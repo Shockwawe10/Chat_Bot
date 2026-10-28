@@ -274,7 +274,7 @@ The default local models are chosen to run on a laptop GPU with 4 GB of memory:
 
 - Use `qwen3:4b-instruct`, not plain `qwen3:4b`. The plain tag is the "thinking" variant: it always writes its reasoning before the answer, even with thinking turned off. In a test with two short questions, `qwen3:4b-instruct` answered in about 1 second; plain `qwen3:4b` wrote about 550 words of reasoning first, which took roughly 30 seconds. The reasoning text also breaks answer scoring.
 - `nomic-embed-text` expects the prefix `search_query: ` on questions and `search_document: ` on chunks.
-- Only one model fits on a 4 GB GPU at a time, so the eval harness generates all answers first and judges them afterwards.
+- Only one model fits on a 4 GB GPU at a time, so the eval harness generates all answers first and judges them afterwards. With the default 4096-token context, `qwen3:4b-instruct` runs about 66% on the GPU and 34% on the CPU (`ollama ps`), around 24 tokens per second.
 - If the judge fails [calibration](#llm-as-judge-calibration), switch it to a stronger hosted model (`JUDGE_PROVIDER=anthropic`) rather than a bigger local one.
 
 ---
