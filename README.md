@@ -213,7 +213,9 @@ python -m venv .venv
 source .venv/bin/activate       # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
 cp .env.example .env            # then fill in the values
-ollama pull <model-name>        # the same name you set as LLM_MODEL in .env
+ollama pull qwen3:4b-instruct   # chatbot (LLM_MODEL)
+ollama pull phi4-mini:3.8b      # judge (JUDGE_MODEL)
+ollama pull nomic-embed-text    # embeddings (EMBEDDING_MODEL)
 pytest                          # data checks on the knowledge base
 
 # Stage 1
@@ -250,15 +252,30 @@ The `Makefile` loads `.env` itself, so you do not need to export the variables i
 | Variable | Example | Purpose |
 | --- | --- | --- |
 | `LLM_PROVIDER` | `ollama` or `anthropic` | Which provider serves the chatbot |
-| `LLM_MODEL` | model name | Model for answers |
+| `LLM_MODEL` | `qwen3:4b-instruct` | Model for answers |
 | `JUDGE_PROVIDER` | `ollama` or `anthropic` | Which provider serves the LLM judge |
-| `JUDGE_MODEL` | model name | Model for LLM-as-judge; must differ from `LLM_MODEL` |
+| `JUDGE_MODEL` | `phi4-mini:3.8b` | Model for LLM-as-judge; must differ from `LLM_MODEL` |
 | `ANTHROPIC_API_KEY` | — | Only for paid runs |
-| `EMBEDDING_MODEL` | model name | Embeddings for Chroma (an English model is enough) |
+| `EMBEDDING_MODEL` | `nomic-embed-text` | Embeddings for Chroma (an English model is enough) |
 | `CHUNK_SIZE`, `CHUNK_OVERLAP`, `TOP_K` | `500`, `50`, `5` | Retrieval settings under test |
 | `PROMPT_VERSION` | `v1` | Recorded in every eval run |
 | `TEMPERATURE` | `0` | Fixed for eval runs |
 | `DB_PATH` | `data/app.db` | SQLite database for the MCP tools |
+
+### Local models
+
+The default local models are chosen to run on a laptop GPU with 4 GB of memory:
+
+| Role | Model | Size | Why |
+| --- | --- | --- | --- |
+| Chatbot | `qwen3:4b-instruct` | 2.5 GB | Follows instructions well for its size and supports tool calling (Stage 6) |
+| Judge | `phi4-mini:3.8b` | 2.5 GB | A different model family from the chatbot, to reduce self-preference |
+| Embeddings | `nomic-embed-text` | 274 MB | Small English embedding model |
+
+- Use `qwen3:4b-instruct`, not plain `qwen3:4b`. The plain tag is the "thinking" variant: it always writes its reasoning before the answer, even with thinking turned off. In a test with two short questions, `qwen3:4b-instruct` answered in about 1 second; plain `qwen3:4b` wrote about 550 words of reasoning first, which took roughly 30 seconds. The reasoning text also breaks answer scoring.
+- `nomic-embed-text` expects the prefix `search_query: ` on questions and `search_document: ` on chunks.
+- Only one model fits on a 4 GB GPU at a time, so the eval harness generates all answers first and judges them afterwards.
+- If the judge fails [calibration](#llm-as-judge-calibration), switch it to a stronger hosted model (`JUDGE_PROVIDER=anthropic`) rather than a bigger local one.
 
 ---
 
