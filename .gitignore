@@ -1,0 +1,25 @@
+# Secrets
+.env
+
+# Python
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+
+# Generated data
+data/app.db
+.chroma/
+
+# Test output
+test-results/
+playwright-report/
+.promptfoo/
+
+# OS and editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
