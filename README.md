@@ -239,7 +239,7 @@ make e2e                        # Playwright
 
 The `Makefile` loads `.env` itself, so you do not need to export the variables in your shell.
 
-**Windows.** Python, Ollama and `pytest` work natively. For `make` targets, use WSL or Git Bash with GNU Make installed. CI runs on Linux.
+**Windows.** Python, Ollama and `pytest` work natively. If `python --version` shows a version older than 3.11, create the venv with `py -3.11 -m venv .venv`. For `make` targets, use WSL or Git Bash with GNU Make installed. CI runs on Linux.
 
 ---
 
@@ -387,10 +387,10 @@ About 8 weeks at 25–35 hours a week, in stages 0 to 8. Every stage ends with s
 
 - [ ] Python, venv, Git, Claude Code, Ollama with a small model, `.env`
 - [ ] Initial commit, push to GitHub, protect `main`
-- [ ] `GLOSSARY.md`: mounting system types (ground, roof), corrosion protection classes, wind and snow load, project stages (site survey, design, supply, installation)
-- [ ] 20–30 knowledge base documents about the fictional company: services, cooperation stages, mounting systems, corrosion protection, what a customer must provide for a quote
-- [ ] Deliberate traps: two similar systems with different corrosion classes, exact numbers, a price question with no answer in the KB
-- [ ] First data tests in `tests/data`: every KB document has valid front matter
+- [x] `GLOSSARY.md`: mounting system types (ground, roof), corrosion protection classes, wind and snow load, project stages (site survey, design, supply, installation)
+- [x] 20–30 knowledge base documents about the fictional company: services, cooperation stages, mounting systems, corrosion protection, what a customer must provide for a quote
+- [x] Deliberate traps: two similar systems with different corrosion classes, exact numbers, a price question with no answer in the KB
+- [x] First data tests in `tests/data`: every KB document has valid front matter
 
 **Exit criteria:** `pytest` runs green in a clean venv; at least 20 KB documents with front matter; at least 15 glossary terms.
 
