@@ -154,7 +154,7 @@ The LLM provider is a single configuration value, so the same evals can run on d
 ## Repository structure
 
 ```text
-rag-support-chatbot/
+Chat_Bot/
 ├── app/                     # chunking, retrieval, generation, FastAPI
 ├── mcp_server/              # tools: leads, projects, products, site surveys (Stage 6)
 ├── ui/                      # Streamlit
@@ -208,7 +208,7 @@ rag-support-chatbot/
 
 ```bash
 # Stage 0
-git clone <repo-url> && cd rag-support-chatbot
+git clone https://github.com/Shockwawe10/Chat_Bot.git && cd Chat_Bot
 python -m venv .venv
 source .venv/bin/activate       # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
