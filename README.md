@@ -375,7 +375,8 @@ A count of passing tests says little if the tests cannot fail, so the chunker wa
 - First round: 15 deliberate breaks, 13 caught. The 2 that survived showed a real gap: nothing tested text that markdown-it drops, such as link reference definitions. Tests were added for it.
 - Second round, after the heading merge and config changes: 26 breaks, 26 caught.
 - Third round, with the embedder and index: 72 breaks, 72 caught.
-- Fourth round, with retrieval, generation and `POST /ask`: 134 breaks, 134 caught. `python -m evals.mutation_check` runs them all.
+- Fourth round, with retrieval, generation and `POST /ask`: 134 breaks, 134 caught.
+- Fifth round, after the abstention contract fix: 158 breaks, 158 caught. `python -m evals.mutation_check` runs them all.
 
 Results are only trusted if they make sense, and two did not:
 
@@ -568,6 +569,8 @@ Filled in as defects are found. Each finding has a test that guards it.
 | --- | --- | --- | --- | --- |
 | F1 | An empty heading at the end of a file stayed alone as a chunk when it was at least `CHUNK_MIN` long | The packer split it from the previous section, and the small-chunk merge only looked at length | Bare headings now always merge back if the result stays within `CHUNK_MAX` | `test_long_empty_heading_at_the_end_of_a_file_also_moves_back` |
 | F2 | Going back to earlier settings could delete a good collection | A cached Chroma system failed to read it ("Nothing found on disk", about 1 run in 100 when one process reopened collections), and the build deleted the collection on any error | The build deletes only what this run created or what failed verification, and each open starts a fresh Chroma system. The same sequence then ran 500 times with no error | `test_outside_error_on_a_kept_collection_does_not_delete_it` |
+| F3 | Correct answers reached the customer as refusals | Spec bug: a separate `abstained` boolean let the model answer and abstain at once, and the server replaced the answer with a fixed sentence | The output is one of two forms, an answer or an abstention, and the schema rules out both together. Over-abstention itself is still open: see the Stage 1 sanity runs in `LEARNING_LOG.md` | `test_answer_and_abstention_cannot_both_come_back` |
+| F4 | A refusal came back as an answer with citations: `{"answer": "abstain", "citations": [1, 2], "status": "answer"}` | Ollama writes keys alphabetically, so `status` comes last and the model had already chosen the `answer` form before reaching it | The prompt shows each form in the order the model writes it | `test_prompt_shows_each_form_in_the_order_the_model_writes_it` |
 
 ---
 

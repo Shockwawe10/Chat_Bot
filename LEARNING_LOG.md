@@ -138,3 +138,40 @@ Primary failed stage: 5 generation, 2 retrieval, 0 chunking, 0 citation. Seconda
 Completeness and faithfulness are separate measures, and Stage 2 needs to score them separately. Questions 2, 4 and 10 are faithful but incomplete, and question 3 is the opposite problem: it looks complete and contains a false claim.
 
 Spec bug: the fixed-sentence rule came from the Stage 1 spec, not from the model. A separate `abstained` boolean let the model produce an answer and abstain at the same time, and the server then threw the answer away. That is what turned questions 5 and 9 into refusals. Question 6 is the other side of it: it needed to abstain and did not. The contract is fixed in run 2.
+
+### Results, run 2
+
+*Run 2, on 2026-10-30 at commit `f9d5ed9`, after the abstention contract fix. The model output is now one of two forms: `{status: answer, answer, citations}` or `{status: abstain, reason}`. Prompt v2 replaces v1. Retrieval was not touched: all 10 questions got the same 5 chunks in the same order as run 1, with the same index fingerprint, so the retrieved column is not repeated. Every difference below comes from generation. `ollama ps`: qwen3:4b-instruct 3.5 GB, 34%/66% CPU/GPU; nomic-embed-text:v1.5 335 MB, 100% GPU. Claude Code drafted the verdicts, and they need my review.*
+
+| # | Cited | Answer (short) | Verdict | Failed stage | Change from run 1 | Notes |
+|---|---|---|---|---|---|---|
+| 1 | products-ground-mount-gf2:1 | At least 0.6 m. | correct | — | same | |
+| 2 | pricing-commercial-offer:2 | 30 days from its date. | partly correct | generation | same | Still leaves out the recalculation. |
+| 3 | corrosion-coatings:2, products-flat-roof-rf2:1 | A4, because it resists chlorides and is used in systems rated C4 and above. | partly correct | generation | better | The false claim is gone. It does not say RF-2 itself is rated C4, so the link is left to the reader. The contract fix did not target this, so count it as a side effect of the new prompt, not a result of the fix. |
+| 4 | none | Fixed abstain sentence. | abstained wrongly | retrieval; secondary: generation | **worse** | Run 1 said "No, the maximum is 2.4 kN/m²". Now the chunk with 2.4 is at rank 1, and the raw reason says both that the context does not state the maximum and that it mentions 2.4. The model could not turn 2.4 < 3.0 into a "no". |
+| 5 | none | Fixed abstain sentence. | abstained wrongly | generation | same verdict | Gold chunk at rank 1, which says "The company does not publish a phone number." The raw reason says the context has no information about a phone number, which is false. The answer run 1 wrote is gone, so the fixed sentence hid nothing this time. |
+| 6 | none | Fixed abstain sentence. | abstained wrongly | retrieval | better | Given what it saw, abstaining was the right response, so generation did not fail here. The customer still gets no answer, and it stays a Stage 2 retrieval case. |
+| 7 | none | Fixed abstain sentence. | correct | — | same | |
+| 8 | none | Fixed abstain sentence. | correct | — | same | The near-miss distractors were still not retrieved, so the same limit applies as in run 1. |
+| 9 | none | Fixed abstain sentence. | abstained wrongly | generation; secondary: fixed-sentence rule (spec bug) | same verdict | Gold chunk at rank 1. The raw `reason` holds the correct explanation, and the customer gets the refusal. No flag was raised. The contract moved this failure into `reason` and did not remove it. |
+| 10 | loads-wind-and-snow:1, products-flat-roof-rf2:1, products-flat-roof-rf1:1 | Lists 5 of the 6 products, from 28 to 36 m/s. | partly correct | generation | better | Every value is true. It leaves out GF-1 (32 m/s) and does not ask which product. The word "passage" no longer reaches the customer. |
+
+Summary: 3 correct, 3 partly correct, 0 wrong, 4 abstained wrongly. Run 1 was 3 correct, 3 partly correct, 2 wrong, 2 abstained wrongly.
+
+Primary failed stage: 5 generation, 2 retrieval, 0 chunking, 0 citation. Same split as run 1.
+
+What this shows:
+- The fix did what it was for: no output can be an answer and an abstention at the same time. The grammar held even when a prompt demanded both, and a real-model test now checks that.
+- It did not make the model decide better. It went from 4 abstentions to 6, and now refuses 4 of the 8 answerable questions. The false claims went away, and more correct answers went with them. A customer who gets a refusal is safer than one who gets a wrong "Yes", but this is a trade, not a clean win.
+- Question 4 is a regression, and question 9 still loses a correct explanation. A correct `reason` is the same failure in a new place. Stage 2 should check `reason` text, not only the answer.
+- This is 10 questions on one model at one seed. The direction may be real, but it does not measure the rate.
+
+Not tuned for run 3, because these 10 questions are frozen and tuning on them would be overfitting. Over-abstention goes to Stage 2 with questions 4, 5 and 9 as cases.
+
+`abstained_with_answer`: replaying run 1's raw outputs, the flag fires on questions 5 and 9 as intended, and also on question 8, which was a correct refusal. Across all 8 abstentions in the v1 traces it fires on 5. The model often fills `answer` with "the context does not say", so the flag means "read this", not "this is wrong". Under the new schema it can only fire on output that did not come through the schema.
+
+Found while making the fix:
+- Ollama writes keys alphabetically, so `status` comes last and the first key is the real decision. With the first prompt draft the model wrote `{"answer": "abstain", "citations": [1, 2], "status": "answer"}`, a refusal dressed as an answer with sources. Showing the forms in the order the model writes them fixed it. I chose this over renaming `status` so it sorts first, because both got 11 of 12 decisions right on questions outside the frozen 10.
+- Citations had no upper limit. Forced to give an empty list, the model counted until `num_predict` cut the JSON off. The list now stops at 10.
+- `reason` goes to the trace only, never to the customer, because it is model text with no citations behind it. Raw output was already traced for every request, and a test now pins it for abstentions.
+- Prompt v1 is deleted, not kept beside v2, because it describes a contract the code no longer accepts. `PROMPT_VERSION=v1` now fails at startup instead of pairing an old prompt with the new schema. It is still in git at `a3c0e9c`.
