@@ -241,13 +241,52 @@ BREAKS = {
     "truncation ignores num_ctx": [
         (GENERATOR, TRUNCATED, "if count is None or count < len(prompt.split()):")
     ],
-    "abstained keeps the model's answer": [
-        (GENERATOR, "return Answer(ABSTAIN_SENTENCE, True, [], flags)", "return Answer(answer, True, [], flags)")
+    "abstention shows the reason to the customer": [
+        (GENERATOR, 'return Answer(ABSTAIN_SENTENCE, True, [], reason=data["reason"].strip())', 'return Answer(data["reason"], True, [], reason=data["reason"].strip())')
     ],
-    "abstained keeps citations": [
-        (GENERATOR, "return Answer(ABSTAIN_SENTENCE, True, [], flags)", "return Answer(ABSTAIN_SENTENCE, True, numbers, flags)")
+    "abstention loses the reason": [
+        (GENERATOR, 'return Answer(ABSTAIN_SENTENCE, True, [], reason=data["reason"].strip())', "return Answer(ABSTAIN_SENTENCE, True, [])")
     ],
-    "abstained with citations not flagged": [(GENERATOR, "        if numbers:\n", "        if False:\n")],
+    "reason not stripped": [(GENERATOR, 'reason=data["reason"].strip())', 'reason=data["reason"])')],
+    "abstention takes extra fields": [
+        (GENERATOR, 'if set(data) != set(ABSTAIN_FORM["properties"]):', "if False:")
+    ],
+    "answer takes extra fields": [(GENERATOR, 'if set(data) != set(ANSWER_FORM["properties"]):', "if False:")],
+    "empty reason accepted": [(GENERATOR, '        if not _has_text(data["reason"]):\n', "        if False:\n")],
+    "unknown status accepted": [(GENERATOR, '    if status != "answer":\n', "    if False:\n")],
+    "old format not flagged": [
+        (GENERATOR, 'return Answer(ABSTAIN_SENTENCE, True, [], ["abstained_with_answer"])', "return Answer(ABSTAIN_SENTENCE, True, [])")
+    ],
+    "old format keeps the answer": [
+        (GENERATOR, 'return Answer(ABSTAIN_SENTENCE, True, [], ["abstained_with_answer"])', 'return Answer(data["answer"], True, [], ["abstained_with_answer"])')
+    ],
+    "old format keeps citations": [
+        (GENERATOR, 'return Answer(ABSTAIN_SENTENCE, True, [], ["abstained_with_answer"])', 'return Answer(ABSTAIN_SENTENCE, True, data["citations"], ["abstained_with_answer"])')
+    ],
+    "old format check ignores the answer": [
+        (GENERATOR, 'if data.get("abstained") is True and _has_text(data.get("answer")):', 'if data.get("abstained") is True:')
+    ],
+    "old format check ignores abstained": [
+        (GENERATOR, 'if data.get("abstained") is True and _has_text(data.get("answer")):', 'if "abstained" in data and _has_text(data.get("answer")):')
+    ],
+    "old format check removed": [
+        (GENERATOR, 'if data.get("abstained") is True and _has_text(data.get("answer")):', "if False:")
+    ],
+    "schema allows either form to be both": [(GENERATOR, 'OUTPUT_SCHEMA = {"oneOf": [ANSWER_FORM, ABSTAIN_FORM]}', "OUTPUT_SCHEMA = ANSWER_FORM")],
+    "schema allows empty citations": [(GENERATOR, ', "minItems": 1', "")],
+    "schema allows endless citations": [(GENERATOR, ', "maxItems": 10', "")],
+    "schema allows extra fields": [(GENERATOR, '    "additionalProperties": False,\n', "")],
+    "schema allows an empty answer": [
+        (GENERATOR, '"answer": {"type": "string", "minLength": 1}', '"answer": {"type": "string"}')
+    ],
+    "schema allows an empty reason": [
+        (GENERATOR, '"reason": {"type": "string", "minLength": 1}', '"reason": {"type": "string"}')
+    ],
+    "status not required": [
+        (GENERATOR, '"required": ["status", "answer", "citations"]', '"required": ["answer", "citations"]')
+    ],
+    "reason not required": [(GENERATOR, '"required": ["status", "reason"]', '"required": ["status"]')],
+    "abstain form says answer": [(GENERATOR, '"status": {"const": "abstain"}', '"status": {"const": "answer"}')],
     "no upper citation limit": [
         (GENERATOR, RANGE, "if type(number) is not int or not 1 <= number:")
     ],
@@ -259,13 +298,14 @@ BREAKS = {
     ],
     "duplicate citations kept": [(GENERATOR, "elif number in citations:", "elif False:")],
     "missing citations not flagged": [(GENERATOR, "    if not citations:\n", "    if False:\n")],
-    "empty answer accepted": [(GENERATOR, "    if not answer.strip():\n", "    if False:\n")],
-    "field types not checked": [
-        (
-            GENERATOR,
-            "if not isinstance(answer, str) or not isinstance(numbers, list) or not isinstance(abstained, bool):",
-            "if False:",
-        )
+    "empty answer accepted": [(GENERATOR, "    if not _has_text(answer):\n", "    if False:\n")],
+    "whitespace counts as text": [(GENERATOR, "bool(value.strip())", "bool(value)")],
+    "text type not checked": [(GENERATOR, "return isinstance(value, str) and bool(value.strip())", 'return bool(str(value or "").strip())')],
+    "empty citations accepted": [
+        (GENERATOR, "if not isinstance(numbers, list) or not numbers:", "if not isinstance(numbers, list):")
+    ],
+    "citation type not checked": [
+        (GENERATOR, "if not isinstance(numbers, list) or not numbers:", "if not numbers:")
     ],
     "passages not numbered": [
         (GENERATOR, 'f"[{hit.rank}] {hit.heading_path}\\n{hit.text}"', 'f"{hit.heading_path}\\n{hit.text}"')
@@ -305,6 +345,8 @@ BREAKS = {
     "unavailable is not a 503": [(API, "raise HTTPException(503,", "raise HTTPException(500,")],
     "Ollama connection errors not handled": [(API, "    httpx.HTTPError,\n", "")],
     "LLM errors not handled": [(API, "    LlmUnavailable,\n", "")],
+    "reason not traced": [(API, '                    "reason": result.reason,\n', "")],
+    "raw outputs not traced": [(API, '                "raw_outputs": result.raw_outputs,\n', "")],
     "answered request not traced": [
         (API, "        traces.write(\n            {\n                **record,", "        print(\n            {\n                **record,")
     ],
@@ -323,7 +365,7 @@ BREAKS = {
     "wrong LLM digest reported": [(API, "llm_digest=llm.cfg.digest", 'llm_digest=""')],
     "config ignores TOP_K": [(API, 'top_k = int(env.get("TOP_K") or DEFAULT_TOP_K)', "top_k = DEFAULT_TOP_K")],
     "config ignores PROMPT_VERSION": [
-        (API, 'PromptTemplate.load(env.get("PROMPT_VERSION") or "v1")', 'PromptTemplate.load("v1")')
+        (API, 'PromptTemplate.load(env.get("PROMPT_VERSION") or "v2")', 'PromptTemplate.load("v2")')
     ],
 }
 

@@ -6,7 +6,7 @@ one. Everything it returns is checked here, and problems become flags on the ans
 
 import hashlib
 import json
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from string import Template
 
 import httpx
@@ -20,15 +20,31 @@ ABSTAIN_SENTENCE = "I can't answer that from the available documents."
 # so a retry only has a chance of a different result at a small temperature.
 RETRY_TEMPERATURE = 0.2
 
-OUTPUT_SCHEMA = {
+ANSWER_FORM = {
     "type": "object",
     "properties": {
-        "answer": {"type": "string"},
-        "citations": {"type": "array", "items": {"type": "integer"}},
-        "abstained": {"type": "boolean"},
+        "status": {"const": "answer"},
+        "answer": {"type": "string", "minLength": 1},
+        # With no upper limit, a model can count until num_predict cuts the JSON off.
+        "citations": {"type": "array", "items": {"type": "integer"}, "minItems": 1, "maxItems": 10},
     },
-    "required": ["answer", "citations", "abstained"],
+    "required": ["status", "answer", "citations"],
+    "additionalProperties": False,
 }
+ABSTAIN_FORM = {
+    "type": "object",
+    "properties": {
+        "status": {"const": "abstain"},
+        "reason": {"type": "string", "minLength": 1},
+    },
+    "required": ["status", "reason"],
+    "additionalProperties": False,
+}
+# One form or the other, so an answer and an abstention cannot both come back.
+# Ollama writes keys alphabetically, so "status" comes last and the first key is
+# the real decision. The prompt must show the forms in that order: otherwise the
+# model starts with "answer" and writes the word "abstain" there, with citations.
+OUTPUT_SCHEMA = {"oneOf": [ANSWER_FORM, ABSTAIN_FORM]}
 
 
 class LlmUnavailable(RuntimeError):
@@ -92,6 +108,7 @@ class Answer:
     citations: list  # passage numbers, 1-based, valid and without duplicates
     flags: list = field(default_factory=list)
     raw_outputs: list = field(default_factory=list)
+    reason: str | None = None  # why the model abstained: for the trace, never for the customer
 
 
 @dataclass(frozen=True)
@@ -152,6 +169,10 @@ class OllamaLlm:
         )
 
 
+def _has_text(value):
+    return isinstance(value, str) and bool(value.strip())
+
+
 def parse_output(text, passage_count):
     """Turn model output into an Answer, or raise MalformedOutput."""
     try:
@@ -160,18 +181,30 @@ def parse_output(text, passage_count):
         raise MalformedOutput(f"not JSON: {error}") from error
     if not isinstance(data, dict):
         raise MalformedOutput("not a JSON object")
-    answer, numbers, abstained = data.get("answer"), data.get("citations"), data.get("abstained")
-    if not isinstance(answer, str) or not isinstance(numbers, list) or not isinstance(abstained, bool):
-        raise MalformedOutput("a field is missing or has the wrong type")
+
+    # The old contract could say both. The schema rules it out, so this output did
+    # not come through the schema, and the flag sends it to a person to read.
+    if data.get("abstained") is True and _has_text(data.get("answer")):
+        return Answer(ABSTAIN_SENTENCE, True, [], ["abstained_with_answer"])
+
+    status = data.get("status")
+    if status == "abstain":
+        if set(data) != set(ABSTAIN_FORM["properties"]):
+            raise MalformedOutput("wrong fields for an abstention")
+        if not _has_text(data["reason"]):
+            raise MalformedOutput("empty reason")
+        return Answer(ABSTAIN_SENTENCE, True, [], reason=data["reason"].strip())
+    if status != "answer":
+        raise MalformedOutput("status is missing or unknown")
+    if set(data) != set(ANSWER_FORM["properties"]):
+        raise MalformedOutput("wrong fields for an answer")
+    answer, numbers = data["answer"], data["citations"]
+    if not _has_text(answer):
+        raise MalformedOutput("empty answer")
+    if not isinstance(numbers, list) or not numbers:
+        raise MalformedOutput("citations must list at least one passage")
 
     flags = []
-    if abstained:
-        if numbers:
-            flags.append("abstained_with_citations")
-        return Answer(ABSTAIN_SENTENCE, True, [], flags)
-    if not answer.strip():
-        raise MalformedOutput("empty answer")
-
     citations = []
     for number in numbers:
         if type(number) is not int or not 1 <= number <= passage_count:
@@ -213,5 +246,5 @@ def generate(llm, prompt, passage_count):
         flags = parsed.flags + prompt_flags(completion, prompt, cfg.num_ctx)
         if attempt:
             flags.append("retried")
-        return Answer(parsed.answer, parsed.abstained, parsed.citations, sorted(flags), raw_outputs)
+        return replace(parsed, flags=sorted(flags), raw_outputs=raw_outputs)
     raise GenerationError("model output could not be parsed after a retry", raw_outputs)

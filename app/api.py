@@ -194,6 +194,7 @@ def create_app(make_retriever, llm, prompt, trace_dir=TRACE_DIR):
                     "answer": result.answer,
                     "abstained": result.abstained,
                     "citations": result.citations,
+                    "reason": result.reason,
                 },
                 "flags": result.flags,
                 "timings_ms": response.timings_ms.model_dump(),
@@ -211,5 +212,5 @@ def create_default_app():
     return create_app(
         lambda: Retriever(INDEX_DIR, backend, top_k),
         OllamaLlm.from_env(env),
-        PromptTemplate.load(env.get("PROMPT_VERSION") or "v1"),
+        PromptTemplate.load(env.get("PROMPT_VERSION") or "v2"),
     )

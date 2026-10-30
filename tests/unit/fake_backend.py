@@ -11,7 +11,7 @@ from app.generator import Completion, LlmConfig
 
 DIM = 64
 TOPICAL_DIM = 512
-VALID_OUTPUT = json.dumps({"answer": "The answer.", "citations": [1], "abstained": False})
+VALID_OUTPUT = json.dumps({"answer": "The answer.", "citations": [1], "status": "answer"})
 
 
 def fake_vector(text):

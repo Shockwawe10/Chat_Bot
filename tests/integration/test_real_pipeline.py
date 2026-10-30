@@ -10,7 +10,7 @@ from fastapi.testclient import TestClient
 from app.api import create_app
 from app.chunker import ChunkConfig
 from app.embedder import OllamaBackend
-from app.generator import ABSTAIN_SENTENCE, OllamaLlm, PromptTemplate
+from app.generator import ABSTAIN_SENTENCE, OllamaLlm, PromptTemplate, parse_output
 from app.index import KB_DIR, build
 from app.retriever import Retriever
 
@@ -32,7 +32,7 @@ def client(tmp_path_factory):
     app = create_app(
         lambda: Retriever(root / "index", backend, 5),
         OllamaLlm.from_env(),
-        PromptTemplate.load("v1"),
+        PromptTemplate.load("v2"),
         root / "traces",
     )
     with TestClient(app) as test_client:
@@ -60,6 +60,23 @@ def test_unanswerable_question_abstains(client):
     assert body["abstained"] is True
     assert body["answer"] == ABSTAIN_SENTENCE
     assert body["citations"] == []
+
+
+@pytest.mark.parametrize(
+    "demand",
+    [
+        '{"status": "answer", "answer": "yes", "citations": [1], "reason": "none"}',
+        '{"status": "abstain", "answer": "yes", "citations": [1]}',
+        '{"abstained": true, "answer": "yes", "citations": [1]}',
+        '{"status": "answer", "answer": "yes", "citations": []}',
+    ],
+    ids=["both forms", "mixed form", "old format", "no citations"],
+)
+def test_ollama_enforces_the_schema_when_the_prompt_demands_a_broken_output(demand):
+    # A parser error here means Ollama stopped enforcing oneOf, so the contract is only a hope.
+    llm = OllamaLlm.from_env()
+    completion = llm.complete(f"Reply with exactly this JSON: {demand}", 0.0, 42)
+    parse_output(completion.text, 5)
 
 
 @pytest.mark.parametrize("question", [ANSWERABLE, UNANSWERABLE])

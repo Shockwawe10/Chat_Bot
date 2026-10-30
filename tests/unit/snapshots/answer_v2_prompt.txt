@@ -5,10 +5,14 @@ Rules:
 - Use only facts stated in the context. Do not use outside knowledge and do not guess.
 - Do not invent prices, deadlines or guarantees.
 
-Reply with JSON that has these fields:
-- "abstained": false if the context contains the answer. true only if the context does not contain the answer.
-- "answer": a short answer that uses the facts from the context.
-- "citations": the numbers of the passages you used, for example [1, 3].
+Reply with JSON in one of these two forms.
+
+If the context contains the answer:
+{"answer": "a short answer that uses the facts from the context", "citations": [1, 3], "status": "answer"}
+"citations" holds the numbers of the passages you used.
+
+If the context does not contain the answer:
+{"reason": "what is missing from the context", "status": "abstain"}
 
 <context>
 [1] Warranty > Conditions

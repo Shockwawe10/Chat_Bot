@@ -14,7 +14,7 @@ from app.generator import ABSTAIN_SENTENCE, LlmUnavailable, PromptTemplate
 from app.index import KB_DIR, build, read_manifest
 from app.retriever import GuardError, IndexUnavailable, Retriever
 
-PROMPT = PromptTemplate.load("v1")
+PROMPT = PromptTemplate.load("v2")
 QUESTION = "How long is the product warranty?"
 
 
@@ -49,8 +49,12 @@ def traces(tmp_path):
     return [json.loads(line) for line in lines]
 
 
-def output(answer="The answer.", citations=(1,), abstained=False):
-    return json.dumps({"answer": answer, "citations": list(citations), "abstained": abstained})
+def output(answer="The answer.", citations=(1,)):
+    return json.dumps({"answer": answer, "citations": list(citations), "status": "answer"})
+
+
+ABSTENTION = json.dumps({"reason": "The context does not say.", "status": "abstain"})
+OLD_FORMAT = json.dumps({"abstained": True, "answer": "Maybe 100 EUR.", "citations": [1]})
 
 
 def test_question_gets_an_answer_with_sources(make_client):
@@ -97,13 +101,22 @@ def test_prompt_sent_to_the_model_holds_the_question_and_the_chunks(make_client)
     assert body["retrieved"][0]["heading_path"] in prompt
 
 
-def test_abstained_answer_has_the_fixed_sentence_and_no_citations(make_client):
-    llm = FakeLlm(outputs=[output("Maybe 100 EUR.", [1], True)])
-    body = make_client(llm).post("/ask", json={"question": QUESTION}).json()
+def test_abstention_has_the_fixed_sentence_and_no_citations(make_client):
+    body = make_client(FakeLlm(outputs=[ABSTENTION])).post("/ask", json={"question": QUESTION}).json()
     assert body["answer"] == ABSTAIN_SENTENCE
-    assert (body["abstained"], body["citations"]) == (True, [])
-    assert body["flags"] == ["abstained_with_citations"]
+    assert (body["abstained"], body["citations"], body["flags"]) == (True, [], [])
     assert not any(hit["cited"] for hit in body["retrieved"])
+
+
+def test_the_reason_is_never_shown_to_the_customer(make_client):
+    response = make_client(FakeLlm(outputs=[ABSTENTION])).post("/ask", json={"question": QUESTION})
+    assert "The context does not say." not in response.text
+
+
+def test_old_format_abstention_with_an_answer_is_flagged_and_hides_the_answer(make_client):
+    response = make_client(FakeLlm(outputs=[OLD_FORMAT])).post("/ask", json={"question": QUESTION})
+    assert response.json()["flags"] == ["abstained_with_answer"]
+    assert "100 EUR" not in response.text
 
 
 def test_flags_reach_the_response(make_client):
@@ -118,7 +131,7 @@ def test_versions_name_what_built_the_answer(index_dir, make_client):
     versions = make_client(llm).post("/ask", json={"question": QUESTION}).json()["versions"]
     assert versions == {
         "index_fingerprint": read_manifest(index_dir)["fingerprint"],
-        "prompt": "v1",
+        "prompt": "v2",
         "llm_digest": llm.cfg.digest,
     }
 
@@ -232,14 +245,27 @@ def test_answered_request_writes_one_full_trace(make_client, tmp_path):
     record = records[0]
     assert record["question"] == QUESTION
     assert record["status"] == 200
-    assert record["prompt_version"] == "v1"
+    assert record["prompt_version"] == "v2"
     assert record["prompt_sha256"] == PROMPT.sha256
     assert len(record["hits"]) == 5
     assert "score" in record["hits"][0]
     assert record["raw_outputs"] == [VALID_OUTPUT]
-    assert record["parsed"] == {"answer": "The answer.", "abstained": False, "citations": [1]}
+    assert record["parsed"] == {"answer": "The answer.", "abstained": False, "citations": [1], "reason": None}
     assert record["flags"] == []
     assert record["timings_ms"]["total"] >= 0
+
+
+@pytest.mark.parametrize("raw", [ABSTENTION, OLD_FORMAT], ids=["abstention", "old format"])
+def test_abstention_trace_keeps_the_raw_model_output(make_client, tmp_path, raw):
+    make_client(FakeLlm(outputs=[raw])).post("/ask", json={"question": QUESTION})
+    record = traces(tmp_path)[0]
+    assert record["parsed"]["abstained"] is True
+    assert record["raw_outputs"] == [raw]
+
+
+def test_abstention_trace_keeps_the_reason(make_client, tmp_path):
+    make_client(FakeLlm(outputs=[ABSTENTION])).post("/ask", json={"question": QUESTION})
+    assert traces(tmp_path)[0]["parsed"]["reason"] == "The context does not say."
 
 
 def test_every_request_adds_a_line(make_client, tmp_path):

@@ -158,7 +158,7 @@ Chat_Bot/
 ├── app/                     # chunking, retrieval, generation, FastAPI
 ├── mcp_server/              # tools: leads, projects, products, site surveys (Stage 6)
 ├── ui/                      # Streamlit
-├── prompts/                 # versioned prompt templates, like answer_v1.txt
+├── prompts/                 # versioned prompt templates, like answer_v2.txt
 ├── data/
 │   ├── kb/                  # demo knowledge base (*.md with front matter)
 │   ├── products.csv         # demo mounting systems: type, corrosion class
@@ -278,7 +278,7 @@ The app reads `.env` itself, so you do not need to export the variables in your 
 | `EMBEDDING_DIGEST` | sha256 from `/api/tags` | The build fails if the installed model has another digest |
 | `OLLAMA_URL` | `http://localhost:11434` | Where Ollama listens |
 | `CHUNK_SIZE`, `CHUNK_MAX`, `CHUNK_MIN`, `TOP_K` | `500`, `800`, `100`, `5` | Retrieval settings under test: soft target, hard limit and minimum chunk length in characters, and results per query. Chunks have no overlap; the heading path carries the context. `ChunkConfig.from_env()` reads the chunk values from `.env`, and a process variable wins over the file |
-| `PROMPT_VERSION` | `v1` | Recorded in every eval run |
+| `PROMPT_VERSION` | `v2` | Recorded in every eval run |
 | `TEMPERATURE` | `0` | Fixed for eval runs |
 | `DB_PATH` | `data/app.db` | SQLite database for the MCP tools |
 

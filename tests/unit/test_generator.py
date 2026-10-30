@@ -11,7 +11,9 @@ from fake_backend import VALID_OUTPUT, FakeLlm
 from app.api import MAX_QUESTION_CHARS
 from app.chunker import ChunkConfig
 from app.generator import (
+    ABSTAIN_FORM,
     ABSTAIN_SENTENCE,
+    ANSWER_FORM,
     OUTPUT_SCHEMA,
     RETRY_TEMPERATURE,
     Completion,
@@ -29,17 +31,21 @@ from app.index import KB_DIR, read_corpus
 from app.retriever import Hit
 from app.settings import ROOT
 
-SNAPSHOT = Path(__file__).parent / "snapshots" / "answer_v1_prompt.txt"
+SNAPSHOT = Path(__file__).parent / "snapshots" / "answer_v2_prompt.txt"
 MODEL = "qwen3:4b-instruct"
-PROMPT = PromptTemplate.load("v1")
+PROMPT = PromptTemplate.load("v2")
 
 
 def hit(rank, heading, text):
     return Hit(f"id-{rank}", "doc", text, heading, rank, 0.5)
 
 
-def output(answer="The answer.", citations=(1,), abstained=False):
-    return json.dumps({"answer": answer, "citations": list(citations), "abstained": abstained})
+def output(answer="The answer.", citations=(1,)):
+    return json.dumps({"answer": answer, "citations": list(citations), "status": "answer"})
+
+
+def abstention(reason="The context does not say."):
+    return json.dumps({"reason": reason, "status": "abstain"})
 
 
 def ollama(handler, cfg=None):
@@ -79,9 +85,17 @@ def test_worst_case_prompt_leaves_room_for_the_answer():
     assert len(rendered) // 3 + cfg.num_predict < cfg.num_ctx
 
 
+def test_prompt_shows_each_form_in_the_order_the_model_writes_it():
+    # Shown in any other order, the model wrote the word "abstain" as an answer, with citations.
+    lines = [line for line in PROMPT.text.splitlines() if line.startswith("{")]
+    forms = [json.loads(line) for line in lines]
+    assert [set(form) for form in forms] == [set(ANSWER_FORM["properties"]), set(ABSTAIN_FORM["properties"])]
+    assert all(list(form) == sorted(form) for form in forms)
+
+
 def test_prompt_version_loads_its_own_file_and_has_a_stable_hash():
-    assert PROMPT.version == "v1"
-    assert PROMPT.sha256 == PromptTemplate.load("v1").sha256
+    assert PROMPT.version == "v2"
+    assert PROMPT.sha256 == PromptTemplate.load("v2").sha256
     assert len(PROMPT.sha256) == 64
 
 
@@ -108,7 +122,7 @@ def test_highest_valid_passage_number_is_kept():
 
 
 def test_citation_that_is_not_an_integer_is_dropped_and_flagged():
-    raw = json.dumps({"answer": "x", "citations": ["1", True, 1.5, 2], "abstained": False})
+    raw = json.dumps({"answer": "x", "citations": ["1", True, 1.5, 2], "status": "answer"})
     parsed = parse_output(raw, 5)
     assert parsed.citations == [2]
     assert parsed.flags == ["citation_out_of_range"]
@@ -120,28 +134,35 @@ def test_duplicate_citation_is_dropped_and_flagged():
     assert parsed.flags == ["citation_duplicate"]
 
 
-def test_empty_citations_are_flagged():
-    parsed = parse_output(output(citations=[]), 5)
-    assert parsed.citations == []
-    assert parsed.flags == ["no_citations"]
-
-
 def test_all_citations_invalid_counts_as_no_citations():
     parsed = parse_output(output(citations=[9]), 5)
     assert parsed.citations == []
     assert parsed.flags == ["citation_out_of_range", "no_citations"]
 
 
-def test_abstained_gives_the_fixed_sentence_whatever_the_model_wrote():
-    parsed = parse_output(output("It might be about 100 EUR.", [], True), 5)
+def test_abstention_gives_the_fixed_sentence_and_keeps_the_reason_apart():
+    parsed = parse_output(abstention("  It might be about 100 EUR.  "), 5)
     assert (parsed.answer, parsed.citations, parsed.abstained) == (ABSTAIN_SENTENCE, [], True)
+    assert parsed.reason == "It might be about 100 EUR."
     assert parsed.flags == []
 
 
-def test_abstained_with_citations_clears_them_and_is_flagged():
-    parsed = parse_output(output("x", [1, 2], True), 5)
-    assert parsed.citations == []
-    assert parsed.flags == ["abstained_with_citations"]
+def test_answer_has_no_reason():
+    assert parse_output(output(), 5).reason is None
+
+
+@pytest.mark.parametrize(
+    "raw",
+    [
+        '{"abstained": true, "answer": "The company does not publish a phone number.", "citations": []}',
+        '{"abstained": true, "answer": "It is C5.", "citations": [1, 4]}',
+    ],
+    ids=["run 1 question 5", "run 1 question 9"],
+)
+def test_old_format_abstention_with_an_answer_is_flagged(raw):
+    parsed = parse_output(raw, 5)
+    assert (parsed.answer, parsed.citations, parsed.abstained) == (ABSTAIN_SENTENCE, [], True)
+    assert parsed.flags == ["abstained_with_answer"]
 
 
 @pytest.mark.parametrize(
@@ -151,16 +172,45 @@ def test_abstained_with_citations_clears_them_and_is_flagged():
         "not json",
         '{"answer": "cut off',
         "[1, 2]",
-        '{"citations": [1], "abstained": false}',
-        '{"answer": "x", "abstained": false}',
         '{"answer": "x", "citations": [1]}',
-        '{"answer": 5, "citations": [1], "abstained": false}',
-        '{"answer": "x", "citations": 1, "abstained": false}',
-        '{"answer": "x", "citations": [1], "abstained": "no"}',
-        '{"answer": "   ", "citations": [1], "abstained": false}',
+        '{"status": "maybe", "answer": "x", "citations": [1]}',
+        '{"status": "answer", "citations": [1]}',
+        '{"status": "answer", "answer": "x"}',
+        '{"status": "answer", "answer": 5, "citations": [1]}',
+        '{"status": "answer", "answer": "   ", "citations": [1]}',
+        '{"status": "answer", "answer": "x", "citations": 1}',
+        '{"status": "answer", "answer": "x", "citations": []}',
+        '{"status": "abstain"}',
+        '{"status": "abstain", "reason": 5}',
+        '{"status": "abstain", "reason": "   "}',
     ],
 )
 def test_malformed_output_is_rejected(raw):
+    with pytest.raises(MalformedOutput):
+        parse_output(raw, 5)
+
+
+@pytest.mark.parametrize(
+    "raw",
+    [
+        '{"status": "answer", "answer": "x", "citations": [1], "reason": "y"}',
+        '{"status": "abstain", "reason": "y", "answer": "x"}',
+        '{"status": "abstain", "reason": "y", "citations": [1]}',
+    ],
+)
+def test_answer_and_abstention_cannot_both_come_back(raw):
+    with pytest.raises(MalformedOutput):
+        parse_output(raw, 5)
+
+
+@pytest.mark.parametrize(
+    "raw",
+    [
+        '{"answer": "x", "citations": [1], "abstained": false}',
+        '{"answer": "", "citations": [], "abstained": true}',
+    ],
+)
+def test_old_format_without_the_contradiction_is_rejected(raw):
     with pytest.raises(MalformedOutput):
         parse_output(raw, 5)
 
@@ -238,8 +288,30 @@ def test_ollama_request_pins_every_setting():
     assert (result.text, result.prompt_eval_count) == ("{}", 7)
 
 
-def test_schema_requires_every_field():
-    assert set(OUTPUT_SCHEMA["required"]) == {"answer", "citations", "abstained"}
+def test_schema_allows_exactly_one_of_two_forms():
+    assert OUTPUT_SCHEMA == {"oneOf": [ANSWER_FORM, ABSTAIN_FORM]}
+    assert ANSWER_FORM["properties"]["status"] == {"const": "answer"}
+    assert ABSTAIN_FORM["properties"]["status"] == {"const": "abstain"}
+
+
+@pytest.mark.parametrize("form", [ANSWER_FORM, ABSTAIN_FORM], ids=["answer", "abstain"])
+def test_each_form_requires_every_field_and_allows_no_others(form):
+    assert set(form["required"]) == set(form["properties"])
+    assert form["additionalProperties"] is False
+
+
+def test_the_forms_share_only_the_status():
+    assert set(ANSWER_FORM["properties"]) & set(ABSTAIN_FORM["properties"]) == {"status"}
+
+
+def test_schema_needs_text_and_at_least_one_citation():
+    assert ANSWER_FORM["properties"]["answer"]["minLength"] == 1
+    assert ABSTAIN_FORM["properties"]["reason"]["minLength"] == 1
+    assert ANSWER_FORM["properties"]["citations"]["minItems"] == 1
+
+
+def test_schema_limits_citations_so_a_runaway_list_cannot_cut_the_json_off():
+    assert ANSWER_FORM["properties"]["citations"]["maxItems"] == 10
 
 
 def test_ollama_error_is_raised():
