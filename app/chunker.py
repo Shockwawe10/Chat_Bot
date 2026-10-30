@@ -10,17 +10,16 @@ There is no overlap: `index_text` carries the heading path as context instead.
 import datetime
 import hashlib
 import logging
-import os
 import re
 from dataclasses import dataclass, replace
-from pathlib import Path, PurePath
+from pathlib import PurePath
 
 import yaml
-from dotenv import dotenv_values
 from markdown_it import MarkdownIt
 
+from app.settings import read_env
+
 CHUNKER_VERSION = "v1"
-ENV_FILE = Path(__file__).resolve().parents[1] / ".env"
 
 logger = logging.getLogger(__name__)
 
@@ -44,7 +43,7 @@ class ChunkConfig:
     def from_env(cls, env=None):
         """Read CHUNK_SIZE, CHUNK_MAX and CHUNK_MIN. By default from .env, then the process."""
         if env is None:
-            env = {**dotenv_values(ENV_FILE), **os.environ}
+            env = read_env()
         defaults = cls()
         return cls(
             target=int(env.get("CHUNK_SIZE") or defaults.target),

@@ -6,3 +6,8 @@ PyYAML==6.0.3
 python-dotenv==1.2.4
 markdown-it-py==4.2.0
 hypothesis==6.170.14
+
+# Stage 1: embeddings and index
+chromadb==1.5.9
+httpx==0.28.1
+numpy==2.4.6

@@ -152,7 +152,7 @@ def test_config_reads_each_setting_from_its_own_variable():
 def test_config_reads_the_env_file_and_the_process_wins(tmp_path, monkeypatch):
     env_file = tmp_path / ".env"
     env_file.write_text("CHUNK_SIZE=300\nCHUNK_MAX=450\nCHUNK_MIN=50\n", encoding="utf-8")
-    monkeypatch.setattr("app.chunker.ENV_FILE", env_file)
+    monkeypatch.setattr("app.settings.ENV_FILE", env_file)
     monkeypatch.delenv("CHUNK_SIZE", raising=False)
     monkeypatch.delenv("CHUNK_MIN", raising=False)
     monkeypatch.setenv("CHUNK_MAX", "600")
