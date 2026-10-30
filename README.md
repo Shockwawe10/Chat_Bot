@@ -462,7 +462,7 @@ About 8 weeks at 25–35 hours a week, in stages 0 to 8. Every stage ends with s
 - [x] Unit tests for the chunker: property tests for its invariants and edge-case fixtures
 - [x] API contract tests: status codes, schema, empty and very long input
 - [x] One end-to-end integration test, with fakes for CI and with the real models locally
-- [ ] Minimal GitHub Actions workflow: lint and tests on every PR
+- [x] Minimal GitHub Actions workflow: lint and tests on every push, so each PR's commits are checked
 
 **Exit criteria:** `make run` and `make test` work from a clean clone; tests run in CI; 10 manual sanity questions recorded in `LEARNING_LOG.md`.
 
