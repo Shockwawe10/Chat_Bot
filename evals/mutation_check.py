@@ -331,7 +331,7 @@ BREAKS = {
 def run_tests():
     shutil.rmtree(ROOT / ".hypothesis", ignore_errors=True)
     return subprocess.run(
-        [sys.executable, "-m", "pytest", "tests/unit", "-q", "-x", "-p", "no:cacheprovider"],
+        [sys.executable, "-m", "pytest", "tests/unit", "tests/api", "-q", "-x", "-p", "no:cacheprovider"],
         cwd=ROOT,
         capture_output=True,
         text=True,

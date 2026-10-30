@@ -125,7 +125,7 @@ Request flow:
 2. `POST /ask` passes it to the agent.
 3. The agent decides whether to search the knowledge base or call an MCP tool, or both.
 4. The answer is returned with its sources and timing.
-5. Every request is traced in Arize Phoenix, so a failed eval case can be opened and inspected step by step.
+5. Every request is written to `runs/traces/<date>.jsonl`, and from Stage 5 also traced in Arize Phoenix, so a failed eval case can be opened and inspected step by step.
 
 Each node in the "Quality checks" box names the folder that holds those checks.
 
@@ -158,6 +158,7 @@ Chat_Bot/
 ├── app/                     # chunking, retrieval, generation, FastAPI
 ├── mcp_server/              # tools: leads, projects, products, site surveys (Stage 6)
 ├── ui/                      # Streamlit
+├── prompts/                 # versioned prompt templates, like answer_v1.txt
 ├── data/
 │   ├── kb/                  # demo knowledge base (*.md with front matter)
 │   ├── products.csv         # demo mounting systems: type, corrosion class
@@ -179,6 +180,7 @@ Chat_Bot/
 │   ├── ai/                  # hallucinations, refusals, numeric fidelity
 │   ├── security/            # injection, jailbreak, prompt leakage
 │   ├── agent/               # tool selection, excessive agency, PII
+│   ├── integration/         # real models, needs Ollama: pytest -m real
 │   └── e2e/                 # Playwright
 ├── reports/
 │   ├── runs/                # one manifest per dev run
@@ -190,6 +192,7 @@ Chat_Bot/
 │   └── drift.md
 ├── .chroma/                 # built by `python -m app.index build`, not committed
 │   └── index_manifest.json  # active collection and what it was built from
+├── runs/traces/             # one JSONL record per /ask request, not committed
 ├── .github/workflows/
 ├── promptfooconfig.yaml
 ├── pytest.ini
@@ -232,6 +235,8 @@ python -m evals.chunk_report    # chunk config, length histogram, gold-span cove
 python -m app.index build       # embed, index and verify; a no-op if nothing changed
 python -m app.index prune       # delete every collection except the active one
 python -m evals.mutation_check  # break the code on purpose and check the tests notice
+uvicorn app.api:create_default_app --factory --port 8000   # the API, same as make run
+pytest -m real                  # end-to-end test with the real models, needs Ollama
 
 # Stage 2
 make eval                       # full dev run, writes reports/runs/<run_id>.json and reports/latest.json
@@ -262,7 +267,9 @@ The `Makefile` loads `.env` itself, so you do not need to export the variables i
 | Variable | Example | Purpose |
 | --- | --- | --- |
 | `LLM_PROVIDER` | `ollama` or `anthropic` | Which provider serves the chatbot |
-| `LLM_MODEL` | `qwen3:4b-instruct` | Model for answers |
+| `LLM_MODEL` | `qwen3:4b-instruct` | Model for answers. Needs an exact tag; `latest` is refused |
+| `LLM_DIGEST` | sha256 from `/api/tags` | The app will not answer if the installed model has another digest |
+| `LLM_SEED`, `LLM_NUM_CTX`, `LLM_NUM_PREDICT` | `42`, `4096`, `512` | Fixed seed, context size and answer budget in tokens |
 | `JUDGE_PROVIDER` | `ollama` or `anthropic` | Which provider serves the LLM judge |
 | `JUDGE_MODEL` | `phi4-mini:3.8b` | Model for LLM-as-judge; must differ from `LLM_MODEL` |
 | `ANTHROPIC_API_KEY` | — | Only for paid runs |
@@ -286,7 +293,10 @@ The default local models are chosen to run on a laptop GPU with 4 GB of memory:
 
 - Use `qwen3:4b-instruct`, not plain `qwen3:4b`. The plain tag is the "thinking" variant: it always writes its reasoning before the answer, even with thinking turned off. In a test with two short questions, `qwen3:4b-instruct` answered in about 1 second; plain `qwen3:4b` wrote about 550 words of reasoning first, which took roughly 30 seconds. The reasoning text also breaks answer scoring.
 - `nomic-embed-text` expects the prefix `search_query: ` on questions and `search_document: ` on chunks. `app/embedder.py` adds them in one place.
-- By default Ollama silently cuts input at 2048 tokens. The embedder sets `truncate: false`, so a long input is an error instead.
+- By default the embedding call silently cuts input at 2048 tokens. The embedder sets `truncate: false`, so a long input is an error instead.
+- On Ollama 0.40.12 a chat prompt over `LLM_NUM_CTX` is refused with a 400, and `/ask` answers 503. As a second defence, a token count below the prompt's word count or at `LLM_NUM_CTX` raises the `prompt_truncated` flag. Ollama has no tokenizer endpoint, so the count cannot be compared exactly.
+- At temperature 0 a new seed gives the same output, so the one retry after unparseable output uses a small temperature and raises the `retried` flag.
+- With both models loaded, `ollama ps` shows `qwen3:4b-instruct` at 3.5 GB, 34% CPU and 66% GPU, and answers take about 2 to 5 seconds.
 - Ollama returns unit-length vectors, so L2 and cosine rank chunks identically. A wrong metric cannot be seen in the ranking, so the build also checks the collection's metric setting and compares the distances.
 - Only one model fits on a 4 GB GPU at a time, so the eval harness generates all answers first and judges them afterwards. With the default 4096-token context, `qwen3:4b-instruct` runs about 66% on the GPU and 34% on the CPU (`ollama ps`), around 24 tokens per second.
 - If the judge fails [calibration](#llm-as-judge-calibration), switch it to a stronger hosted model (`JUDGE_PROVIDER=anthropic`) rather than a bigger local one.
@@ -363,7 +373,8 @@ A count of passing tests says little if the tests cannot fail, so the chunker wa
 
 - First round: 15 deliberate breaks, 13 caught. The 2 that survived showed a real gap: nothing tested text that markdown-it drops, such as link reference definitions. Tests were added for it.
 - Second round, after the heading merge and config changes: 26 breaks, 26 caught.
-- Third round, with the embedder and index: 72 breaks, 72 caught. `python -m evals.mutation_check` runs them all.
+- Third round, with the embedder and index: 72 breaks, 72 caught.
+- Fourth round, with retrieval, generation and `POST /ask`: 134 breaks, 134 caught. `python -m evals.mutation_check` runs them all.
 
 Results are only trusted if they make sense, and two did not:
 
@@ -445,11 +456,11 @@ About 8 weeks at 25–35 hours a week, in stages 0 to 8. Every stage ends with s
 **Goal:** a simple chatbot that answers with sources. Its weak spots will be found by evals later.
 
 - [x] Chunking, embeddings and a verified Chroma index
-- [ ] Top-k retrieval and generation
-- [ ] `POST /ask` returning answer, sources and timing
+- [x] Top-k retrieval and generation
+- [x] `POST /ask` returning answer, sources and timing
 - [x] Unit tests for the chunker: property tests for its invariants and edge-case fixtures
-- [ ] API contract tests: status codes, schema, empty and very long input
-- [ ] One end-to-end integration test
+- [x] API contract tests: status codes, schema, empty and very long input
+- [x] One end-to-end integration test, with fakes for CI and with the real models locally
 - [ ] Minimal GitHub Actions workflow: lint and tests on every PR
 
 **Exit criteria:** `make run` and `make test` work from a clean clone; tests run in CI; 10 manual sanity questions recorded in `LEARNING_LOG.md`.
