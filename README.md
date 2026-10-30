@@ -225,6 +225,7 @@ pytest                          # data checks on the knowledge base
 make ingest                     # chunk and index data/kb into Chroma
 make run                        # API on http://localhost:8000
 make test                       # unit, data and API tests
+python -m evals.chunk_report    # chunk config, length histogram, gold-span coverage
 
 # Stage 2
 make eval                       # full dev run, writes reports/runs/<run_id>.json and reports/latest.json
@@ -260,7 +261,7 @@ The `Makefile` loads `.env` itself, so you do not need to export the variables i
 | `JUDGE_MODEL` | `phi4-mini:3.8b` | Model for LLM-as-judge; must differ from `LLM_MODEL` |
 | `ANTHROPIC_API_KEY` | — | Only for paid runs |
 | `EMBEDDING_MODEL` | `nomic-embed-text` | Embeddings for Chroma (an English model is enough) |
-| `CHUNK_SIZE`, `CHUNK_MAX`, `CHUNK_MIN`, `TOP_K` | `500`, `800`, `100`, `5` | Retrieval settings under test: soft target, hard limit and minimum chunk length in characters, and results per query. Chunks have no overlap; the heading path carries the context |
+| `CHUNK_SIZE`, `CHUNK_MAX`, `CHUNK_MIN`, `TOP_K` | `500`, `800`, `100`, `5` | Retrieval settings under test: soft target, hard limit and minimum chunk length in characters, and results per query. Chunks have no overlap; the heading path carries the context. `ChunkConfig.from_env()` reads the chunk values from `.env`, and a process variable wins over the file |
 | `PROMPT_VERSION` | `v1` | Recorded in every eval run |
 | `TEMPERATURE` | `0` | Fixed for eval runs |
 | `DB_PATH` | `data/app.db` | SQLite database for the MCP tools |
@@ -345,6 +346,16 @@ Every full dev run writes `reports/runs/<run_id>.json`, copies it to `reports/la
 - timestamp, all metrics, total cost, p95 latency
 
 In nightly and end-of-stage runs, LLM-judged metrics are run three times and reported as mean and spread, so a difference smaller than the noise is not treated as an improvement. The PR smoke run is a single pass to keep cost low.
+
+### Can the tests fail?
+
+A count of passing tests says little if the tests cannot fail, so the chunker was broken on purpose, one change at a time, and the unit tests were run after each break.
+
+- First round: 15 deliberate breaks, 13 caught. The 2 that survived showed a real gap: nothing tested text that markdown-it drops, such as link reference definitions. Tests were added for it.
+- Second round, after the heading merge and config changes: 26 breaks, 26 caught.
+- A trap worth knowing: Hypothesis saves failing examples and replays them. One saved example made every later break look "caught". Each break now starts with the saved examples deleted, and only after the unbroken code passes.
+
+These breaks were written by hand. [mutmut](https://github.com/boxed/mutmut) can do the same thing systematically later.
 
 ### CI gates
 
@@ -527,7 +538,7 @@ Filled in as defects are found. Each finding has a test that guards it.
 
 | ID | What happened | Root cause | Fix | Guarding test |
 | --- | --- | --- | --- | --- |
-| — | — | — | — | — |
+| F1 | An empty heading at the end of a file stayed alone as a chunk when it was at least `CHUNK_MIN` long | The packer split it from the previous section, and the small-chunk merge only looked at length | Bare headings now always merge back if the result stays within `CHUNK_MAX` | `test_long_empty_heading_at_the_end_of_a_file_also_moves_back` |
 
 ---
 
