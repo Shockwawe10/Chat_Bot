@@ -51,3 +51,41 @@ None today.
 - Dead config is a trap: a setting nothing reads looks like a change that took effect.
 
 Still unclear: gold-span coverage is not measured until `evals/gold_spans.jsonl` exists in Stage 2, and the chunker may change once it does. A chunker code change also needs a manual bump of `chunker_version`, or an old index still counts as up to date.
+
+## 2026-10-30: Stage 1, retrieval, generation, API and CI
+
+*Drafted by Claude Code at my request, not written in my own words yet. The verdicts in the sanity table are also its draft and still need my review.*
+
+**What changed:**
+Added retrieval (`app/retriever.py`), generation (`app/generator.py`), the prompt (`prompts/answer_v1.txt`) and `POST /ask` (`app/api.py`). Every request is traced to `runs/traces/`. Added a Makefile, `ruff` and a GitHub Actions workflow. API tests are in `tests/api/`, and real-model tests are in `tests/integration/` and run with `pytest -m real`.
+**How it works, in my own words:**
+The question is embedded and the 5 closest chunks are found in Chroma. The app refuses an index built with another model. The chunks go into a numbered prompt, and the model must reply in JSON with an answer, the passage numbers it used, and whether it abstained. The server checks those numbers and turns them into chunk ids, so the model cannot invent a source. If it abstains, the answer is a fixed sentence. The response also shows every retrieved chunk, any flags, timings and the versions used.
+**How I checked it:**
+432 tests pass without Ollama, and 4 real-model tests pass, including the same question twice giving the same output. The mutation check caught 134 of 134 breaks before the final lint fixes. A clean clone passed lint and tests, and CI passed on GitHub. The real server answered over HTTP and returned 422 for a blank question.
+
+10 manual sanity questions, on the real models:
+
+| # | Question | Answer | Verdict |
+| --- | --- | --- | --- |
+| 1 | Which corrosivity category is RoofFlat RF-2 rated for? | C4 | Correct |
+| 2 | What is the maximum snow load for GroundFrame GF-1? | 2.4 kN/m² | Correct |
+| 3 | How long is a commercial offer valid? | 30 days from its date | Correct |
+| 4 | What extra information do you need for a roof project quote? | Roof type and covering, slope, age of the building and waterproofing, drawings or a structural report | Correct |
+| 5 | Can I use GF-1 on a site 5 km from the sea? | "Yes", and it contradicts itself | **Wrong.** The knowledge base says GF-1 is not used within 10 km of the sea, and GF-2 is used there. No flag was raised |
+| 6 | How long is the installation warranty, and when does it start? | 5 years, from the handover certificate | Correct |
+| 7 | What is your price per kWp? | No standard price, and lists what the price depends on | Correct, no invented number. It did not abstain |
+| 8 | Can you install a solar system on my private house? | No, the smallest project is 100 kWp | Correct |
+| 9 | Why do all your mounting systems use corrosivity category C5? | Abstained | Safe, not ideal. It did not accept the false premise, but it did not correct it either |
+| 10 | Wie lange gilt die Produktgarantie? | Abstained | Safe, not ideal. The README wants a reply that only English is supported |
+
+Result: 7 correct, 2 safe but not ideal, 1 wrong.
+**Manual change of the day:**
+None today.
+**What I learned / what is still unclear:**
+- A wrong answer can pass every test. Question 5 had the right documents and no flags, and only reading the answer showed the mistake. That is why Stage 2 needs a golden dataset.
+- The model gets exact facts right but is weaker at reasoning about them, like "5 km is within 10 km".
+- Check how the tools really behave before relying on them. On this Ollama version an over-long chat prompt is refused with a 400, not silently cut, and there is no tokenizer endpoint.
+- At temperature 0 a new seed gave the same output, so a retry needs a small temperature to be able to differ.
+- The model can mark a correct answer as abstained unless the prompt defines that field clearly.
+
+Still unclear: should question 7 count as a correct answer or as a required refusal? The README lists price questions as "must refuse", but the knowledge base does say there is no price list. Decide this for the golden dataset. Questions 5, 9 and 10 should become golden cases in Stage 2. For the GF-2 category question, a GF-1 chunk ranked first, so retrieval needs checking too.
