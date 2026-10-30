@@ -63,7 +63,7 @@ The question is embedded and the 5 closest chunks are found in Chroma. The app r
 **How I checked it:**
 432 tests pass without Ollama, and 4 real-model tests pass, including the same question twice giving the same output. The mutation check caught 134 of 134 breaks before the final lint fixes. A clean clone passed lint and tests, and CI passed on GitHub. The real server answered over HTTP and returned 422 for a blank question.
 
-10 manual sanity questions, on the real models:
+**Informal set (exploratory, not counted):** 10 manual questions on the real models, run before the frozen set below.
 
 | # | Question | Answer | Verdict |
 | --- | --- | --- | --- |
@@ -92,8 +92,7 @@ Still unclear: should question 7 count as a correct answer or as a required refu
 
 ## Stage 1 sanity questions (frozen before the first run)
 
-Drafted by Claude from data/kb; reviewed and frozen by me on 2026-10-30,
-before any pipeline output was seen.
+Drafted by Claude from data/kb and reviewed by me on 2026-10-30, before these questions were run. An earlier informal set of 10 had already been run on the same pipeline, so the drafting was not blind to how the pipeline behaves.
 
 | # | Type | Question | Expected answer | Gold source (doc › section) |
 |---|---|---|---|---|
@@ -113,23 +112,29 @@ before any pipeline output was seen.
 Verdicts: correct / partly correct / wrong / abstained wrongly / should have abstained.
 Failed stage: chunking / retrieval / generation / citation.
 
-*Run on 2026-10-30 at commit `a3c0e9c`, with no changes to the pipeline or prompt. The verdicts and failed stages are Claude Code's draft and need my review. Chunk ids are shortened to `doc:index`; the full ids and raw model outputs are in `runs/traces/`.*
+Rules for every table below:
+- Any false claim makes the answer wrong, even if the rest is right. Partly correct means true but incomplete.
+- The primary failed stage is the earliest one that failed. Later failures are listed as secondary.
+
+*Run 1, on 2026-10-30 at commit `a3c0e9c`, with no changes to the pipeline or prompt. Claude Code drafted the verdicts and failed stages, and they were revised after review on the same day. Chunk ids are shortened to `doc:index`; the full ids and raw model outputs are in `runs/traces/`.*
 
 | # | Retrieved chunk ids (rank order) | Cited | Answer (short) | Verdict | Failed stage | Notes |
 |---|---|---|---|---|---|---|
 | 1 | products-ground-mount-gf2:1, products-ground-mount-gf2:0, products-ground-mount-gf2:2, products-ground-mount-gf1:1, products-ground-mount-gf1:2 | products-ground-mount-gf2:1 | At least 0.6 m. | correct | — | Gold chunk at rank 1. |
 | 2 | pricing-commercial-offer:2, process-cooperation-stages:2, services-supply:2, process-quote-requirements:4, pricing-commercial-offer:1 | pricing-commercial-offer:2 | 30 days from its date. | partly correct | generation | Gold chunk at rank 1. The main fact is right; it left out the recalculation. |
-| 3 | corrosion-coatings:2, products-overview:2, products-flat-roof-rf2:2, products-flat-roof-rf2:0, products-flat-roof-rf2:1 | corrosion-coatings:2, products-flat-roof-rf2:1 | A4, because it resists chlorides and suits systems rated "up to C4". | partly correct | generation | Both gold chunks retrieved and cited. The source says C4 and above, so "up to C4" gets the rule backwards. |
-| 4 | products-ground-mount-gf1:1, products-ground-mount-gf1:3, products-ground-mount-gf2:2, products-ground-mount-gf1:2, products-ground-mount-gf1:0 | products-ground-mount-gf1:1 | No, the maximum for GF-1 is 2.4 kN/m². | partly correct | retrieval | The "When a site exceeds the maximum" chunk was not retrieved, so the reinforced option was never in the context. The GF-2 limit of 3.5 kN/m² was retrieved but not used. |
-| 5 | company-contacts:0, company-contacts:1, company-contacts:2, warranty:3, process-quote-requirements:1 | none | Fixed abstain sentence. | abstained wrongly | generation | Gold chunk at rank 1. The raw output said "The company does not publish a phone number." but set `abstained: true`, so the fixed sentence replaced it. No flag was raised. |
-| 6 | process-quote-requirements:1, company-overview:3, company-overview:1, products-flat-roof-rf2:2, services-installation:2 | process-quote-requirements:1, company-overview:1, products-flat-roof-rf2:2 | "Yes", with RF-2 as the reason. | wrong | retrieval | The 100 kWp rule was not in the 5 chunks, though three other chunks of the right documents were. Generation failed too: with no rule in the context it invented a reason, cited chunks that do not support it, and did not abstain. No flag was raised. |
+| 3 | corrosion-coatings:2, products-overview:2, products-flat-roof-rf2:2, products-flat-roof-rf2:0, products-flat-roof-rf2:1 | corrosion-coatings:2, products-flat-roof-rf2:1 | A4, because it resists chlorides and suits systems rated "up to C4". | wrong | generation | Both gold chunks retrieved and cited. The source says C4 and above, so "up to C4" turns the rule upside down and a customer would conclude the opposite. |
+| 4 | products-ground-mount-gf1:1, products-ground-mount-gf1:3, products-ground-mount-gf2:2, products-ground-mount-gf1:2, products-ground-mount-gf1:0 | products-ground-mount-gf1:1 | No, the maximum for GF-1 is 2.4 kN/m². | partly correct | retrieval; secondary: generation | The "When a site exceeds the maximum" chunk was not retrieved, so the reinforced option was never in the context. The GF-2 limit of 3.5 kN/m² was retrieved but not used. |
+| 5 | company-contacts:0, company-contacts:1, company-contacts:2, warranty:3, process-quote-requirements:1 | none | Fixed abstain sentence. | abstained wrongly | generation; secondary: fixed-sentence rule (spec bug) | Gold chunk at rank 1. The raw output said "The company does not publish a phone number." but set `abstained: true`, so the fixed sentence replaced it. No flag was raised. |
+| 6 | process-quote-requirements:1, company-overview:3, company-overview:1, products-flat-roof-rf2:2, services-installation:2 | process-quote-requirements:1, company-overview:1, products-flat-roof-rf2:2 | "Yes", with RF-2 as the reason. | wrong (answer without support) | retrieval; secondary: generation | The 100 kWp rule was not in the 5 chunks, though two other chunks of the gold document were. Given what it saw, the right response was to abstain. The context said the company does flat roofs, and the model read "no stated limit" as "allowed". The cited chunks support the flat-roof facts but not the "Yes". No flag was raised. Stage 2 test case for hybrid search and reranking: the question and the gold sentence ("smallest project it accepts") share almost no words. |
 | 7 | company-overview:0, company-overview:3, company-overview:1, company-overview:2, services-overview:0 | none | Fixed abstain sentence. | correct | — | |
-| 8 | products-ground-mount-gf1:2, products-ground-mount-gf1:1, products-ground-mount-gf1:0, products-ground-mount-gf2:3, products-overview:2 | none | Fixed abstain sentence. | correct | — | The torque distractors were not retrieved, so this was an easier test than it was designed to be. |
-| 9 | products-ground-mount-gf2:3, products-ground-mount-gf1:2, products-overview:2, corrosion-coatings:0, products-ground-mount-gf2:1 | none | Fixed abstain sentence. | abstained wrongly | generation | Gold chunk at rank 1. The raw output had a correct explanation with citations, but set `abstained: true`. The `abstained_with_citations` flag caught it. |
+| 8 | products-ground-mount-gf1:2, products-ground-mount-gf1:1, products-ground-mount-gf1:0, products-ground-mount-gf2:3, products-overview:2 | none | Fixed abstain sentence. | correct | — | The near-miss distractors were never retrieved, so the test did not exercise what it was designed for. For Stage 2: confirm the distractors are actually retrieved before counting a question as a near-miss abstention test. |
+| 9 | products-ground-mount-gf2:3, products-ground-mount-gf1:2, products-overview:2, corrosion-coatings:0, products-ground-mount-gf2:1 | none | Fixed abstain sentence. | abstained wrongly | generation; secondary: fixed-sentence rule (spec bug) | Gold chunk at rank 1. The raw output had a correct explanation with citations, but set `abstained: true`. The `abstained_with_citations` flag caught it. |
 | 10 | loads-wind-and-snow:1, loads-wind-and-snow:2, services-design:3, products-flat-roof-rf2:1, products-flat-roof-rf1:1 | loads-wind-and-snow:1 | 36 m/s for GF-2, "as stated in passage [1]". | partly correct | generation | The table with all products was at rank 1. It picked the highest value, did not ask which product or list them, and showed the prompt's word "passage" to the customer. |
 
-Summary: 3 correct, 4 partly correct, 1 wrong, 2 abstained wrongly, 0 should have abstained.
+Summary: 3 correct, 3 partly correct, 2 wrong, 2 abstained wrongly. One of the wrong answers (6) is an answer without support, which is the "should have abstained" case.
 
-Failed stage: 5 generation, 2 retrieval, 0 chunking, 0 citation. Of the 8 answerable questions, all the gold chunks were retrieved for 6; question 4 missed one of its two and question 6 missed its only one.
+Primary failed stage: 5 generation, 2 retrieval, 0 chunking, 0 citation. Secondary: generation on 4 and 6, and the fixed-sentence rule on 5 and 9. Of the 8 answerable questions, all the gold chunks were retrieved for 6; question 4 missed one of its two and question 6 missed its only one.
 
-Pattern to look at in Stage 2: the `abstained` field is unreliable. The two questions it broke (5 and 9) had the right answer in the raw output, and the fixed sentence hid it. The one wrong answer (6) needed `abstained: true` and did not get it.
+Completeness and faithfulness are separate measures, and Stage 2 needs to score them separately. Questions 2, 4 and 10 are faithful but incomplete, and question 3 is the opposite problem: it looks complete and contains a false claim.
+
+Spec bug: the fixed-sentence rule came from the Stage 1 spec, not from the model. A separate `abstained` boolean let the model produce an answer and abstain at the same time, and the server then threw the answer away. That is what turned questions 5 and 9 into refusals. Question 6 is the other side of it: it needed to abstain and did not. The contract is fixed in run 2.
