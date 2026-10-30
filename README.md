@@ -168,6 +168,8 @@ Chat_Bot/
 │   ├── agent_cases.jsonl    # tool-use cases (Stage 6)
 │   ├── run_evals.py         # evaluation harness
 │   ├── render_results.py    # writes the Results table into README.md
+│   ├── chunk_report.py      # gold-span coverage and chunk-length histogram
+│   ├── gold_spans.jsonl     # answer spans for the chunker check
 │   └── history.csv          # one row per run
 ├── tests/
 │   ├── unit/
@@ -187,6 +189,7 @@ Chat_Bot/
 │   └── drift.md
 ├── .github/workflows/
 ├── promptfooconfig.yaml
+├── pytest.ini
 ├── requirements.txt
 ├── Dockerfile
 ├── Makefile
@@ -257,7 +260,7 @@ The `Makefile` loads `.env` itself, so you do not need to export the variables i
 | `JUDGE_MODEL` | `phi4-mini:3.8b` | Model for LLM-as-judge; must differ from `LLM_MODEL` |
 | `ANTHROPIC_API_KEY` | — | Only for paid runs |
 | `EMBEDDING_MODEL` | `nomic-embed-text` | Embeddings for Chroma (an English model is enough) |
-| `CHUNK_SIZE`, `CHUNK_OVERLAP`, `TOP_K` | `500`, `50`, `5` | Retrieval settings under test |
+| `CHUNK_SIZE`, `CHUNK_MAX`, `CHUNK_MIN`, `TOP_K` | `500`, `800`, `100`, `5` | Retrieval settings under test: soft target, hard limit and minimum chunk length in characters, and results per query. Chunks have no overlap; the heading path carries the context |
 | `PROMPT_VERSION` | `v1` | Recorded in every eval run |
 | `TEMPERATURE` | `0` | Fixed for eval runs |
 | `DB_PATH` | `data/app.db` | SQLite database for the MCP tools |
@@ -338,7 +341,7 @@ Every full dev run writes `reports/runs/<run_id>.json`, copies it to `reports/la
 
 - git commit SHA, dataset version, prompt version
 - provider, model, judge provider, judge model, embedding model, temperature
-- chunk size, overlap, top-k
+- chunker version, chunk size, max and min, top-k
 - timestamp, all metrics, total cost, p95 latency
 
 In nightly and end-of-stage runs, LLM-judged metrics are run three times and reported as mean and spread, so a difference smaller than the noise is not treated as an improvement. The PR smoke run is a single pass to keep cost low.
@@ -417,7 +420,7 @@ About 8 weeks at 25–35 hours a week, in stages 0 to 8. Every stage ends with s
 
 - [ ] Chunking, embeddings, Chroma, top-k retrieval, generation
 - [ ] `POST /ask` returning answer, sources and timing
-- [ ] Unit tests for the chunker (size, overlap, empty file)
+- [x] Unit tests for the chunker: property tests for its invariants and edge-case fixtures
 - [ ] API contract tests: status codes, schema, empty and very long input
 - [ ] One end-to-end integration test
 - [ ] Minimal GitHub Actions workflow: lint and tests on every PR
