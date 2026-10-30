@@ -89,3 +89,47 @@ None today.
 - The model can mark a correct answer as abstained unless the prompt defines that field clearly.
 
 Still unclear: should question 7 count as a correct answer or as a required refusal? The README lists price questions as "must refuse", but the knowledge base does say there is no price list. Decide this for the golden dataset. Questions 5, 9 and 10 should become golden cases in Stage 2. For the GF-2 category question, a GF-1 chunk ranked first, so retrieval needs checking too.
+
+## Stage 1 sanity questions (frozen before the first run)
+
+Drafted by Claude from data/kb; reviewed and frozen by me on 2026-10-30,
+before any pipeline output was seen.
+
+| # | Type | Question | Expected answer | Gold source (doc › section) |
+|---|---|---|---|---|
+| 1 | Table lookup | What is the minimum ground clearance of GroundFrame GF-2? | At least 0.6 m. | products-ground-mount-gf2 › Specifications |
+| 2 | Simple fact | How long is a commercial offer valid? | 30 days from its date; after that it is recalculated because steel and aluminium prices change. | pricing-commercial-offer › Commercial offer |
+| 3 | Two chunks | Which fasteners does RF-2 use, and why those? | Stainless steel A4. RF-2 is rated C4, and A4 is used from C4 up because it resists chlorides from salt better. | products-flat-roof-rf2 › Specifications + corrosion-coatings › Stainless steel fasteners |
+| 4 | Two chunks, numeric | Our ground-mount site has a snow load of 3.0 kN/m². Can GF-1 handle it? | No as standard: GF-1's maximum is 2.4 kN/m². The team either designs a reinforced version or proposes another product (GF-2 goes to 3.5 kN/m²), decided in the preliminary design. | products-ground-mount-gf1 › Specifications (or loads table) + loads-wind-and-snow › When a site exceeds the maximum |
+| 5 | Stated absence | What is your phone number? | The company doesn't publish one. Email sales@example.com (new projects) or support@example.com (existing projects); a project manager calls back if a call is useful. | company-contacts › Email |
+| 6 | Applying a rule | Can you build a 50 kWp system on our office roof? | No. The smallest project the company accepts is 100 kWp. | company-overview › What the company does not do |
+| 7 | Unanswerable (far) | Who founded Example Solar, and in what year? | Abstain. Not in the knowledge base. | none |
+| 8 | Unanswerable (near miss) | What torque should GF-1 bolts be tightened to? | Abstain. Torque checks are mentioned, but no value is given. | none (distractors: services-installation › Handover, services-maintenance › What an inspection covers) |
+| 9 | Against intuition | GF-1's coating is 85 µm and GF-2's only 25 µm, so GF-1 resists corrosion better, right? | No. GF-2 is rated C5 and GF-1 C4; the zinc-magnesium coating protects better in salty air, and thickness alone doesn't show which resists corrosion better. | products-ground-mount-gf2 › Thin but stronger coating |
+| 10 | Ambiguous | What is the maximum wind speed? | Ask which product, or list per product (28 to 36 m/s). Bonus: two other wind limits exist (installation stops above 12 m/s; extra inspection after gusts above 25 m/s). | loads-wind-and-snow › Maximum values per product |
+
+### Results
+
+Verdicts: correct / partly correct / wrong / abstained wrongly / should have abstained.
+Failed stage: chunking / retrieval / generation / citation.
+
+*Run on 2026-10-30 at commit `a3c0e9c`, with no changes to the pipeline or prompt. The verdicts and failed stages are Claude Code's draft and need my review. Chunk ids are shortened to `doc:index`; the full ids and raw model outputs are in `runs/traces/`.*
+
+| # | Retrieved chunk ids (rank order) | Cited | Answer (short) | Verdict | Failed stage | Notes |
+|---|---|---|---|---|---|---|
+| 1 | products-ground-mount-gf2:1, products-ground-mount-gf2:0, products-ground-mount-gf2:2, products-ground-mount-gf1:1, products-ground-mount-gf1:2 | products-ground-mount-gf2:1 | At least 0.6 m. | correct | — | Gold chunk at rank 1. |
+| 2 | pricing-commercial-offer:2, process-cooperation-stages:2, services-supply:2, process-quote-requirements:4, pricing-commercial-offer:1 | pricing-commercial-offer:2 | 30 days from its date. | partly correct | generation | Gold chunk at rank 1. The main fact is right; it left out the recalculation. |
+| 3 | corrosion-coatings:2, products-overview:2, products-flat-roof-rf2:2, products-flat-roof-rf2:0, products-flat-roof-rf2:1 | corrosion-coatings:2, products-flat-roof-rf2:1 | A4, because it resists chlorides and suits systems rated "up to C4". | partly correct | generation | Both gold chunks retrieved and cited. The source says C4 and above, so "up to C4" gets the rule backwards. |
+| 4 | products-ground-mount-gf1:1, products-ground-mount-gf1:3, products-ground-mount-gf2:2, products-ground-mount-gf1:2, products-ground-mount-gf1:0 | products-ground-mount-gf1:1 | No, the maximum for GF-1 is 2.4 kN/m². | partly correct | retrieval | The "When a site exceeds the maximum" chunk was not retrieved, so the reinforced option was never in the context. The GF-2 limit of 3.5 kN/m² was retrieved but not used. |
+| 5 | company-contacts:0, company-contacts:1, company-contacts:2, warranty:3, process-quote-requirements:1 | none | Fixed abstain sentence. | abstained wrongly | generation | Gold chunk at rank 1. The raw output said "The company does not publish a phone number." but set `abstained: true`, so the fixed sentence replaced it. No flag was raised. |
+| 6 | process-quote-requirements:1, company-overview:3, company-overview:1, products-flat-roof-rf2:2, services-installation:2 | process-quote-requirements:1, company-overview:1, products-flat-roof-rf2:2 | "Yes", with RF-2 as the reason. | wrong | retrieval | The 100 kWp rule was not in the 5 chunks, though three other chunks of the right documents were. Generation failed too: with no rule in the context it invented a reason, cited chunks that do not support it, and did not abstain. No flag was raised. |
+| 7 | company-overview:0, company-overview:3, company-overview:1, company-overview:2, services-overview:0 | none | Fixed abstain sentence. | correct | — | |
+| 8 | products-ground-mount-gf1:2, products-ground-mount-gf1:1, products-ground-mount-gf1:0, products-ground-mount-gf2:3, products-overview:2 | none | Fixed abstain sentence. | correct | — | The torque distractors were not retrieved, so this was an easier test than it was designed to be. |
+| 9 | products-ground-mount-gf2:3, products-ground-mount-gf1:2, products-overview:2, corrosion-coatings:0, products-ground-mount-gf2:1 | none | Fixed abstain sentence. | abstained wrongly | generation | Gold chunk at rank 1. The raw output had a correct explanation with citations, but set `abstained: true`. The `abstained_with_citations` flag caught it. |
+| 10 | loads-wind-and-snow:1, loads-wind-and-snow:2, services-design:3, products-flat-roof-rf2:1, products-flat-roof-rf1:1 | loads-wind-and-snow:1 | 36 m/s for GF-2, "as stated in passage [1]". | partly correct | generation | The table with all products was at rank 1. It picked the highest value, did not ask which product or list them, and showed the prompt's word "passage" to the customer. |
+
+Summary: 3 correct, 4 partly correct, 1 wrong, 2 abstained wrongly, 0 should have abstained.
+
+Failed stage: 5 generation, 2 retrieval, 0 chunking, 0 citation. Of the 8 answerable questions, all the gold chunks were retrieved for 6; question 4 missed one of its two and question 6 missed its only one.
+
+Pattern to look at in Stage 2: the `abstained` field is unreliable. The two questions it broke (5 and 9) had the right answer in the raw output, and the fixed sentence hid it. The one wrong answer (6) needed `abstained: true` and did not get it.
