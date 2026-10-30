@@ -19,6 +19,9 @@ CHUNKER = ROOT / "app" / "chunker.py"
 EMBEDDER = ROOT / "app" / "embedder.py"
 INDEX = ROOT / "app" / "index.py"
 SETTINGS = ROOT / "app" / "settings.py"
+RETRIEVER = ROOT / "app" / "retriever.py"
+GENERATOR = ROOT / "app" / "generator.py"
+API = ROOT / "app" / "api.py"
 
 PACK = "if joined > cfg.max or (joined > cfg.target and can_stop):"
 MERGE = "if fits and (_size(group) < cfg.min or _only_headings(group)):"
@@ -28,6 +31,11 @@ EMBED_CALL = "vectors = embedder.embed_documents([item.index_text for item in co
 UP_TO_DATE = "if is_active and exists and client.get_collection(name).count() == len(corpus.chunks):"
 STORED = 'if entry["metadata"] != metadata_for(item, corpus) or entry["document"] != item.text:'
 VERIFY_STEP = "verify(collection, corpus, embedder)\n    except IndexCheckError:"
+RANGE = "if type(number) is not int or not 1 <= number <= passage_count:"
+TRUNCATED = "if count is None or count < len(prompt.split()) or count >= num_ctx:"
+ATTEMPTS = "attempts = [(cfg.temperature, cfg.seed), (RETRY_TEMPERATURE, cfg.seed + 1)]"
+NUMBER_TO_ID = "hits[number - 1].chunk_id for number in result.citations"
+OFF_BY_ONE = "hits[min(number, len(hits) - 1)].chunk_id for number in result.citations"
 
 # name: list of (file, text to find, replacement)
 BREAKS = {
@@ -113,8 +121,8 @@ BREAKS = {
         (EMBEDDER, "_with_prefix(QUERY_PREFIX, text)", "_with_prefix(DOCUMENT_PREFIX, text)")
     ],
     "truncation on": [(EMBEDDER, '"truncate": False', '"truncate": True')],
-    "digest not compared": [(EMBEDDER, "if installed[self.model] != self.digest:", "if False:")],
-    "model missing not noticed": [(EMBEDDER, "if self.model not in installed:", "if False:")],
+    "digest not compared": [(EMBEDDER, "if installed[model] != digest:", "if False:")],
+    "model missing not noticed": [(EMBEDDER, "if model not in installed:", "if False:")],
     "latest tag allowed": [(EMBEDDER, 'if not tag or tag == "latest":', "if not tag:")],
     "context length not checked": [
         (EMBEDDER, "if len(text) + SPECIAL_TOKENS > self._context_length:", "if False:")
@@ -198,6 +206,125 @@ BREAKS = {
     "prune removes collections it does not own": [
         (INDEX, 'if name.startswith(COLLECTION_PREFIX) and name != ', "if name != ")
     ],
+    # Retrieval
+    "wrong query prefix": [
+        (RETRIEVER, "return self.embedder.embed_query(question)", "return self.embedder.embed_documents([question])[0]")
+    ],
+    "guard disabled": [(RETRIEVER, "        check_guard(manifest, backend)\n", "")],
+    "guard ignores the model": [(RETRIEVER, '        "embedding_model": backend.model,\n', "")],
+    "guard ignores the digest": [(RETRIEVER, '        "embedding_digest": backend.digest,\n', "")],
+    "guard ignores the prefix": [(RETRIEVER, '        "document_prefix": DOCUMENT_PREFIX,\n', "")],
+    "installed model not checked": [(RETRIEVER, "            backend.check_pinned()\n", "            pass\n")],
+    "score is the distance": [(RETRIEVER, "score=1 - distance", "score=distance")],
+    "ranks start at zero": [(RETRIEVER, "start=1,", "start=0,")],
+    "k ignored": [
+        (RETRIEVER, "n_results=min(self.top_k, self.collection.count())", "n_results=self.collection.count()")
+    ],
+    # Generation
+    "no output schema": [(GENERATOR, '            "format": OUTPUT_SCHEMA,\n', "")],
+    "thinking on": [(GENERATOR, '"think": False', '"think": True')],
+    "num_ctx not sent": [(GENERATOR, '                "num_ctx": self.cfg.num_ctx,\n', "")],
+    "num_predict not sent": [(GENERATOR, '                "num_predict": self.cfg.num_predict,\n', "")],
+    "seed not sent": [(GENERATOR, '                "seed": seed,\n', "")],
+    "temperature not sent": [(GENERATOR, '                "temperature": temperature,\n', "")],
+    "no retry": [(GENERATOR, ATTEMPTS, "attempts = [(cfg.temperature, cfg.seed)]")],
+    "retry repeats the same call": [
+        (GENERATOR, ATTEMPTS, "attempts = [(cfg.temperature, cfg.seed), (cfg.temperature, cfg.seed)]")
+    ],
+    "retry not flagged": [(GENERATOR, "        if attempt:\n", "        if False:\n")],
+    "truncation not flagged": [
+        (GENERATOR, "flags = parsed.flags + prompt_flags(completion, prompt, cfg.num_ctx)", "flags = parsed.flags")
+    ],
+    "truncation ignores the prompt length": [
+        (GENERATOR, TRUNCATED, "if count is None or count >= num_ctx:")
+    ],
+    "truncation ignores num_ctx": [
+        (GENERATOR, TRUNCATED, "if count is None or count < len(prompt.split()):")
+    ],
+    "abstained keeps the model's answer": [
+        (GENERATOR, "return Answer(ABSTAIN_SENTENCE, True, [], flags)", "return Answer(answer, True, [], flags)")
+    ],
+    "abstained keeps citations": [
+        (GENERATOR, "return Answer(ABSTAIN_SENTENCE, True, [], flags)", "return Answer(ABSTAIN_SENTENCE, True, numbers, flags)")
+    ],
+    "abstained with citations not flagged": [(GENERATOR, "        if numbers:\n", "        if False:\n")],
+    "no upper citation limit": [
+        (GENERATOR, RANGE, "if type(number) is not int or not 1 <= number:")
+    ],
+    "citation zero allowed": [
+        (GENERATOR, RANGE, "if type(number) is not int or not 0 <= number <= passage_count:")
+    ],
+    "bad citation type allowed": [
+        (GENERATOR, RANGE, "if not isinstance(number, int) or not 1 <= number <= passage_count:")
+    ],
+    "duplicate citations kept": [(GENERATOR, "elif number in citations:", "elif False:")],
+    "missing citations not flagged": [(GENERATOR, "    if not citations:\n", "    if False:\n")],
+    "empty answer accepted": [(GENERATOR, "    if not answer.strip():\n", "    if False:\n")],
+    "field types not checked": [
+        (
+            GENERATOR,
+            "if not isinstance(answer, str) or not isinstance(numbers, list) or not isinstance(abstained, bool):",
+            "if False:",
+        )
+    ],
+    "passages not numbered": [
+        (GENERATOR, 'f"[{hit.rank}] {hit.heading_path}\\n{hit.text}"', 'f"{hit.heading_path}\\n{hit.text}"')
+    ],
+    "heading path left out of the prompt": [
+        (GENERATOR, 'f"[{hit.rank}] {hit.heading_path}\\n{hit.text}"', 'f"[{hit.rank}]\\n{hit.text}"')
+    ],
+    "latest LLM tag allowed": [
+        (GENERATOR, 'if ":" not in self.model or self.model.endswith(":latest"):', 'if ":" not in self.model:')
+    ],
+    "LLM digest not required": [(GENERATOR, "        if not self.digest:\n", "        if False:\n")],
+    "answer budget not checked": [(GENERATOR, "if self.num_predict >= self.num_ctx:", "if False:")],
+    "config ignores TEMPERATURE": [
+        (GENERATOR, 'temperature=float(env.get("TEMPERATURE") or defaults["temperature"])', 'temperature=defaults["temperature"]')
+    ],
+    "config ignores LLM_SEED": [
+        (GENERATOR, 'seed=int(env.get("LLM_SEED") or defaults["seed"])', 'seed=defaults["seed"]')
+    ],
+    "config ignores LLM_NUM_CTX": [
+        (GENERATOR, 'num_ctx=int(env.get("LLM_NUM_CTX") or defaults["num_ctx"])', 'num_ctx=defaults["num_ctx"]')
+    ],
+    "config ignores LLM_NUM_PREDICT": [
+        (GENERATOR, 'num_predict=int(env.get("LLM_NUM_PREDICT") or defaults["num_predict"])', 'num_predict=defaults["num_predict"]')
+    ],
+    # API
+    "citation off by one": [(API, "citations=[" + NUMBER_TO_ID + "]", "citations=[" + OFF_BY_ONE + "]")],
+    "cited mark off by one": [(API, "cited = {" + NUMBER_TO_ID + "}", "cited = {" + OFF_BY_ONE + "}")],
+    "retrieved shown as cited": [(API, "cited=hit.chunk_id in cited", "cited=True")],
+    "guard mismatch does not stop startup": [
+        (API, "        except GuardError:\n            raise  # refuse to start on an index built with another model\n", "")
+    ],
+    "LLM pin not checked": [(API, "            llm.check_pinned()\n", "")],
+    "no length limit": [(API, "max_length=MAX_QUESTION_CHARS", "max_length=100000")],
+    "empty question allowed": [(API, "min_length=1", "min_length=0")],
+    "spaces not stripped": [(API, "strip_whitespace=True", "strip_whitespace=False")],
+    "bad output is not a 502": [(API, "raise HTTPException(502,", "raise HTTPException(503,")],
+    "unavailable is not a 503": [(API, "raise HTTPException(503,", "raise HTTPException(500,")],
+    "Ollama connection errors not handled": [(API, "    httpx.HTTPError,\n", "")],
+    "LLM errors not handled": [(API, "    LlmUnavailable,\n", "")],
+    "answered request not traced": [
+        (API, "        traces.write(\n            {\n                **record,", "        print(\n            {\n                **record,")
+    ],
+    "invalid request not traced": [
+        (API, '        traces.write({"status": 422, "errors": json.loads(json.dumps(error.errors(), default=str))})\n', "")
+    ],
+    "unparseable output not traced": [
+        (API, '            traces.write({**record, "status": 502, "raw_outputs": error.raw_outputs})\n', "")
+    ],
+    "unavailable service not traced": [
+        (API, '            traces.write({**record, "status": 503, "error": str(error)})\n', "")
+    ],
+    "trace escapes non-ASCII text": [(API, "ensure_ascii=False", "ensure_ascii=True")],
+    "wrong index version reported": [(API, "index_fingerprint=retriever.fingerprint", 'index_fingerprint=""')],
+    "wrong prompt version reported": [(API, "prompt=prompt.version,", 'prompt="",')],
+    "wrong LLM digest reported": [(API, "llm_digest=llm.cfg.digest", 'llm_digest=""')],
+    "config ignores TOP_K": [(API, 'top_k = int(env.get("TOP_K") or DEFAULT_TOP_K)', "top_k = DEFAULT_TOP_K")],
+    "config ignores PROMPT_VERSION": [
+        (API, 'PromptTemplate.load(env.get("PROMPT_VERSION") or "v1")', 'PromptTemplate.load("v1")')
+    ],
 }
 
 
@@ -247,7 +374,8 @@ def main():
     parser.add_argument("--only", default="", help="run only breaks whose name contains this text")
     args = parser.parse_args()
     selected = {name: edits for name, edits in BREAKS.items() if args.only in name}
-    originals = {path: path.read_bytes() for path in (CHUNKER, EMBEDDER, INDEX, SETTINGS)}
+    files = (CHUNKER, EMBEDDER, INDEX, SETTINGS, RETRIEVER, GENERATOR, API)
+    originals = {path: path.read_bytes() for path in files}
     check_breaks_apply(selected, originals)
 
     baseline = run_tests()

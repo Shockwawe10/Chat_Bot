@@ -11,3 +11,7 @@ hypothesis==6.170.14
 chromadb==1.5.9
 httpx==0.28.1
 numpy==2.4.6
+
+# Stage 1: API
+fastapi==0.162.0
+uvicorn==0.54.0

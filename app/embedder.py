@@ -41,6 +41,16 @@ def check_vector(vector, dim):
         raise EmbeddingError("vector has zero norm")
 
 
+def check_pinned(client, model, digest):
+    """Fail if the installed model is not the exact one that is pinned."""
+    models = client.get("/api/tags").raise_for_status().json()["models"]
+    installed = {item["name"]: item["digest"] for item in models}
+    if model not in installed:
+        raise EmbeddingError(f"{model} is not installed in Ollama")
+    if installed[model] != digest:
+        raise EmbeddingError(f"{model} has digest {installed[model]}, pinned {digest}")
+
+
 class OllamaBackend:
     def __init__(self, model, digest, base_url=DEFAULT_URL, client=None):
         tag = model.rpartition(":")[2] if ":" in model else ""
@@ -62,13 +72,7 @@ class OllamaBackend:
         )
 
     def check_pinned(self):
-        """Fail if the installed model is not the exact one this index is pinned to."""
-        models = self.client.get("/api/tags").raise_for_status().json()["models"]
-        installed = {model["name"]: model["digest"] for model in models}
-        if self.model not in installed:
-            raise EmbeddingError(f"{self.model} is not installed in Ollama")
-        if installed[self.model] != self.digest:
-            raise EmbeddingError(f"{self.model} has digest {installed[self.model]}, pinned {self.digest}")
+        check_pinned(self.client, self.model, self.digest)
 
     def context_length(self):
         response = self.client.post("/api/show", json={"model": self.model}).raise_for_status()
