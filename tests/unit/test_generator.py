@@ -6,6 +6,7 @@ from pathlib import Path
 import httpx
 import pytest
 from dotenv import dotenv_values
+from fake_backend import VALID_OUTPUT, FakeLlm
 
 from app.api import MAX_QUESTION_CHARS
 from app.chunker import ChunkConfig
@@ -27,7 +28,6 @@ from app.generator import (
 from app.index import KB_DIR, read_corpus
 from app.retriever import Hit
 from app.settings import ROOT
-from fake_backend import VALID_OUTPUT, FakeLlm
 
 SNAPSHOT = Path(__file__).parent / "snapshots" / "answer_v1_prompt.txt"
 MODEL = "qwen3:4b-instruct"

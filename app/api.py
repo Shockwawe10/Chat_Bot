@@ -10,18 +10,24 @@ import threading
 import time
 from contextlib import asynccontextmanager
 from dataclasses import asdict
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Annotated
 
 import httpx
 from chromadb.errors import ChromaError
-from fastapi import FastAPI, HTTPException, Request
+from fastapi import FastAPI, HTTPException
 from fastapi.exception_handlers import request_validation_exception_handler
 from fastapi.exceptions import RequestValidationError
 from pydantic import BaseModel, StringConstraints
 
 from app.embedder import EmbeddingError, OllamaBackend
-from app.generator import GenerationError, LlmUnavailable, OllamaLlm, PromptTemplate, generate
+from app.generator import (
+    GenerationError,
+    LlmUnavailable,
+    OllamaLlm,
+    PromptTemplate,
+    generate,
+)
 from app.index import INDEX_DIR
 from app.retriever import GuardError, IndexUnavailable, Retriever
 from app.settings import ROOT, read_env
@@ -89,7 +95,7 @@ class TraceLog:
         self.lock = threading.Lock()
 
     def write(self, record):
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         line = json.dumps({"time": now.isoformat(), **record}, ensure_ascii=False)
         self.directory.mkdir(parents=True, exist_ok=True)
         with self.lock, open(self.directory / f"{now.date()}.jsonl", "a", encoding="utf-8") as file:

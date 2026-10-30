@@ -231,6 +231,7 @@ pytest                          # data checks on the knowledge base
 make ingest                     # chunk and index data/kb into Chroma
 make run                        # API on http://localhost:8000
 make test                       # unit, data and API tests
+make lint                       # ruff
 python -m evals.chunk_report    # chunk config, length histogram, gold-span coverage
 python -m app.index build       # embed, index and verify; a no-op if nothing changed
 python -m app.index prune       # delete every collection except the active one
@@ -254,7 +255,7 @@ make ui                         # Streamlit
 make e2e                        # Playwright
 ```
 
-The `Makefile` loads `.env` itself, so you do not need to export the variables in your shell.
+The app reads `.env` itself, so you do not need to export the variables in your shell.
 
 **Windows.** Python, Ollama and `pytest` work natively. If `python --version` shows a version older than 3.11, create the venv with `py -3.11 -m venv .venv`. For `make` targets, use WSL or Git Bash with GNU Make installed. CI runs on Linux.
 

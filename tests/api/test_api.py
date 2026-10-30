@@ -4,6 +4,7 @@ import json
 
 import httpx
 import pytest
+from fake_backend import VALID_OUTPUT, FakeLlm, TopicalBackend
 from fastapi.testclient import TestClient
 
 from app import api
@@ -12,7 +13,6 @@ from app.chunker import ChunkConfig
 from app.generator import ABSTAIN_SENTENCE, LlmUnavailable, PromptTemplate
 from app.index import KB_DIR, build, read_manifest
 from app.retriever import GuardError, IndexUnavailable, Retriever
-from fake_backend import VALID_OUTPUT, FakeLlm, TopicalBackend
 
 PROMPT = PromptTemplate.load("v1")
 QUESTION = "How long is the product warranty?"
@@ -194,9 +194,8 @@ def test_output_that_parses_on_the_retry_is_a_200(make_client):
 def test_guard_mismatch_refuses_to_start(index_dir, tmp_path):
     backend = TopicalBackend(model="other:1")
     app = create_app(lambda: Retriever(index_dir, backend, 5), FakeLlm(), PROMPT, tmp_path)
-    with pytest.raises(GuardError):
-        with TestClient(app):
-            pass
+    with pytest.raises(GuardError), TestClient(app):
+        pass
 
 
 def test_missing_index_starts_with_a_503_and_recovers_when_the_index_appears(index_dir, tmp_path):
@@ -289,6 +288,11 @@ def test_default_app_reads_top_k_and_prompt_version(monkeypatch, tmp_path):
     monkeypatch.setattr(PromptTemplate, "load", staticmethod(fake_prompt))
     monkeypatch.setenv("TOP_K", "3")
     monkeypatch.setenv("PROMPT_VERSION", "v9")
+    # CI has no .env file, so the pinned models have to come from here.
+    monkeypatch.setenv("EMBEDDING_MODEL", "fake:1")
+    monkeypatch.setenv("EMBEDDING_DIGEST", "fake-digest")
+    monkeypatch.setenv("LLM_MODEL", "fake-llm:1")
+    monkeypatch.setenv("LLM_DIGEST", "fake-llm-digest")
     with TestClient(create_default_app()):
         pass
     assert seen == {"top_k": 3, "prompt": "v9"}

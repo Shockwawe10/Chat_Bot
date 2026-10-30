@@ -16,7 +16,7 @@ import logging
 import os
 import sys
 from dataclasses import asdict, dataclass
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 import chromadb
 import numpy as np
@@ -24,7 +24,13 @@ from chromadb.api.shared_system_client import SharedSystemClient
 from chromadb.config import Settings
 
 from app.chunker import CHUNKER_VERSION, ChunkConfig, chunk, parse_document
-from app.embedder import DOCUMENT_PREFIX, Embedder, EmbeddingError, OllamaBackend, check_vector
+from app.embedder import (
+    DOCUMENT_PREFIX,
+    Embedder,
+    EmbeddingError,
+    OllamaBackend,
+    check_vector,
+)
 from app.settings import ROOT
 
 KB_DIR = ROOT / "data" / "kb"
@@ -264,7 +270,7 @@ def build(kb_dir, index_dir, cfg, backend):
             "fingerprint": full_fingerprint,
             "inputs": inputs,
             "chunk_count": len(corpus.chunks),
-            "build_time": datetime.now(timezone.utc).isoformat(),
+            "build_time": datetime.now(UTC).isoformat(),
         },
     )
     return BuildResult("reactivated" if exists else "built", name, len(corpus.chunks))

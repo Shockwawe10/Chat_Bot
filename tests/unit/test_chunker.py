@@ -3,12 +3,18 @@
 import logging
 
 import pytest
+from dotenv import dotenv_values
 from hypothesis import given, settings
 from hypothesis import strategies as st
 
-from dotenv import dotenv_values
-
-from app.chunker import CHUNKER_VERSION, MARKDOWN, NEWLINE, ChunkConfig, chunk, parse_document
+from app.chunker import (
+    CHUNKER_VERSION,
+    MARKDOWN,
+    NEWLINE,
+    ChunkConfig,
+    chunk,
+    parse_document,
+)
 from evals.chunk_report import KB_DIR, ROOT, load_corpus
 
 CFG = ChunkConfig()

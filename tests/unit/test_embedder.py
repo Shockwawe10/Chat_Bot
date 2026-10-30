@@ -5,6 +5,7 @@ import json
 import httpx
 import pytest
 from dotenv import dotenv_values
+from fake_backend import FakeBackend
 
 from app.embedder import (
     DOCUMENT_PREFIX,
@@ -15,7 +16,6 @@ from app.embedder import (
     check_vector,
 )
 from app.settings import ROOT
-from fake_backend import FakeBackend
 
 MODEL = "nomic-embed-text:v1.5"
 DIGEST = "0a109f42"

@@ -333,6 +333,7 @@ def run_tests():
     return subprocess.run(
         [sys.executable, "-m", "pytest", "tests/unit", "tests/api", "-q", "-x", "-p", "no:cacheprovider"],
         cwd=ROOT,
+        check=False,
         capture_output=True,
         text=True,
         encoding="utf-8",

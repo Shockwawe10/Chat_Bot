@@ -8,13 +8,14 @@ import json
 
 import numpy as np
 import pytest
+from fake_backend import DIM, FakeBackend
 
 from app import index
 from app.chunker import ChunkConfig
 from app.embedder import DOCUMENT_PREFIX, QUERY_PREFIX, Embedder, EmbeddingError
 from app.index import (
-    IndexCheckError,
     KB_DIR,
+    IndexCheckError,
     build,
     fingerprint,
     fingerprint_inputs,
@@ -24,7 +25,6 @@ from app.index import (
     read_manifest,
     verify,
 )
-from fake_backend import DIM, FakeBackend
 
 CFG = ChunkConfig()
 TIGHT_CFG = ChunkConfig(target=300, max=800, min=100)
@@ -219,7 +219,7 @@ def test_outside_error_on_a_kept_collection_does_not_delete_it(index_dir, built,
 
 
 def test_kept_collection_that_fails_verification_is_deleted_and_rebuilt(index_dir, built):
-    collection, corpus, _, _, first = built
+    _, corpus, _, _, first = built
     build(KB_DIR, index_dir, TIGHT_CFG, FakeBackend())
     open_client(index_dir).get_collection(first.collection).delete(ids=[corpus.chunks[5].id])
     with pytest.raises(IndexCheckError, match="completeness"):

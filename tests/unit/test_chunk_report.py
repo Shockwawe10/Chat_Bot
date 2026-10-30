@@ -3,7 +3,12 @@
 import pytest
 
 from app.chunker import Chunk
-from evals.chunk_report import gold_span_coverage, length_histogram, main, span_in_one_chunk
+from evals.chunk_report import (
+    gold_span_coverage,
+    length_histogram,
+    main,
+    span_in_one_chunk,
+)
 
 
 def make_chunk(text, start, end):

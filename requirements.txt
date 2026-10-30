@@ -15,3 +15,6 @@ numpy==2.4.6
 # Stage 1: API
 fastapi==0.162.0
 uvicorn==0.54.0
+
+# Stage 1: lint
+ruff==0.17.3

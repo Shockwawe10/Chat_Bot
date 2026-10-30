@@ -2,12 +2,12 @@
 
 import numpy as np
 import pytest
+from fake_backend import TopicalBackend
 
 from app.chunker import ChunkConfig
 from app.embedder import DOCUMENT_PREFIX, QUERY_PREFIX, EmbeddingError
 from app.index import KB_DIR, build, open_client, read_manifest
 from app.retriever import GuardError, Hit, IndexUnavailable, Retriever, check_guard
-from fake_backend import TopicalBackend
 
 CFG = ChunkConfig()
 
