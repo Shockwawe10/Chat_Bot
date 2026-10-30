@@ -170,6 +170,7 @@ Chat_Bot/
 │   ├── render_results.py    # writes the Results table into README.md
 │   ├── chunk_report.py      # gold-span coverage and chunk-length histogram
 │   ├── gold_spans.jsonl     # answer spans for the chunker check
+│   ├── mutation_check.py    # breaks the code on purpose and checks the tests notice
 │   └── history.csv          # one row per run
 ├── tests/
 │   ├── unit/
@@ -187,6 +188,8 @@ Chat_Bot/
 │   ├── experiments.md
 │   ├── SECURITY_REPORT.md
 │   └── drift.md
+├── .chroma/                 # built by `python -m app.index build`, not committed
+│   └── index_manifest.json  # active collection and what it was built from
 ├── .github/workflows/
 ├── promptfooconfig.yaml
 ├── pytest.ini
@@ -218,7 +221,7 @@ pip install -r requirements.txt
 cp .env.example .env            # then fill in the values
 ollama pull qwen3:4b-instruct   # chatbot (LLM_MODEL)
 ollama pull phi4-mini:3.8b      # judge (JUDGE_MODEL)
-ollama pull nomic-embed-text    # embeddings (EMBEDDING_MODEL)
+ollama pull nomic-embed-text:v1.5   # embeddings (EMBEDDING_MODEL)
 pytest                          # data checks on the knowledge base
 
 # Stage 1
@@ -226,6 +229,9 @@ make ingest                     # chunk and index data/kb into Chroma
 make run                        # API on http://localhost:8000
 make test                       # unit, data and API tests
 python -m evals.chunk_report    # chunk config, length histogram, gold-span coverage
+python -m app.index build       # embed, index and verify; a no-op if nothing changed
+python -m app.index prune       # delete every collection except the active one
+python -m evals.mutation_check  # break the code on purpose and check the tests notice
 
 # Stage 2
 make eval                       # full dev run, writes reports/runs/<run_id>.json and reports/latest.json
@@ -260,7 +266,9 @@ The `Makefile` loads `.env` itself, so you do not need to export the variables i
 | `JUDGE_PROVIDER` | `ollama` or `anthropic` | Which provider serves the LLM judge |
 | `JUDGE_MODEL` | `phi4-mini:3.8b` | Model for LLM-as-judge; must differ from `LLM_MODEL` |
 | `ANTHROPIC_API_KEY` | — | Only for paid runs |
-| `EMBEDDING_MODEL` | `nomic-embed-text` | Embeddings for Chroma (an English model is enough) |
+| `EMBEDDING_MODEL` | `nomic-embed-text:v1.5` | Embeddings for Chroma (an English model is enough). Needs an exact tag; `latest` is refused |
+| `EMBEDDING_DIGEST` | sha256 from `/api/tags` | The build fails if the installed model has another digest |
+| `OLLAMA_URL` | `http://localhost:11434` | Where Ollama listens |
 | `CHUNK_SIZE`, `CHUNK_MAX`, `CHUNK_MIN`, `TOP_K` | `500`, `800`, `100`, `5` | Retrieval settings under test: soft target, hard limit and minimum chunk length in characters, and results per query. Chunks have no overlap; the heading path carries the context. `ChunkConfig.from_env()` reads the chunk values from `.env`, and a process variable wins over the file |
 | `PROMPT_VERSION` | `v1` | Recorded in every eval run |
 | `TEMPERATURE` | `0` | Fixed for eval runs |
@@ -274,10 +282,12 @@ The default local models are chosen to run on a laptop GPU with 4 GB of memory:
 | --- | --- | --- | --- |
 | Chatbot | `qwen3:4b-instruct` | 2.5 GB | Follows instructions well for its size and supports tool calling (Stage 6) |
 | Judge | `phi4-mini:3.8b` | 2.5 GB | A different model family from the chatbot, to reduce self-preference |
-| Embeddings | `nomic-embed-text` | 274 MB | Small English embedding model |
+| Embeddings | `nomic-embed-text:v1.5` | 274 MB | Small English embedding model. Runs 100% on the GPU (`ollama ps`) |
 
 - Use `qwen3:4b-instruct`, not plain `qwen3:4b`. The plain tag is the "thinking" variant: it always writes its reasoning before the answer, even with thinking turned off. In a test with two short questions, `qwen3:4b-instruct` answered in about 1 second; plain `qwen3:4b` wrote about 550 words of reasoning first, which took roughly 30 seconds. The reasoning text also breaks answer scoring.
-- `nomic-embed-text` expects the prefix `search_query: ` on questions and `search_document: ` on chunks.
+- `nomic-embed-text` expects the prefix `search_query: ` on questions and `search_document: ` on chunks. `app/embedder.py` adds them in one place.
+- By default Ollama silently cuts input at 2048 tokens. The embedder sets `truncate: false`, so a long input is an error instead.
+- Ollama returns unit-length vectors, so L2 and cosine rank chunks identically. A wrong metric cannot be seen in the ranking, so the build also checks the collection's metric setting and compares the distances.
 - Only one model fits on a 4 GB GPU at a time, so the eval harness generates all answers first and judges them afterwards. With the default 4096-token context, `qwen3:4b-instruct` runs about 66% on the GPU and 34% on the CPU (`ollama ps`), around 24 tokens per second.
 - If the judge fails [calibration](#llm-as-judge-calibration), switch it to a stronger hosted model (`JUDGE_PROVIDER=anthropic`) rather than a bigger local one.
 
@@ -353,7 +363,12 @@ A count of passing tests says little if the tests cannot fail, so the chunker wa
 
 - First round: 15 deliberate breaks, 13 caught. The 2 that survived showed a real gap: nothing tested text that markdown-it drops, such as link reference definitions. Tests were added for it.
 - Second round, after the heading merge and config changes: 26 breaks, 26 caught.
-- A trap worth knowing: Hypothesis saves failing examples and replays them. One saved example made every later break look "caught". Each break now starts with the saved examples deleted, and only after the unbroken code passes.
+- Third round, with the embedder and index: 72 breaks, 72 caught. `python -m evals.mutation_check` runs them all.
+
+Results are only trusted if they make sense, and two did not:
+
+- Hypothesis saves failing examples and replays them. One saved example made every later break look "caught". Each break now starts with the saved examples deleted, and only after the unbroken code passes.
+- In the third round, one break was "caught" by a test that had nothing to do with it. That test was failing at random, and following it up found a real defect (F2 in [Findings](#findings)).
 
 These breaks were written by hand. [mutmut](https://github.com/boxed/mutmut) can do the same thing systematically later.
 
@@ -429,7 +444,8 @@ About 8 weeks at 25–35 hours a week, in stages 0 to 8. Every stage ends with s
 
 **Goal:** a simple chatbot that answers with sources. Its weak spots will be found by evals later.
 
-- [ ] Chunking, embeddings, Chroma, top-k retrieval, generation
+- [x] Chunking, embeddings and a verified Chroma index
+- [ ] Top-k retrieval and generation
 - [ ] `POST /ask` returning answer, sources and timing
 - [x] Unit tests for the chunker: property tests for its invariants and edge-case fixtures
 - [ ] API contract tests: status codes, schema, empty and very long input
@@ -539,6 +555,7 @@ Filled in as defects are found. Each finding has a test that guards it.
 | ID | What happened | Root cause | Fix | Guarding test |
 | --- | --- | --- | --- | --- |
 | F1 | An empty heading at the end of a file stayed alone as a chunk when it was at least `CHUNK_MIN` long | The packer split it from the previous section, and the small-chunk merge only looked at length | Bare headings now always merge back if the result stays within `CHUNK_MAX` | `test_long_empty_heading_at_the_end_of_a_file_also_moves_back` |
+| F2 | Going back to earlier settings could delete a good collection | A cached Chroma system failed to read it ("Nothing found on disk", about 1 run in 100 when one process reopened collections), and the build deleted the collection on any error | The build deletes only what this run created or what failed verification, and each open starts a fresh Chroma system. The same sequence then ran 500 times with no error | `test_outside_error_on_a_kept_collection_does_not_delete_it` |
 
 ---
 
