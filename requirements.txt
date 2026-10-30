@@ -1,3 +1,7 @@
 # Stage 0: data checks
 pytest==9.2.0
 PyYAML==6.0.3
+
+# Stage 1: chunking
+markdown-it-py==4.2.0
+hypothesis==6.170.14
