@@ -2,21 +2,25 @@
 
 `chunk()` always works on the original file text, so every chunk can be traced
 back to exact character offsets. Whole units (paragraph, list item, table row,
-code block) are packed up to a soft target, and a chunk never crosses a heading.
+code block) are packed up to a soft target. Body text of two sections never mixes,
+so a chunk only crosses a heading when that heading has no body of its own.
 There is no overlap: `index_text` carries the heading path as context instead.
 """
 
 import datetime
 import hashlib
 import logging
+import os
 import re
 from dataclasses import dataclass, replace
-from pathlib import PurePath
+from pathlib import Path, PurePath
 
 import yaml
+from dotenv import dotenv_values
 from markdown_it import MarkdownIt
 
 CHUNKER_VERSION = "v1"
+ENV_FILE = Path(__file__).resolve().parents[1] / ".env"
 
 logger = logging.getLogger(__name__)
 
@@ -35,6 +39,18 @@ class ChunkConfig:
     def __post_init__(self):
         if not 0 < self.min <= self.target <= self.max:
             raise ValueError(f"need 0 < min <= target <= max, got {self}")
+
+    @classmethod
+    def from_env(cls, env=None):
+        """Read CHUNK_SIZE, CHUNK_MAX and CHUNK_MIN. By default from .env, then the process."""
+        if env is None:
+            env = {**dotenv_values(ENV_FILE), **os.environ}
+        defaults = cls()
+        return cls(
+            target=int(env.get("CHUNK_SIZE") or defaults.target),
+            max=int(env.get("CHUNK_MAX") or defaults.max),
+            min=int(env.get("CHUNK_MIN") or defaults.min),
+        )
 
 
 @dataclass(frozen=True)
@@ -55,7 +71,7 @@ class Chunk:
 class DocMeta:
     doc_id: str
     title: str | None
-    date: str | None
+    last_reviewed: str | None  # a review date, not when the content was written
     url: str | None
     version: str | None
 
@@ -66,7 +82,7 @@ class _Unit:
 
     start: int
     end: int
-    kind: str = "block"  # "heading" or "block"
+    heading: str | None = None  # the title, if this unit is a heading line
     table_header: tuple[int, int] | None = None  # for rows cut off from their header
     oversize: bool = False
 
@@ -116,16 +132,16 @@ def parse_document(text, filename):
     """Return (DocMeta, body_start). Front matter goes here and is never indexed."""
     front_matter, body_start = _find_front_matter(text)
     front_matter = front_matter or {}
-    # The knowledge base stores the review date as `last_reviewed`.
-    date = front_matter.get("date", front_matter.get("last_reviewed"))
-    if isinstance(date, (datetime.date, datetime.datetime)):
-        date = date.isoformat()
+    reviewed = front_matter.get("last_reviewed")
+    if isinstance(reviewed, (datetime.date, datetime.datetime)):
+        reviewed = reviewed.isoformat()
     doc_id = front_matter.get("id") or PurePath(filename).stem
-    if date is None:
-        logger.warning("%s: no date in front matter", doc_id)
+    if reviewed is None:
+        logger.warning("%s: no last_reviewed in front matter", doc_id)
     optional = (front_matter.get(key) for key in ("title", "url", "version"))
     title, url, version = (None if value is None else str(value) for value in optional)
-    return DocMeta(str(doc_id), title, None if date is None else str(date), url, version), body_start
+    reviewed = None if reviewed is None else str(reviewed)
+    return DocMeta(str(doc_id), title, reviewed, url, version), body_start
 
 
 def _blocks(body):
@@ -186,7 +202,7 @@ def _split_oversize(text, unit, cfg):
         else:
             packed.append((start, end))
     return [
-        replace(unit, start=start, end=end, oversize=True, kind=unit.kind if i == 0 else "block")
+        replace(unit, start=start, end=end, oversize=True, heading=unit.heading if i == 0 else None)
         for i, (start, end) in enumerate(packed)
     ]
 
@@ -223,7 +239,7 @@ def _read_sections(text, body_start, cfg):
                 open_headings.pop()
             open_headings.append((level, " ".join(title.split())))
             sections.append(_Section(tuple(name for _, name in open_headings), []))
-            add(_Unit(*_trim(text, *span(first, last)), kind="heading"))
+            add(_Unit(*_trim(text, *span(first, last)), heading=open_headings[-1][1]))
         elif token.type == "table_open":
             for unit in _table_units(text, span, first, last, cfg):
                 add(unit)
@@ -232,6 +248,32 @@ def _read_sections(text, body_start, cfg):
     if cursor < len(starts):
         add(_Unit(*_trim(text, *span(cursor, len(starts)))))
     return sections
+
+
+def _only_headings(units):
+    return all(unit.heading is not None for unit in units)
+
+
+def _merge_empty_headings(sections):
+    """Move a heading with no body of its own forward, into the next section.
+
+    It has no text to mix with that section, and alone it would be a tiny chunk
+    that outranks real answers in BM25. A heading at the end of a file moves back.
+    """
+    merged = []
+    waiting = []
+    for section in sections:
+        units = waiting + section.units
+        if _only_headings(units):
+            waiting = units
+        else:
+            merged.append(_Section(section.heading_path, units))
+            waiting = []
+    if waiting and merged:
+        merged[-1].units.extend(waiting)
+    elif waiting:
+        merged.append(_Section(sections[-1].heading_path, waiting))
+    return merged
 
 
 def _size(units):
@@ -244,8 +286,9 @@ def _pack(units, cfg):
     for unit in units:
         if current:
             joined = unit.end - current[0].start
-            # A chunk under cfg.min may pass the target, so a heading stays with its text.
-            if joined > cfg.max or (joined > cfg.target and _size(current) >= cfg.min):
+            # A short chunk or a bare heading may pass the target to stay with the next unit.
+            can_stop = _size(current) >= cfg.min and not _only_headings(current)
+            if joined > cfg.max or (joined > cfg.target and can_stop):
                 groups.append(current)
                 current = []
         current.append(unit)
@@ -258,7 +301,7 @@ def _merge_small(groups, cfg):
     merged = []
     for group in groups:
         fits = merged and group[-1].end - merged[-1][0].start <= cfg.max
-        if fits and _size(group) < cfg.min:
+        if fits and (_size(group) < cfg.min or _only_headings(group)):
             merged[-1] = merged[-1] + group
         else:
             merged.append(group)
@@ -266,20 +309,20 @@ def _merge_small(groups, cfg):
 
 
 def _index_text(text, heading_path, group, body):
-    # A chunk that opens with its own heading already contains the last path entry.
-    path = heading_path[:-1] if group[0].kind == "heading" else heading_path
-    prefix = " > ".join(name for name in path if name)
+    # A heading that is already in the chunk is not repeated in the prefix.
+    own_headings = {unit.heading for unit in group}
+    prefix = " > ".join(name for name in heading_path if name and name not in own_headings)
     if group[0].table_header:
         start, end = group[0].table_header
         body = f"{text[start:end]}\n{body}"
     return f"{prefix}\n\n{body}" if prefix else body
 
 
-def chunk(text, doc_id, cfg=ChunkConfig()):
+def chunk(text, doc_id, cfg):
     """Split one file into chunks. `text` is the whole original file, front matter included."""
     _, body_start = _find_front_matter(text)
     chunks = []
-    for section in _read_sections(text, body_start, cfg):
+    for section in _merge_empty_headings(_read_sections(text, body_start, cfg)):
         for group in _merge_small(_pack(section.units, cfg), cfg):
             start, end = group[0].start, group[-1].end
             body = text[start:end]

@@ -11,7 +11,7 @@ import json
 import logging
 from pathlib import Path
 
-from app.chunker import ChunkConfig, chunk, parse_document
+from app.chunker import CHUNKER_VERSION, ChunkConfig, chunk, parse_document
 
 ROOT = Path(__file__).resolve().parents[1]
 KB_DIR = ROOT / "data" / "kb"
@@ -64,8 +64,10 @@ def length_histogram(chunks, bucket=BUCKET):
 
 def main():
     logging.basicConfig(level=logging.WARNING, format="%(levelname)s %(message)s")
-    corpus = load_corpus(KB_DIR, ChunkConfig())
+    cfg = ChunkConfig.from_env()
+    corpus = load_corpus(KB_DIR, cfg)
     chunks = [item for _, doc_chunks in corpus.values() for item in doc_chunks]
+    print(f"config: target={cfg.target} max={cfg.max} min={cfg.min} chunker={CHUNKER_VERSION}")
     print(f"corpus data/kb: {len(corpus)} documents, {len(chunks)} chunks")
     print(f"oversize chunks: {sum(item.oversize for item in chunks)}")
     print("chunk length histogram:")

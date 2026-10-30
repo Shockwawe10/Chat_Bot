@@ -3,7 +3,7 @@
 import pytest
 
 from app.chunker import Chunk
-from evals.chunk_report import gold_span_coverage, length_histogram, span_in_one_chunk
+from evals.chunk_report import gold_span_coverage, length_histogram, main, span_in_one_chunk
 
 
 def make_chunk(text, start, end):
@@ -53,6 +53,23 @@ def test_coverage_is_the_share_of_contained_spans():
 def test_coverage_refuses_an_empty_gold_set():
     with pytest.raises(ValueError):
         gold_span_coverage([], {})
+
+
+def report_for(monkeypatch, capsys, target, maximum):
+    monkeypatch.setenv("CHUNK_SIZE", target)
+    monkeypatch.setenv("CHUNK_MAX", maximum)
+    monkeypatch.setenv("CHUNK_MIN", "50")
+    main()
+    return capsys.readouterr().out
+
+
+def test_report_prints_the_config_it_used_and_the_config_takes_effect(monkeypatch, capsys):
+    tight = report_for(monkeypatch, capsys, "150", "300")
+    loose = report_for(monkeypatch, capsys, "500", "800")
+    assert "config: target=150 max=300 min=50 chunker=v1" in tight
+    assert "config: target=500 max=800 min=50 chunker=v1" in loose
+    count = lambda out: int(out.split(" documents, ")[1].split(" chunks")[0])
+    assert count(tight) > count(loose)
 
 
 def test_histogram_groups_lengths_into_buckets():
