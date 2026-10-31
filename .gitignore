@@ -8,10 +8,14 @@ __pycache__/
 .pytest_cache/
 .ruff_cache/
 .mypy_cache/
+.hypothesis/
 
 # Generated data
 data/app.db
 .chroma/
+
+# Request traces
+runs/
 
 # Test output
 test-results/
