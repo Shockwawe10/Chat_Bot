@@ -25,6 +25,7 @@ An AI QA portfolio project: an English-language customer support chatbot that an
 - [Quality strategy](#quality-strategy)
 - [Development workflow](#development-workflow)
 - [Roadmap](#roadmap)
+- [Explained simply](#explained-simply)
 - [Findings](#findings)
 - [Learning resources](#learning-resources)
 - [License](#license)
@@ -416,6 +417,7 @@ Code in this repository is written with Claude Code. I own the requirements, the
 4. **Tests are mine.** AI may propose what to test and which edge cases to cover, but the decision is mine.
 5. **No secrets in the repo.** Keys only in `.env` and GitHub Secrets.
 6. **Measure, don't guess.** Any change to prompt, retrieval or model goes through `make eval-smoke` before the PR.
+7. **Explain it simply.** After every finished part of the work, a short explanation goes into [Explained simply](#explained-simply), written so a 10-year-old could follow it: what was built, why, and how we know it works.
 
 ### AI and human authorship
 
@@ -443,6 +445,7 @@ AI and I can both write and edit code, documents, the golden dataset and the gol
 - [ ] PR description explains the change, reviewed and edited by me if AI drafted it
 - [ ] `LEARNING_LOG.md` entry added
 - [ ] Results table regenerated with `make results` if a metric moved
+- [ ] [Explained simply](#explained-simply) has a part for this work
 
 ### Data rules
 
@@ -574,6 +577,52 @@ Personal data leakage (LLM02) needs the agent and its customer data, so it is te
 - [ ] A short post about one finding, for example how well the LLM judge agreed with my labels
 
 **Exit criteria:** someone else (or a clean virtual machine) follows [Quick start](#quick-start) and gets a working chatbot and an eval report without my help.
+
+---
+
+## Explained simply
+
+Every finished part of the project, explained in plain words, the way you would explain it to a 10-year-old. A new part is added each time a piece of work is done.
+
+### The big idea
+
+Imagine a robot helper at a company's front desk. Customers ask it questions, and it has to find the answer in the company's notebooks and say where it found it. If the answer is not in the notebooks, it must say "I don't know" instead of making something up. This project builds that robot, but the real goal is building the tests that check whether the robot tells the truth.
+
+### Stage 0: the notebooks
+
+We wrote 24 short notebooks (documents) about a made-up company that builds metal frames for solar panels, plus a word list with 26 terms. Tests check that every notebook has its label on top, like a title and a date, and that no notebook holds a real phone number.
+
+### Stage 1, part 1: cutting the notebooks into cards
+
+The robot cannot read a whole notebook at once, so each one is cut into small cards of about 500 letters. A card never ends in the middle of a sentence, a list item or a table row, and every card remembers which chapter it came from. Tests make up thousands of random notebooks and check that no words get lost, doubled or mixed up.
+
+### Stage 1, part 2: giving every card an address
+
+A small program turns each card into a list of 768 numbers. Cards that mean similar things get similar numbers, like houses on the same street. All the cards go into a box (the Chroma index) that can quickly find the cards closest to a question. Before the box is used, it checks itself: every card is inside, nothing has changed, and every card can find itself.
+
+### Stage 1, part 3: answering a question
+
+When a question comes in, the robot finds the 5 closest cards and gives them to a small language model. The model must answer only from those cards, say which cards it used, and reply in a fixed shape so the program can check it. If the model names a card that does not exist, the program notices. Every question and answer is written in a diary (the trace), so we can see later what happened.
+
+### Stage 1, part 4: checking the checkers
+
+There are hundreds of tests. But a test that can never fail proves nothing, so we break the code on purpose, one small break at a time, and make sure some test notices each break. There are now 200 breaks, and the tests catch every one. GitHub also runs all the tests each time new code is uploaded.
+
+### Stage 1, part 5: the first 10 questions, and a bug in the rules
+
+We asked the robot 10 questions and graded the answers by hand. Sometimes it knew the answer but still said "I can't answer". The rules let it say "here is the answer" and "I don't know" at the same time, and then the program threw the answer away. We changed the rules so it can only say one of the two. That fixed the mix-up, but the robot started saying "I don't know" more often.
+
+### Stage 2, part 1: writing the exam
+
+We wrote an exam of 75 questions with their correct answers, all taken from the notebooks. Some questions have no answer in the notebooks, some try to trick the robot with a wrong idea, and some are in another language. 52 questions are for practice. The other 23 are locked away for the final exam, so the robot cannot be tuned to pass them. I checked every question by hand.
+
+### Stage 2, part 2: a fair grader
+
+A program grades the answers. It is strict with numbers: "15 years" does not count as "5 years", even though the 5 is in there. Another program checks the exam itself: every correct answer really is in the notebooks, and nobody changed a locked question without saying so.
+
+### Stage 2, part 3: the first report card
+
+One command runs the whole practice exam and writes a report card. First we tried the grader on two silly robots, one that always says "I don't know" and one that always says "Yes." Both got exactly the scores we predicted before the test, so the grader can be trusted. Then the real robot took the exam. It finds the right card 83% of the time, but it says "I don't know" to 22 of the 42 questions it should answer. That is the main thing to fix next.
 
 ---
 
