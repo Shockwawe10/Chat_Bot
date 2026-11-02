@@ -11,11 +11,13 @@ GREEK_MU, MICRO_SIGN = chr(0x3BC), chr(0xB5)  # they look the same, so they are 
 SPACES = re.compile(r"[\s  ]+")
 THOUSANDS = re.compile(r"(?<=\d)[, ](?=\d{3}(?!\d))")
 RANGE = re.compile(r"(?<=\d) ?(?:to|–|—|-) ?(?=\d)")
-UNIT_GAP = re.compile(r"(?<=\d) (?!to\b)(?=[a-zµ°²/%])")
 DEGREES = re.compile(r"(?<=\d) ?degrees?\b")
 SQUARE = re.compile(r"(?<=m)2(?!\d)")
 # "1.5 to 2.5 m" means 1.5 m too, so the unit after a range is copied to its start.
-BARE_RANGE = re.compile(r"(?<![\d.])(\d+(?:\.\d+)?) to (\d+(?:\.\d+)?)([a-zµ°²/%]+)")
+BARE_RANGE = re.compile(r"(?<![\d.])(\d+(?:\.\d+)?) to (\d+(?:\.\d+)?) ?([a-zµ°²/%]+)")
+# Where a number meets its unit. Spaces are not removed from the text, because that
+# also joins words: "a4 fasteners" became "a4fasteners" and lost the whole value A4.
+UNIT_EDGE = re.compile(r"(?<=\d) ?(?=[^\d\s.,])")
 
 
 def normalise(text):
@@ -25,8 +27,7 @@ def normalise(text):
     text = SQUARE.sub("²", text)
     text = THOUSANDS.sub("", text)
     text = RANGE.sub(" to ", text)
-    text = UNIT_GAP.sub("", text)
-    return BARE_RANGE.sub(r"\1\3 to \2\3", text)
+    return BARE_RANGE.sub(r"\1 \3 to \2 \3", text)
 
 
 def contains_fact(text, fact):
@@ -36,7 +37,9 @@ def contains_fact(text, fact):
         raise ValueError("empty fact")
     before = r"(?<![a-z0-9.,])" if wanted[0].isalnum() else ""
     after = r"(?![a-z0-9])" if wanted[-1].isalnum() else ""
-    return re.search(before + re.escape(wanted) + after, normalise(text)) is not None
+    # "350 kW" and "350kW" are the same value, so the space after a number is optional.
+    body = r"\s?".join(re.escape(part) for part in UNIT_EDGE.split(wanted))
+    return re.search(before + body + after, normalise(text)) is not None
 
 
 def missing_facts(text, facts):

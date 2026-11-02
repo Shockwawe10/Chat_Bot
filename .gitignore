@@ -15,7 +15,7 @@ data/app.db
 .chroma/
 
 # Request traces
-runs/
+/runs/
 
 # Test output
 test-results/

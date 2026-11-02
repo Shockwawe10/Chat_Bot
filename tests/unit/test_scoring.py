@@ -28,6 +28,11 @@ from evals.validate_golden import load_dataset
         ("GF-2's coating is thinner.", "GF-2"),
         ("The installation warranty is 5 years, not 15.", "5 years"),
         ("Snow load up to 2.4 kN/m².", "2.4 kN/m²"),
+        # Real pipeline answers that an earlier version scored as wrong.
+        ("RF-2 uses stainless steel A4 fasteners because they resist chlorides.", "A4"),
+        ("GroundFrame GF-2 would be used.", "GF-2"),
+        ("Keep about 200 m² per MWp free.", "200 m²"),
+        ("Systems rated C4 and above use A4.", "C4"),
     ],
 )
 def test_same_value_in_another_form_matches(text, fact):

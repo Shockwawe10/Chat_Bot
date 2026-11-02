@@ -24,6 +24,10 @@ GENERATOR = ROOT / "app" / "generator.py"
 API = ROOT / "app" / "api.py"
 SCORING = ROOT / "evals" / "scoring.py"
 VALIDATOR = ROOT / "evals" / "validate_golden.py"
+METRICS = ROOT / "evals" / "metrics.py"
+SYSTEMS_FILE = ROOT / "evals" / "systems.py"
+RUN_EVALS = ROOT / "evals" / "run_evals.py"
+RENDER = ROOT / "evals" / "render_results.py"
 
 PACK = "if joined > cfg.max or (joined > cfg.target and can_stop):"
 MERGE = "if fits and (_size(group) < cfg.min or _only_headings(group)):"
@@ -374,12 +378,36 @@ BREAKS = {
     "scoring: no boundary after a value": [(SCORING, 'after = r"(?![a-z0-9])" if', 'after = "" if')],
     "scoring: thousands separators kept": [(SCORING, '    text = THOUSANDS.sub("", text)\n', "")],
     "scoring: range forms not unified": [(SCORING, '    text = RANGE.sub(" to ", text)\n', "")],
-    "scoring: unit gap kept": [(SCORING, '    text = UNIT_GAP.sub("", text)\n', "")],
-    "scoring: range unit not copied": [(SCORING, r'return BARE_RANGE.sub(r"\1\3 to \2\3", text)', "return text")],
+    "scoring: space after a number required": [(SCORING, r'body = r"\s?".join(', 'body = " ".join(')],
+    "scoring: number glued to the next word": [(SCORING, r'body = r"\s?".join(', 'body = "".join(')],
+    "scoring: range unit not copied": [(SCORING, r'return BARE_RANGE.sub(r"\1 \3 to \2 \3", text)', "return text")],
     "scoring: degrees word kept": [(SCORING, '    text = DEGREES.sub("°", text)\n', "")],
     "scoring: m2 not read as square metres": [(SCORING, '    text = SQUARE.sub("²", text)\n', "")],
     "scoring: Greek mu kept": [(SCORING, "    text = text.replace(GREEK_MU, MICRO_SIGN)", "    text = text")],
     "scoring: case kept": [(SCORING, "SPACES.sub(\" \", text.lower())", "SPACES.sub(\" \", text)")],
+    # Eval harness
+    "harness: gold matched in any document": [
+        (METRICS, 'if any(span["doc_id"] == doc_id and span["quote"] in text for span in group):', 'if any(span["quote"] in text for span in group):')
+    ],
+    "harness: CRLF chunk text not normalised": [(METRICS, 'return store.text(chunk_id).replace("\\r\\n", "\\n")', "return store.text(chunk_id)")],
+    "harness: hit rate counts any group": [(METRICS, 'scored["hit"] = ranks[0] is not None', 'scored["hit"] = any(rank is not None for rank in ranks)')],
+    "harness: reciprocal rank off by one": [(METRICS, 'scored["reciprocal_rank"] = 1 / ranks[0] if ranks[0] else 0.0', 'scored["reciprocal_rank"] = 1 / (ranks[0] + 1) if ranks[0] else 0.0')],
+    "harness: undecided counted as a pass": [(METRICS, "        behaviour_ok = None  # only the judge can tell\n", "        behaviour_ok = True\n")],
+    "harness: refusal passes a language case": [(METRICS, "        behaviour_ok = english\n", "        behaviour_ok = english or refused\n")],
+    "harness: missing facts ignored": [(METRICS, "    elif not ok or refused or missing:\n", "    elif not ok or refused:\n")],
+    "harness: server error ignored": [(METRICS, "    elif not ok or refused or missing:\n", "    elif refused or missing:\n")],
+    "harness: refusal accuracy ignores over-refusal": [(METRICS, 'else ok and not refused,', "else True,")],
+    "harness: distractor never found": [(METRICS, 'scored["distractor_in_context"] = any(', 'scored["distractor_in_context"] = False and any(')],
+    "harness: p95 is the maximum": [(METRICS, "return values[min(len(values) - 1, math.ceil(0.95 * len(values)) - 1)]", "return values[-1]")],
+    "harness: random retriever not seeded": [(SYSTEMS_FILE, "self.random = random.Random(seed)", "self.random = random.Random()")],
+    "harness: always-abstain answers": [(SYSTEMS_FILE, '"answer": ABSTAIN_SENTENCE, "abstained": True,', '"answer": ABSTAIN_SENTENCE, "abstained": False,')],
+    "harness: drafts are run": [(RUN_EVALS, 'reviewed = [c for c in chosen if c["reviewed_by"] is not None]', "reviewed = chosen")],
+    "harness: smoke run updates latest": [(RUN_EVALS, 'full_dev = report["system"] == "pipeline" and report["split"] == "dev" and not report["smoke"]', 'full_dev = report["system"] == "pipeline" and report["split"] == "dev"')],
+    "harness: any run can be the baseline": [(RUN_EVALS, "        if not full_dev:\n            raise SystemExit", "        if False:\n            raise SystemExit")],
+    "harness: holdout without a flag": [(RUN_EVALS, 'if args.split == "holdout" and not args.allow_holdout:', "if False:")],
+    "render: baseline shown as current": [(RENDER, "cells[2] = fill(current) if current else DASH", "cells[2] = fill(baseline) if baseline else DASH")],
+    "render: another k accepted": [(RENDER, 'if current and current["top_k"] != 5:', "if False:")],
+    "render: unmeasured shown as zero": [(RENDER, 'return DASH if value is None else f"{value:.2f}"', 'return f"{value or 0:.2f}"')],
     # Golden dataset validator
     "golden: substring match for must_include": [
         (VALIDATOR, 'if not contains_fact(case["expected_answer"], fact):', 'if fact.lower() not in case["expected_answer"].lower():')
@@ -452,7 +480,7 @@ def main():
     parser.add_argument("--only", default="", help="run only breaks whose name contains this text")
     args = parser.parse_args()
     selected = {name: edits for name, edits in BREAKS.items() if args.only in name}
-    files = (CHUNKER, EMBEDDER, INDEX, SETTINGS, RETRIEVER, GENERATOR, API, SCORING, VALIDATOR)
+    files = (CHUNKER, EMBEDDER, INDEX, SETTINGS, RETRIEVER, GENERATOR, API, SCORING, VALIDATOR, METRICS, SYSTEMS_FILE, RUN_EVALS, RENDER)
     originals = {path: path.read_bytes() for path in files}
     check_breaks_apply(selected, originals)
 
