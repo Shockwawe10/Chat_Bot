@@ -55,3 +55,9 @@ Written by /aar-loop after each session's After Action Review. Read this file be
 - Actual: I ran a script that imported evals.validate_golden and app.chunker while the mutation check was rewriting chunker files. The counts it gave had to be recomputed after the run before they could be written into golden_validation.md. They matched, but only by luck of timing.
 - Why: mutation_check writes broken copies of app/ and evals/ files to disk and restores them after each test run, so any process that imports during that window can get a broken module.
 - tags: evals,mutation,fix-applied
+
+## 2026-11-02 -- evals/mutation_check.py must break a temporary copy of the project (shutil.copytree without .git, .venv, .chroma, .env, reports), never the real files. A rule asking people not to touch files during a run was not enough.
+- Expected: The previous rule, run nothing that imports app/ or evals/ during a mutation run, would keep broken files out of the repository.
+- Actual: Commit dafea09 (Stage 2 harness) was made while the check was running and captured app/embedder.py with truncate set to true, one of the deliberate breaks. Stopping the run later also left app/generator.py without its output schema.
+- Why: The check wrote each break into the real file and restored it after the tests, so anything reading the working tree during that window, including git commit, saw broken code. Fixed in 11608dc and by running the breaks in a copy; the CLAUDE.md rule now says to keep it that way.
+- tags: evals,mutation,git,fix-applied

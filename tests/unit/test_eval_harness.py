@@ -239,6 +239,8 @@ def test_holdout_needs_an_explicit_flag():
 
 
 def test_git_state_reads_the_commit():
+    if not (run_evals.ROOT / ".git").exists():
+        pytest.skip("not a git checkout, for example the mutation check's copy")
     sha, dirty = run_evals.git_state()
     assert len(sha) == 40 and isinstance(dirty, bool)
 

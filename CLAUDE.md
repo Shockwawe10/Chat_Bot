@@ -10,7 +10,7 @@ Before trusting an eval scorer or CI gate, run it on the fixed refusal sentence,
 
 Put any Python longer than about 15 lines, or with nested quotes, in a scratchpad .py file written with the Write tool. Never run it through a bash heredoc.
 
-While python -m evals.mutation_check runs, run nothing that imports app/ or evals/. It rewrites those files one break at a time.
+python -m evals.mutation_check breaks a temporary copy of the project, never the real files. Keep it that way: when it edited the real files, a commit made during a run captured a broken app/embedder.py.
 
 Do not print or read holdout cases from evals/golden_dataset.jsonl. Filter to split == dev, and report holdout as ids and booleans only.
 

@@ -6,12 +6,17 @@ Every break must make a test fail. A break that survives is a gap in the tests.
 Hypothesis saves failing examples and replays them, so the saved examples are
 deleted before each run; otherwise one break would make all the later ones look
 caught. The unbroken code must pass first, for the same reason.
+
+The breaks are made in a temporary copy of the project, never in the real files.
+Breaking the real files once put a broken app/embedder.py into a commit made while
+the check was running.
 """
 
 import argparse
 import shutil
 import subprocess
 import sys
+import tempfile
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -471,11 +476,27 @@ BREAKS = {
 }
 
 
-def run_tests():
-    shutil.rmtree(ROOT / ".hypothesis", ignore_errors=True)
+LEFT_OUT = shutil.ignore_patterns(
+    ".git", ".venv", ".chroma", ".env", "runs", "reports", "__pycache__", ".hypothesis", ".pytest_cache", ".ruff_cache"
+)
+
+
+def copy_project(folder):
+    """A copy with what the unit and API tests need, like a clean CI checkout."""
+    work = folder / "project"
+    shutil.copytree(ROOT, work, ignore=LEFT_OUT)
+    return work
+
+
+def in_copy(path, work):
+    return work / path.relative_to(ROOT)
+
+
+def run_tests(work):
+    shutil.rmtree(work / ".hypothesis", ignore_errors=True)
     return subprocess.run(
         [sys.executable, "-m", "pytest", "tests/unit", "tests/api", "-q", "-x", "-p", "no:cacheprovider"],
-        cwd=ROOT,
+        cwd=work,
         check=False,
         capture_output=True,
         text=True,
@@ -504,13 +525,18 @@ def check_breaks_apply(selected, originals):
                 sys.exit(f"break {name!r} no longer matches {path.name}: {old}")
 
 
-def apply_break(edits, originals):
-    """Write the broken files. Edits to one file apply together."""
+def apply_break(edits, originals, work):
+    """Write the broken files into the copy. Edits to one file apply together."""
     sources = read_sources(originals)
     for path, old, new in edits:
         sources[path] = sources[path].replace(old, new)
     for path in {path for path, _, _ in edits}:
-        path.write_bytes(sources[path].encode("utf-8"))
+        in_copy(path, work).write_bytes(sources[path].encode("utf-8"))
+
+
+def restore(originals, work):
+    for path, original in originals.items():
+        in_copy(path, work).write_bytes(original)
 
 
 def main():
@@ -522,25 +548,21 @@ def main():
     originals = {path: path.read_bytes() for path in files}
     check_breaks_apply(selected, originals)
 
-    baseline = run_tests()
-    if baseline.returncode != 0:
-        sys.exit("the unbroken code fails, so the results would mean nothing:\n" + baseline.stdout[-1500:])
-    print("baseline passes", flush=True)
-
     survived = []
-    try:
+    with tempfile.TemporaryDirectory(prefix="mutation-") as folder:
+        work = copy_project(Path(folder))
+        baseline = run_tests(work)
+        if baseline.returncode != 0:
+            sys.exit("the unbroken code fails, so the results would mean nothing:\n" + baseline.stdout[-1500:])
+        print("baseline passes", flush=True)
         for name, edits in selected.items():
-            apply_break(edits, originals)
-            result = run_tests()
-            for path, original in originals.items():
-                path.write_bytes(original)
+            apply_break(edits, originals, work)
+            result = run_tests(work)
+            restore(originals, work)
             caught = result.returncode != 0
             print(f"{'caught  ' if caught else 'SURVIVED'} {name}  {failed_test(result) if caught else ''}", flush=True)
             if not caught:
                 survived.append(name)
-    finally:
-        for path, original in originals.items():
-            path.write_bytes(original)
     print(f"total {len(selected)}, caught {len(selected) - len(survived)}, survived: {survived or 'none'}")
     sys.exit(1 if survived else 0)
 
