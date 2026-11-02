@@ -80,7 +80,7 @@ class OllamaBackend:
         return next(value for key, value in info.items() if key.endswith(".context_length"))
 
     def embed(self, texts):
-        payload = {"model": self.model, "input": texts, "truncate": True}
+        payload = {"model": self.model, "input": texts, "truncate": False}
         response = self.client.post("/api/embed", json=payload)
         if response.status_code != 200:
             raise EmbeddingError(f"Ollama returned {response.status_code}: {response.text}")
