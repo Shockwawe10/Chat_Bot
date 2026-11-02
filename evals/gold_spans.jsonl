@@ -1,0 +1,91 @@
+{"case": "g001", "doc_id": "pricing-commercial-offer", "quote": "The offer is valid for 30 days from its date."}
+{"case": "g002", "doc_id": "process-site-survey", "quote": "The survey is usually scheduled within 10 working days of the request."}
+{"case": "g002", "doc_id": "process-cooperation-stages", "quote": "| Site survey | Within 10 working days of the request |"}
+{"case": "g003", "doc_id": "process-cooperation-stages", "quote": "| Detailed design | 3 to 6 weeks after the contract |"}
+{"case": "g004", "doc_id": "warranty", "quote": "The company replies within 5 working days and arranges an inspection if needed."}
+{"case": "g005", "doc_id": "company-overview", "quote": "It does not do electrical installation or grid connection."}
+{"case": "g005", "doc_id": "services-installation", "quote": "Electrical work is not included."}
+{"case": "g006", "doc_id": "company-contacts", "quote": "Each sales region (North, Central and South) has its own project manager."}
+{"case": "g007", "doc_id": "services-maintenance", "quote": "Bolt torque on a sample of connections."}
+{"case": "g008", "doc_id": "foundations-ground-mount", "quote": "The default. Fast to install, no concrete."}
+{"case": "g009", "doc_id": "process-roof-assessment", "quote": "If the waterproofing has less than 10 years of expected life left, the company recommends replacing it before installation."}
+{"case": "g010", "doc_id": "services-overview", "quote": "Maintenance is offered for any mounting system the company supplied, also when another contractor installed it."}
+{"case": "g011", "doc_id": "products-carport-cp1", "quote": "Mounting points for EV chargers on the columns. The company does not supply or connect the chargers."}
+{"case": "g012", "doc_id": "services-supply", "quote": "Delivery to the site is included in every supply order."}
+{"case": "g013", "doc_id": "company-contacts", "quote": "The company is closed on weekends and public holidays."}
+{"case": "g014", "doc_id": "services-design", "quote": "Changes after approval, such as a different module model, may require a new calculation and can change the price and the schedule."}
+{"case": "g015", "doc_id": "company-contacts", "quote": "The company does not publish a phone number."}
+{"case": "g016", "doc_id": "pricing-commercial-offer", "quote": "The company does not publish prices and has no standard price per kWp."}
+{"case": "g017", "doc_id": "pricing-commercial-offer", "quote": "Because of this, prices are not given by email, chat or phone before a commercial offer is prepared."}
+{"case": "g018", "doc_id": "corrosion-categories", "quote": "The company does not offer any system for category CX."}
+{"case": "g019", "doc_id": "foundations-ground-mount", "quote": "Grading is not part of the company's services."}
+{"case": "g020", "doc_id": "products-pitched-roof-rp1", "quote": "RP-1 is not used on roofs covered with asbestos-cement sheets. The company does not work on such roofs."}
+{"case": "g021", "doc_id": "products-ground-mount-gf2", "quote": "| Ground clearance | At least 0.6 m |"}
+{"case": "g022", "doc_id": "products-flat-roof-rf1", "quote": "| Maximum wind speed | 28 m/s |"}
+{"case": "g022", "doc_id": "loads-wind-and-snow", "quote": "| RoofFlat RF-1 | 28 m/s | 2.0 kN/m² |"}
+{"case": "g023", "doc_id": "products-flat-roof-rf2", "quote": "| Added roof load | 12 to 20 kg/m², including ballast |"}
+{"case": "g024", "doc_id": "products-carport-cp1", "quote": "| Tilt angle | 5° to 10° |"}
+{"case": "g025", "doc_id": "products-ground-mount-gf1", "quote": "| Coating thickness | 85 µm average |"}
+{"case": "g025", "doc_id": "corrosion-coatings", "quote": "Average coating thickness: 85 µm."}
+{"case": "g026", "doc_id": "corrosion-coatings", "quote": "The anodic layer is 15 µm on RF-1 and RP-1 and 20 µm on RF-2."}
+{"case": "g026", "doc_id": "products-flat-roof-rf2", "quote": "| Coating thickness | 20 µm anodic layer |"}
+{"case": "g027", "doc_id": "products-pitched-roof-rp1", "quote": "| Corrosivity category | C3 |"}
+{"case": "g027", "doc_id": "products-overview", "quote": "| RoofPitch RP-1 | Pitched roof, rails and hooks | Anodised aluminium | C3 |"}
+{"case": "g028", "doc_id": "products-pitched-roof-rp1", "quote": "| Roof slope | 10° to 60° |"}
+{"case": "g029", "doc_id": "products-ground-mount-gf2", "quote": "| Typical plant size | 1 MWp to 100 MWp |"}
+{"case": "g030", "doc_id": "products-ground-mount-gf1", "quote": "| Module layout | 2 modules in portrait per table row |"}
+{"case": "g031", "doc_id": "products-ground-mount-gf1", "quote": "| Maximum snow load | 2.4 kN/m² |"}
+{"case": "g031", "doc_id": "loads-wind-and-snow", "quote": "| GroundFrame GF-1 | 32 m/s | 2.4 kN/m² |"}
+{"case": "g031", "doc_id": "loads-wind-and-snow", "quote": "If the site values are higher than the product maximum, the engineering team either designs a reinforced version (shorter spans, more posts or more ballast) or proposes another product."}
+{"case": "g032", "doc_id": "company-overview", "quote": "The smallest project it accepts is 100 kWp."}
+{"case": "g033", "doc_id": "products-ground-mount-gf1", "quote": "GF-1 is not used in corrosivity category C5, for example within 10 km of the sea."}
+{"case": "g034", "doc_id": "products-ground-mount-gf2", "quote": "GF-2 can follow terrain slopes of up to 10% in the north-south direction without earthworks."}
+{"case": "g034", "doc_id": "foundations-ground-mount", "quote": "GF-1 can follow slopes of up to 15% and GF-2 up to 10% without earthworks."}
+{"case": "g035", "doc_id": "services-supply", "quote": "The customer provides a flat, dry storage area of about 200 m² for each MWp of a ground-mount plant."}
+{"case": "g036", "doc_id": "products-flat-roof-rf2", "quote": "| Fasteners | Stainless steel A4 |"}
+{"case": "g036", "doc_id": "corrosion-coatings", "quote": "A4 stainless steel is used in systems rated C4 and above, because it resists chlorides from salt better."}
+{"case": "g037", "doc_id": "products-ground-mount-gf2", "quote": "Sites near chemical plants, fertiliser storage or other sources of aggressive air."}
+{"case": "g037", "doc_id": "products-overview", "quote": "GF-2 is rated for C5 and is chosen for coastal sites within 10 km of the sea and for sites near chemical plants."}
+{"case": "g037", "doc_id": "corrosion-coatings", "quote": "**Zinc-magnesium coating.** Used on GroundFrame GF-2."}
+{"case": "g037", "doc_id": "products-ground-mount-gf2", "quote": "| Material | Steel with zinc-magnesium coating |"}
+{"case": "g038", "doc_id": "services-installation", "quote": "Electricity and water on site for tools and workers."}
+{"case": "g038", "doc_id": "services-supply", "quote": "The customer provides a flat, dry storage area of about 200 m² for each MWp of a ground-mount plant."}
+{"case": "g039", "doc_id": "process-roof-assessment", "quote": "If neither exists, the company can order a roof assessment from a partner engineer at the customer's cost."}
+{"case": "g039", "doc_id": "process-roof-assessment", "quote": "Roof installation does not start without a positive assessment."}
+{"case": "g039", "doc_id": "services-installation", "quote": "Roof work starts only after the roof assessment is approved."}
+{"case": "g040", "doc_id": "process-quote-requirements", "quote": "Company name and a contact person with an email address."}
+{"case": "g040", "doc_id": "process-quote-requirements", "quote": "Land plot boundaries."}
+{"case": "g041", "doc_id": "services-installation", "quote": "After installation the company checks the torque of a sample of bolts, makes a photo report and signs a handover certificate with the customer."}
+{"case": "g041", "doc_id": "warranty", "quote": "Both periods start on the date of the handover certificate."}
+{"case": "g042", "doc_id": "process-site-survey", "quote": "The engineer writes a survey report. It is the basis for the preliminary design and the commercial offer."}
+{"case": "g042", "doc_id": "services-design", "quote": "**Preliminary design.** Made after the site survey. It gives the layout, the chosen mounting system and the plant size in kWp."}
+{"case": "g043", "doc_id": "products-flat-roof-rf1", "quote": "| Maximum roof slope | 5° |"}
+{"case": "g043", "doc_id": "products-flat-roof-rf2", "quote": "| Maximum roof slope | 5° |"}
+{"case": "g043", "doc_id": "products-pitched-roof-rp1", "quote": "| Roof slope | 10° to 60° |"}
+{"case": "g044", "doc_id": "products-pitched-roof-rp1", "quote": "| Corrosivity category | C3 |"}
+{"case": "g044", "doc_id": "corrosion-categories", "quote": "| C5 | Very high | Coastal sites within 10 km of the sea, and sites near chemical plants |"}
+{"case": "g044", "doc_id": "corrosion-categories", "quote": "A system can be used at sites with that category or a lower one."}
+{"case": "g045", "doc_id": "services-maintenance", "quote": "An extra inspection after a storm with wind gusts above 25 m/s or after unusually heavy snow."}
+{"case": "g045", "doc_id": "warranty", "quote": "Damage from wind or snow above the values used in the structural calculation."}
+{"case": "g056", "doc_id": "products-ground-mount-gf2", "quote": "The zinc-magnesium coating on GF-2 is thinner than the hot-dip galvanising on GF-1, but it protects better in salty air."}
+{"case": "g057", "doc_id": "products-overview", "quote": "| GroundFrame GF-2 | Ground, twin post | Steel with zinc-magnesium coating | C5 |"}
+{"case": "g058", "doc_id": "corrosion-categories", "quote": "| CX | Extreme | Offshore and splash zones |"}
+{"case": "g058", "doc_id": "corrosion-categories", "quote": "The company does not offer any system for category CX."}
+{"case": "g059", "doc_id": "foundations-ground-mount", "quote": "Rammed posts are usually driven 1.5 m to 2.5 m deep. The exact depth comes from the geotechnical survey."}
+{"case": "g059", "doc_id": "foundations-ground-mount", "quote": "Every ground-mount project needs a geotechnical survey before the detailed design."}
+{"case": "g060", "doc_id": "warranty", "quote": "| Installation warranty | 5 years | Installation work done by the company's crews |"}
+{"case": "g061", "doc_id": "products-flat-roof-rf2", "quote": "The low tilt and closed shape catch less wind, so it needs less ballast than RF-1."}
+{"case": "g061", "doc_id": "products-overview", "quote": "RF-2 puts less load on the roof and is rated for C4."}
+{"case": "g062", "doc_id": "pricing-commercial-offer", "quote": "The offer is valid for 30 days from its date."}
+{"case": "g063", "doc_id": "products-carport-cp1", "quote": "| Material | Steel, hot-dip galvanised |"}
+{"case": "g064", "doc_id": "loads-wind-and-snow", "quote": "| GroundFrame GF-2 | 36 m/s | 3.5 kN/m² |"}
+{"case": "g065", "doc_id": "warranty", "quote": "| Product warranty | 15 years |"}
+{"case": "g065", "doc_id": "warranty", "quote": "| Installation warranty | 5 years | Installation work done by the company's crews |"}
+{"case": "g066", "doc_id": "products-overview", "quote": "| GroundFrame GF-2 | Ground, twin post | Steel with zinc-magnesium coating | C5 |"}
+{"case": "g067", "doc_id": "corrosion-coatings", "quote": "Average coating thickness: 85 µm."}
+{"case": "g067", "doc_id": "corrosion-coatings", "quote": "The anodic layer is 15 µm on RF-1 and RP-1 and 20 µm on RF-2."}
+{"case": "g068", "doc_id": "company-contacts", "quote": "The usual reply time is within 2 working days."}
+{"case": "g068", "doc_id": "warranty", "quote": "The company replies within 5 working days and arranges an inspection if needed."}
+{"case": "g069", "doc_id": "products-ground-mount-gf1", "quote": "| Tilt angle | 15° to 35° |"}
+{"case": "g069", "doc_id": "products-ground-mount-gf2", "quote": "| Tilt angle | 10° to 30° |"}
+{"case": "g070", "doc_id": "process-site-survey", "quote": "The site survey is free for projects of 100 kWp and above that are in one of the three sales regions."}
