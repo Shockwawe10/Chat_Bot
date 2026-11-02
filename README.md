@@ -338,7 +338,7 @@ Tests are organized by risk, not by feature. Each risk has an example, a suite t
 
 Rules:
 
-- About 75 cases, written by hand **before** any tuning.
+- About 75 cases, written **before** any tuning. Cases may be drafted or edited by AI or by me, under the rules in [AI and human authorship](#ai-and-human-authorship).
 - Categories and target counts: single fact 20, multi-document 10, numeric 15, out of scope (must refuse) 10, false premise 8, ambiguous 7, unsupported language (must reply that only English is supported) 5.
 - **Dev / holdout split.** About 70% dev for tuning and 30% holdout, split within each category so both sets have the same mix. Holdout runs only at the end of a stage, manually, and its results go to `reports/holdout/`. It is never part of the nightly run, so the metrics measure the chatbot, not how well it was fitted to the tests.
 - **Smoke set.** 3 dev cases from each category, 21 in total. Every category is covered, so a PR cannot break refusals or numbers unnoticed.
@@ -407,11 +407,23 @@ API keys are stored in GitHub Secrets. The smoke set is small to keep paid API u
 Code in this repository is written with Claude Code. I own the requirements, the test design and the review. Every line merged must be something I can explain.
 
 1. **Spec first.** Before asking for code, I write in plain words what the code must do and how I will check it.
-2. **Explain before merge.** After generation I ask for a line-by-line explanation, then summarize it in my own words in the PR description and in `LEARNING_LOG.md`.
+2. **Explain before merge.** After generation I ask for a line-by-line explanation. The PR description and the `LEARNING_LOG.md` entry may be drafted by AI, but I review and edit them so they say what I understand.
 3. **One manual change a day.** At least one small change is done by hand, without AI: a parameter, a rename, a bug fix.
-4. **Tests are mine.** AI may help with syntax, but what to test and which edge cases to cover is my decision.
+4. **Tests are mine.** AI may propose what to test and which edge cases to cover, but the decision is mine.
 5. **No secrets in the repo.** Keys only in `.env` and GitHub Secrets.
 6. **Measure, don't guess.** Any change to prompt, retrieval or model goes through `make eval-smoke` before the PR.
+
+### AI and human authorship
+
+AI and I can both write and edit code, documents, the golden dataset and the gold spans. What makes the work trustworthy is the review, not who typed it:
+
+1. **AI work is marked until I review it.** A document drafted by AI says so at the top. A golden case records who wrote it in `authored_by` (`human` or `claude-draft`) and who reviewed it in `reviewed_by`.
+2. **A golden case counts only after I review it.** I check the question, the expected answer, `must_include` and the gold spans against `data/kb`, then set `reviewed_by`. A case without a review is a draft and is not scored.
+3. **A blind check by a person.** Before the set is accepted, a person who is neither me nor an AI labels the expected behaviour of 20 cases, using only `data/kb`. At least 90% agreement is needed. Below 80%, the disputed cases are rewritten first.
+4. **Human labels stay human.** The judge-calibration labels and the blind check are written by people only. They are the reference the AI is measured against, so AI cannot produce them.
+5. **The author is not the judge.** The model that drafts golden cases is never the judge model, and the judge model is never the model that answers.
+6. **No peeking at the holdout.** An AI session that changes the prompt, retrieval or model never reads holdout cases. It works on dev only and reports holdout results as ids and counts.
+7. **Every edit is versioned.** Any change to the golden dataset, by AI or by me, bumps `dataset_version`. A change to a holdout case also needs the holdout hash to be frozen again on purpose.
 
 ### Git
 
@@ -424,7 +436,7 @@ Code in this repository is written with Claude Code. I own the requirements, the
 - [ ] All tests pass locally and in CI
 - [ ] `make eval-smoke` meets every PR threshold
 - [ ] Changes to prompt, model or retrieval are recorded in a run manifest
-- [ ] PR description explains the change in my own words
+- [ ] PR description explains the change, reviewed and edited by me if AI drafted it
 - [ ] `LEARNING_LOG.md` entry added
 - [ ] Results table regenerated with `make results` if a metric moved
 
