@@ -1,12 +1,12 @@
-# Golden dataset v1.1: validation
+# Golden dataset v1.2: validation
 
 ## Acceptance status
 
-The set is accepted only when all three checks pass, and it is scored only case by case after review: 0 of 75 cases have `reviewed_by` set.
+The set is accepted only when all three checks pass, and it is scored only case by case after review. I reviewed all 75 cases against `data/kb` on 2026-11-02 and recorded it in `reviewed_by` in v1.2.
 
 | Check | Pass criterion | Status |
 | --- | --- | --- |
-| Validator | `python -m evals.validate_golden` exits 0 | **Passed** on 2026-11-02 for v1.1. Its 26 tests in `tests/unit/test_validate_golden.py` include a check that the set validates with both LF and CRLF line endings, and one that the holdout matches its frozen hash and version, which now runs in CI. `python -m evals.mutation_check --only golden:` breaks the validator 11 ways, all caught |
+| Validator | `python -m evals.validate_golden` exits 0 | **Passed** on 2026-11-02 for v1.2. Its 26 tests in `tests/unit/test_validate_golden.py` include a check that the set validates with both LF and CRLF line endings, and one that the holdout matches its frozen hash and version, which now runs in CI. `python -m evals.mutation_check --only golden:` breaks the validator 11 ways, all caught |
 | Blind second annotator | At least 90% agreement on expected behaviour for the 20 cases in `evals/annotation/blind_20.csv`. Below 80%, rewrite the disputed cases before anything else | **Pending.** Needs a person who is neither me nor an AI |
 | Baselines separate | The predictions below hold | **Pending.** Needs `run_evals.py` and the local models |
 
@@ -22,9 +22,13 @@ Claude drafted all 75 cases on 2026-10-31 from `data/kb` and the chunker v1 outp
 
 A review against the source text then corrected 4 expected answers that claimed more than the knowledge base says. Gold-span coverage is 100%, but mostly by construction: the gold quotes are short single sentences. Read it as "no gold sentence is split by the chunker", not as evidence that the chunk size is right. The holdout hash was frozen after these fixes. Any later change to a holdout case means bumping `dataset_version` and freezing again on purpose.
 
+## Changes in v1.2
+
+On 2026-11-02 I reviewed all 75 cases and kept them as they were, including g070. `reviewed_by` is set on every case, and no other field changed. The holdout was frozen again on purpose at v1.2, because the hash covers every field.
+
 ## Changes in v1.1
 
-Made on 2026-11-02 by Claude Code, from the review of v1.0, and not reviewed by me yet. The holdout was frozen again on purpose at v1.1.
+Made on 2026-11-02 by Claude Code, from the review of v1.0. The holdout was frozen again on purpose at v1.1.
 
 - Every case has `reviewed_by`, empty for now. Under the README's authorship rules a case is scored only after review.
 - `must_include` is matched as whole values (see Known limits). In v1.0 an answer giving only "15 years" passed g065's "15 years" and "5 years".
