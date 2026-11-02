@@ -19,3 +19,21 @@ Written by /aar-loop after each session's After Action Review. Read this file be
 - Actual: The shell rejected the whole command at parse time and wrote none of the 7 files; the 12 files from the earlier batch were intact.
 - Why: Parse errors abort the command before any line runs. I did not find the offending character, so the next attempt used 7 separate Write calls instead.
 - tags: bash,files,logged-only
+
+## 2026-10-31 -- Compute every count and chunk claim in LEARNING_LOG.md or a report from the saved JSON or trace before writing it. Do not write it from memory of the output.
+- Expected: The run 1 Q6 note would state how many chunks of the gold document were retrieved.
+- Actual: I wrote 'three other chunks of the right documents' and repeated it to the user. company-overview had 2 chunks in the top 5, and the note also said the cited chunks did not support the reason when they supported the flat-roof facts.
+- Why: I summarised the retrieved list by eye while drafting, and no script checked the sentence. The same slip happened in Stage 1, when I said 6 title chunks and there were 7. It was only caught when the false-claim rule forced a re-read.
+- tags: reporting,evals,fix-applied
+
+## 2026-10-31 -- Before trusting an eval scorer or CI gate, feed it the pipeline's fixed refusal sentence and a near-value wrong answer such as 15 years for 5 years. A must_include match after removing spaces is a substring match, so it needs number boundaries.
+- Expected: The validator passing with exit 0 and 11 tests would mean must_include and the PR gate could score answers.
+- Actual: A 15-years-only answer passes g065, the refusal sentence passes 5 of 15 smoke cases that should be answered, and a correct clarifying question fails g065 and g070.
+- Why: The validator only checks the data against its design: must_include inside expected_answer. Nothing ran a wrong output through the scoring rule. The defects appeared only when real strings were tested with normalise.
+- tags: evals,golden,fix-applied
+
+## 2026-10-31 -- Never print or read holdout case text from evals/golden_dataset.jsonl in a session that may tune the pipeline. Filter to split == dev, report holdout as ids and booleans only, and do not run the pipeline on holdout before the end of a stage.
+- Expected: A golden set review would need to read every case to verify its facts.
+- Actual: Reading the 52 dev cases against data/kb plus id-only checks on the 23 holdout cases found the defects, including g070, without exposing a holdout question. Holdout facts stay unverified by me, and the 2 holdout near misses were not run.
+- Why: I tune prompts in Stage 3, so holdout text I read stops being held out. The trade-off is that holdout facts need a human reviewer.
+- tags: evals,holdout,what-worked,fix-applied
