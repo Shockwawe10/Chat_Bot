@@ -22,6 +22,8 @@ SETTINGS = ROOT / "app" / "settings.py"
 RETRIEVER = ROOT / "app" / "retriever.py"
 GENERATOR = ROOT / "app" / "generator.py"
 API = ROOT / "app" / "api.py"
+SCORING = ROOT / "evals" / "scoring.py"
+VALIDATOR = ROOT / "evals" / "validate_golden.py"
 
 PACK = "if joined > cfg.max or (joined > cfg.target and can_stop):"
 MERGE = "if fits and (_size(group) < cfg.min or _only_headings(group)):"
@@ -367,6 +369,39 @@ BREAKS = {
     "config ignores PROMPT_VERSION": [
         (API, 'PromptTemplate.load(env.get("PROMPT_VERSION") or "v2")', 'PromptTemplate.load("v2")')
     ],
+    # Scoring
+    "scoring: no boundary before a value": [(SCORING, 'before = r"(?<![a-z0-9.,])" if', 'before = "" if')],
+    "scoring: no boundary after a value": [(SCORING, 'after = r"(?![a-z0-9])" if', 'after = "" if')],
+    "scoring: thousands separators kept": [(SCORING, '    text = THOUSANDS.sub("", text)\n', "")],
+    "scoring: range forms not unified": [(SCORING, '    text = RANGE.sub(" to ", text)\n', "")],
+    "scoring: unit gap kept": [(SCORING, '    text = UNIT_GAP.sub("", text)\n', "")],
+    "scoring: range unit not copied": [(SCORING, r'return BARE_RANGE.sub(r"\1\3 to \2\3", text)', "return text")],
+    "scoring: degrees word kept": [(SCORING, '    text = DEGREES.sub("°", text)\n', "")],
+    "scoring: m2 not read as square metres": [(SCORING, '    text = SQUARE.sub("²", text)\n', "")],
+    "scoring: Greek mu kept": [(SCORING, "    text = text.replace(GREEK_MU, MICRO_SIGN)", "    text = text")],
+    "scoring: case kept": [(SCORING, "SPACES.sub(\" \", text.lower())", "SPACES.sub(\" \", text)")],
+    # Golden dataset validator
+    "golden: substring match for must_include": [
+        (VALIDATOR, 'if not contains_fact(case["expected_answer"], fact):', 'if fact.lower() not in case["expected_answer"].lower():')
+    ],
+    "golden: clarify may require a value": [
+        (VALIDATOR, 'if case["expected_behaviour"] == "clarify" and case["must_include"]:', "if False:")
+    ],
+    "golden: empty reviewer allowed": [
+        (VALIDATOR, "if reviewer is not None and (not isinstance(reviewer, str) or not reviewer.strip()):", "if False:")
+    ],
+    "golden: any author allowed": [(VALIDATOR, 'if case["authored_by"] not in AUTHORS:', "if False:")],
+    "golden: mixed versions allowed": [(VALIDATOR, "    if len(versions) != 1:\n", "    if False:\n")],
+    "golden: holdout edit allowed": [(VALIDATOR, "    if digest != holdout_hash(cases):\n", "    if False:\n")],
+    "golden: unfrozen version allowed": [(VALIDATOR, "    if version != current:\n", "    if False:\n")],
+    "golden: byte order mark breaks the file": [(VALIDATOR, 'encoding="utf-8-sig", newline=""', 'encoding="utf-8", newline=""')],
+    "golden: empty labels skipped": [
+        (VALIDATOR, '        elif not label:\n            problems.append(f"{row[\'id\']}: behaviour is empty")\n', "")
+    ],
+    "golden: unknown labels allowed": [(VALIDATOR, "        elif label not in BEHAVIOURS:\n", "        elif False:\n")],
+    "golden: agreement always exits 0": [
+        (VALIDATOR, "return 0 if share is not None and share >= ACCEPT else 1", "return 0")
+    ],
 }
 
 
@@ -417,7 +452,7 @@ def main():
     parser.add_argument("--only", default="", help="run only breaks whose name contains this text")
     args = parser.parse_args()
     selected = {name: edits for name, edits in BREAKS.items() if args.only in name}
-    files = (CHUNKER, EMBEDDER, INDEX, SETTINGS, RETRIEVER, GENERATOR, API)
+    files = (CHUNKER, EMBEDDER, INDEX, SETTINGS, RETRIEVER, GENERATOR, API, SCORING, VALIDATOR)
     originals = {path: path.read_bytes() for path in files}
     check_breaks_apply(selected, originals)
 
