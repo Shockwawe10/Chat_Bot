@@ -388,7 +388,8 @@ A count of passing tests says little if the tests cannot fail, so the chunker wa
 - Fourth round, with retrieval, generation and `POST /ask`: 134 breaks, 134 caught.
 - Fifth round, after the abstention contract fix: 158 breaks, 158 caught.
 - Sixth round, with the answer scorer and the golden dataset validator: 179 breaks, 179 caught. On the first try one break survived: with the empty-label check removed, an empty label was still refused, but as an unknown label. The test now checks the message.
-- Seventh round, with the eval harness and the results renderer: 200 breaks, 200 caught. On the first try 3 harness breaks survived, and each one showed a missing test: a gold quote over two lines in a chunk stored with CRLF, a hit found only in a later gold group, and a server error on a case with no fact to check. `python -m evals.mutation_check` runs them all.
+- Seventh round, with the eval harness and the results renderer: 200 breaks, 200 caught. On the first try 3 harness breaks survived, and each one showed a missing test: a gold quote over two lines in a chunk stored with CRLF, a hit found only in a later gold group, and a server error on a case with no fact to check.
+- Eighth round, with the LLM judge and judge calibration: 215 breaks, 215 caught. On the first try 3 breaks survived: no test gave the judge a reference that differed from the answer, none had high agreement with a kappa of 0, and none rendered a plain metric with no value. Each now has a test. The breaks are now made in a temporary copy of the project: when they were made in the real files, a commit during a run saved a broken `app/embedder.py`. `python -m evals.mutation_check` runs them all.
 
 Results are only trusted if they make sense, and two did not:
 
