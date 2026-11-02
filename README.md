@@ -342,7 +342,7 @@ Rules:
 - Categories and target counts: single fact 20, multi-document 10, numeric 15, out of scope (must refuse) 10, false premise 8, ambiguous 7, unsupported language (must reply that only English is supported) 5.
 - **Dev / holdout split.** About 70% dev for tuning and 30% holdout, split within each category so both sets have the same mix. Holdout runs only at the end of a stage, manually, and its results go to `reports/holdout/`. It is never part of the nightly run, so the metrics measure the chatbot, not how well it was fitted to the tests.
 - **Smoke set.** 3 dev cases from each category, 21 in total. Every category is covered, so a PR cannot break refusals or numbers unnoticed.
-- `must_include` lists the exact facts and numbers that must appear. This is what "numeric fidelity" checks, with plain code and no LLM. Matching ignores case, spaces and thousands separators, so `350 kW`, `350kW` and `350 KW` all match. The knowledge base writes each unit in one standard form.
+- `must_include` lists the exact facts and numbers that must appear. This is what "numeric fidelity" checks, with plain code and no LLM. Matching ignores case, spaces and thousands separators, so `350 kW`, `350kW` and `350 KW` all match. It matches whole values only, so `5 years` is not found in `15 years`, and range forms such as `3 to 6`, `3-6` and `3–6` are the same. The rules live in `evals/scoring.py`, and every rule has a test with a near-value wrong answer. The knowledge base writes each unit in one standard form.
 - Any change to the dataset bumps `dataset_version` and triggers a new baseline run.
 
 ### LLM-as-judge calibration
@@ -376,7 +376,8 @@ A count of passing tests says little if the tests cannot fail, so the chunker wa
 - Second round, after the heading merge and config changes: 26 breaks, 26 caught.
 - Third round, with the embedder and index: 72 breaks, 72 caught.
 - Fourth round, with retrieval, generation and `POST /ask`: 134 breaks, 134 caught.
-- Fifth round, after the abstention contract fix: 158 breaks, 158 caught. `python -m evals.mutation_check` runs them all.
+- Fifth round, after the abstention contract fix: 158 breaks, 158 caught.
+- Sixth round, with the answer scorer and the golden dataset validator: 179 breaks, 179 caught. On the first try one break survived: with the empty-label check removed, an empty label was still refused, but as an unknown label. The test now checks the message. `python -m evals.mutation_check` runs them all.
 
 Results are only trusted if they make sense, and two did not:
 
@@ -389,7 +390,7 @@ These breaks were written by hand. [mutmut](https://github.com/boxed/mutmut) can
 
 | When | What runs | Fails the build if |
 | --- | --- | --- |
-| Every pull request | lint; unit, data and API tests; agent tests (from Stage 6); smoke eval (21 dev cases, one pass) | any test fails; any smoke case misses a `must_include` fact or fails to refuse when it should; smoke hit rate@5 or faithfulness is below threshold; any unconfirmed action or PII leak |
+| Every pull request | lint; unit, data and API tests; agent tests (from Stage 6); smoke eval (21 dev cases, one pass) | any test fails; any smoke case misses a `must_include` fact, fails to refuse when it should, or refuses when it should answer; smoke hit rate@5 or faithfulness is below threshold; any unconfirmed action or PII leak |
 | Nightly or manual | full dev eval (three passes), full agent cases, red teaming, garak scan | any nightly metric crosses its threshold |
 | Manual, end of stage | holdout eval, judge calibration | — (results written to `reports/holdout/` and reviewed once) |
 | Manual | drift comparison on a second model | — (report only) |

@@ -19,7 +19,9 @@ would differ between a Windows machine and CI. The chunker is run on the same no
 - word overlap: at least a third of the cases with gold spans are low-overlap
 - near misses: plain BM25 puts a distractor chunk in its top 5
 - seen cases are in dev; no gold quote is shared across dev and holdout
-- the holdout hash matches the frozen one
+- reviews: authored_by is known; reviewed_by is empty (a draft) or names the reviewer
+- clarify cases have no must_include: a correct clarifying question names no value
+- the holdout hash and dataset_version match the frozen ones
 It also prints BM25 hit rate@5 by overlap stratum, one of the pre-registered checks.
 """
 
@@ -37,6 +39,7 @@ import numpy as np
 
 from app.chunker import ChunkConfig, chunk, parse_document
 from evals.chunk_report import KB_DIR
+from evals.scoring import contains_fact
 
 ROOT = Path(__file__).resolve().parents[1]
 DATASET = ROOT / "evals" / "golden_dataset.jsonl"
@@ -105,8 +108,12 @@ REQUIRED_FIELDS = [
     "smoke",
     "seen",
     "authored_by",
+    "reviewed_by",
     "dataset_version",
 ]
+AUTHORS = {"human", "claude-draft"}
+BEHAVIOURS = sorted(set(BEHAVIOUR.values()))
+ACCEPT, REWRITE = 0.90, 0.80  # blind agreement: accept at or above, rewrite below
 SMOKE_PER_CATEGORY = 3
 DOC_MIN, DOC_MAX = 1, 6
 LOW_OVERLAP = 1 / 3  # a case is low-overlap at or below this share
@@ -274,11 +281,18 @@ def check(cases, corpus):
         if not case["question"].strip() or not case["expected_answer"].strip():
             errors.append(f"{cid}: empty question or expected answer")
 
-        # must_include facts must appear in the expected answer, after normalising.
-        answer = normalise(case["expected_answer"])
+        if case["authored_by"] not in AUTHORS:
+            errors.append(f"{cid}: authored_by must be one of {sorted(AUTHORS)}")
+        reviewer = case["reviewed_by"]
+        if reviewer is not None and (not isinstance(reviewer, str) or not reviewer.strip()):
+            errors.append(f"{cid}: reviewed_by must be null (a draft) or name the reviewer")
+
+        # must_include facts must appear in the expected answer, as whole values.
         for fact in case["must_include"]:
-            if normalise(fact) not in answer:
+            if not contains_fact(case["expected_answer"], fact):
                 errors.append(f"{cid}: must_include {fact!r} is not in expected_answer")
+        if case["expected_behaviour"] == "clarify" and case["must_include"]:
+            errors.append(f"{cid}: a clarify case must have no must_include")
 
         # Gold spans by behaviour.
         has_gold = bool(case["gold"])
@@ -369,6 +383,9 @@ def check(cases, corpus):
                     f"{cid}: BM25 top {TOP_K} has none of its distractors, so it is not a near miss"
                 )
 
+    versions = {case.get("dataset_version") for case in cases}
+    if len(versions) != 1:
+        errors.append(f"cases disagree on dataset_version: {sorted(map(str, versions))}")
     errors += check_counts(cases, corpus)
     errors += check_split_leaks(cases)
     if stats["overlap"]:
@@ -446,37 +463,69 @@ def check_split_leaks(cases):
     return errors
 
 
-def normalise(text):
-    """Case, spaces and thousands separators ignored, as the README's numeric fidelity rule says."""
-    text = text.lower().replace(" ", " ")
-    text = re.sub(r"(?<=\d),(?=\d{3}\b)", "", text)
-    return re.sub(r"\s+", "", text)
+def read_annotation(cases, path):
+    """Rows of a blind annotation file. Every row must name a known case and one behaviour."""
+    by_id = {case["id"]: case for case in cases}
+    # utf-8-sig: Excel saves UTF-8 with a byte order mark, which would hide the "id" column.
+    with open(path, encoding="utf-8-sig", newline="") as handle:
+        rows = list(csv.DictReader(handle))
+    problems = []
+    for row in rows:
+        label = (row.get("behaviour") or "").strip()
+        if row.get("id") not in by_id:
+            problems.append(f"unknown case id {row.get('id')!r}")
+        elif not label:
+            problems.append(f"{row['id']}: behaviour is empty")
+        elif label not in BEHAVIOURS:
+            problems.append(f"{row['id']}: behaviour {label!r} is not one of {BEHAVIOURS}")
+    if not rows:
+        problems.append("the file has no rows")
+    return rows, problems
 
 
 def agreement(cases, path):
-    """Share of cases where a blind annotator chose the same expected behaviour."""
-    by_id = {case["id"]: case for case in cases}
-    with open(path, encoding="utf-8") as handle:
-        rows = [
-            row for row in csv.DictReader(handle) if row.get("behaviour", "").strip()
-        ]
-    if not rows:
-        raise SystemExit(f"{path}: no filled-in rows")
-    same = [
-        row
-        for row in rows
-        if row["behaviour"].strip() == by_id[row["id"]]["expected_behaviour"]
-    ]
-    print(
-        f"behaviour agreement: {len(same)}/{len(rows)} = {len(same) / len(rows):.0%} (accept at >= 90%)"
-    )
-    for row in rows:
-        if row not in same:
-            print(
-                f"  {row['id']}: annotator {row['behaviour']!r}, dataset "
-                f"{by_id[row['id']]['expected_behaviour']!r}"
-            )
-    return len(same) / len(rows)
+    """Return (share agreed, problems). A share is only given for a complete, valid file."""
+    rows, problems = read_annotation(cases, path)
+    if problems:
+        return None, problems
+    expected = {case["id"]: case["expected_behaviour"] for case in cases}
+    disputed = [row for row in rows if row["behaviour"].strip() != expected[row["id"]]]
+    share = (len(rows) - len(disputed)) / len(rows)
+    print(f"behaviour agreement: {len(rows) - len(disputed)}/{len(rows)} = {share:.0%}")
+    for row in disputed:
+        print(f"  {row['id']}: annotator {row['behaviour'].strip()!r}, dataset {expected[row['id']]!r}")
+    if share >= ACCEPT:
+        print(f"accepted (at least {ACCEPT:.0%})")
+    elif share >= REWRITE:
+        print(f"not accepted: review the disputed cases (accept at {ACCEPT:.0%})")
+    else:
+        print(f"not accepted: rewrite the disputed cases first (below {REWRITE:.0%})")
+    return share, []
+
+
+def read_frozen(path=HOLDOUT_HASH):
+    """Return (digest, dataset_version) recorded by --freeze, or None."""
+    if not path.exists():
+        return None
+    parts = path.read_text(encoding="utf-8").split()
+    version = parts[1].removeprefix("dataset_version=") if len(parts) > 1 else None
+    return parts[0], version
+
+
+def check_frozen(cases, path=HOLDOUT_HASH):
+    """The holdout may change only with a new dataset_version and a deliberate freeze."""
+    frozen = read_frozen(path)
+    if frozen is None:
+        return ["holdout hash not frozen yet (run --freeze once the set is accepted)"]
+    digest, version = frozen
+    current = cases[0]["dataset_version"] if cases else None
+    if digest != holdout_hash(cases):
+        if version == current:
+            return ["holdout changed since it was frozen: bump dataset_version and re-freeze on purpose"]
+        return [f"holdout changed for dataset_version {current}: run --freeze on purpose"]
+    if version != current:
+        return [f"dataset_version is {current} but the holdout was frozen at {version}: run --freeze"]
+    return []
 
 
 def report(cases, stats):
@@ -485,6 +534,8 @@ def report(cases, stats):
         f"holdout: {sum(c['split'] == 'holdout' for c in cases)}  "
         f"smoke: {sum(c['smoke'] for c in cases)}  seen: {sum(c['seen'] for c in cases)}"
     )
+    reviewed = sum(c["reviewed_by"] is not None for c in cases)
+    print(f"reviewed: {reviewed} of {len(cases)} (unreviewed cases are drafts and are not scored)")
     overlap = stats["overlap"]
     low = {cid for cid, share in overlap.items() if share <= LOW_OVERLAP}
     print(
@@ -531,8 +582,10 @@ def main(argv=None):
         write_dataset(cases)
         print("offsets recomputed from quotes")
     if args.agreement:
-        agreement(cases, args.agreement)
-        return 0
+        share, problems = agreement(cases, args.agreement)
+        for problem in problems:
+            print(f"ERROR {problem}")
+        return 0 if share is not None and share >= ACCEPT else 1
 
     errors, stats = check(cases, corpus)
     report(cases, stats)
@@ -554,18 +607,12 @@ def main(argv=None):
         GOLD_SPANS.write_text("\n".join(lines) + "\n", encoding="utf-8", newline="\n")
         print(f"wrote {len(lines)} spans to {GOLD_SPANS.relative_to(ROOT)}")
 
-    digest = holdout_hash(cases)
     if args.freeze:
-        HOLDOUT_HASH.write_text(digest + "\n", encoding="utf-8", newline="\n")
-        print(f"holdout frozen: {digest}")
-    elif not HOLDOUT_HASH.exists():
-        errors.append(
-            "holdout hash not frozen yet (run --freeze once the set is accepted)"
-        )
-    elif HOLDOUT_HASH.read_text(encoding="utf-8").strip() != digest:
-        errors.append(
-            "holdout changed since it was frozen: bump dataset_version and re-freeze on purpose"
-        )
+        digest, version = holdout_hash(cases), cases[0]["dataset_version"]
+        HOLDOUT_HASH.write_text(f"{digest} dataset_version={version}\n", encoding="utf-8", newline="\n")
+        print(f"holdout frozen at dataset_version {version}: {digest}")
+    else:
+        errors += check_frozen(cases)
 
     for error in errors:
         print(f"ERROR {error}")

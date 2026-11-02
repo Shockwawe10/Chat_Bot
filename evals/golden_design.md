@@ -85,4 +85,7 @@ README fields, plus the fields that make grading claim by claim possible.
 | `distractors` | Chunks that look relevant but do not hold the answer: `{doc_id, quote}` |
 | `required_claims` | Claims a correct answer must make |
 | `forbidden_claims` | Claims that make the answer wrong |
-| `smoke`, `seen`, `authored_by` | Smoke set member; already run through the pipeline; who wrote the case |
+| `smoke`, `seen`, `authored_by` | Smoke set member; already run through the pipeline; who wrote the case (`human` or `claude-draft`) |
+| `reviewed_by` | Who checked the case against `data/kb`, or `null` for a draft. Added in v1.1; drafts are not scored |
+
+A clarify case has an empty `must_include`, because a correct clarifying question names no value. Its required claims say "asks which ..., or gives ..." so that both correct replies pass.

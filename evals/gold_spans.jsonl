@@ -59,6 +59,8 @@
 {"case": "g041", "doc_id": "warranty", "quote": "Both periods start on the date of the handover certificate."}
 {"case": "g042", "doc_id": "process-site-survey", "quote": "The engineer writes a survey report. It is the basis for the preliminary design and the commercial offer."}
 {"case": "g042", "doc_id": "services-design", "quote": "**Preliminary design.** Made after the site survey. It gives the layout, the chosen mounting system and the plant size in kWp."}
+{"case": "g042", "doc_id": "process-cooperation-stages", "quote": "For ground-mount projects, a geotechnical survey follows."}
+{"case": "g042", "doc_id": "process-site-survey", "quote": "For ground-mount sites, the report also says where the geotechnical survey will be done."}
 {"case": "g043", "doc_id": "products-flat-roof-rf1", "quote": "| Maximum roof slope | 5° |"}
 {"case": "g043", "doc_id": "products-flat-roof-rf2", "quote": "| Maximum roof slope | 5° |"}
 {"case": "g043", "doc_id": "products-pitched-roof-rp1", "quote": "| Roof slope | 10° to 60° |"}

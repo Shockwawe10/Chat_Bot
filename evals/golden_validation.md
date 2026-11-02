@@ -1,12 +1,12 @@
-# Golden dataset v1.0: validation
+# Golden dataset v1.1: validation
 
 ## Acceptance status
 
-The set is accepted only when all three checks pass.
+The set is accepted only when all three checks pass, and it is scored only case by case after review: 0 of 75 cases have `reviewed_by` set.
 
 | Check | Pass criterion | Status |
 | --- | --- | --- |
-| Validator | `python -m evals.validate_golden` exits 0 | **Passed** on 2026-10-31. Its 11 tests in `tests/unit/test_validate_golden.py` include 7 deliberate breaks, all caught, and a check that the set validates with both LF and CRLF line endings |
+| Validator | `python -m evals.validate_golden` exits 0 | **Passed** on 2026-11-02 for v1.1. Its 26 tests in `tests/unit/test_validate_golden.py` include a check that the set validates with both LF and CRLF line endings, and one that the holdout matches its frozen hash and version, which now runs in CI. `python -m evals.mutation_check --only golden:` breaks the validator 11 ways, all caught |
 | Blind second annotator | At least 90% agreement on expected behaviour for the 20 cases in `evals/annotation/blind_20.csv`. Below 80%, rewrite the disputed cases before anything else | **Pending.** Needs a person who is neither me nor an AI |
 | Baselines separate | The predictions below hold | **Pending.** Needs `run_evals.py` and the local models |
 
@@ -21,6 +21,17 @@ Claude drafted all 75 cases on 2026-10-31 from `data/kb` and the chunker v1 outp
 - an answer that failed its own `must_include`
 
 A review against the source text then corrected 4 expected answers that claimed more than the knowledge base says. Gold-span coverage is 100%, but mostly by construction: the gold quotes are short single sentences. Read it as "no gold sentence is split by the chunker", not as evidence that the chunk size is right. The holdout hash was frozen after these fixes. Any later change to a holdout case means bumping `dataset_version` and freezing again on purpose.
+
+## Changes in v1.1
+
+Made on 2026-11-02 by Claude Code, from the review of v1.0, and not reviewed by me yet. The holdout was frozen again on purpose at v1.1.
+
+- Every case has `reviewed_by`, empty for now. Under the README's authorship rules a case is scored only after review.
+- `must_include` is matched as whole values (see Known limits). In v1.0 an answer giving only "15 years" passed g065's "15 years" and "5 years".
+- A clarify case may not have `must_include`, because a correct clarifying question names no value. g065 (dev) now accepts "asks which warranty, or gives both". g070 (holdout) lost its `must_include`, but its 2 required claims still contain numbers and do not offer the clarifying question as an option. That was changed without reading the case, so it needs my review.
+- g042 now includes the geotechnical survey that follows the site visit on ground-mount projects, with a third gold group.
+- The validator rejects an unknown `authored_by`, an empty `reviewed_by`, and cases on different versions. The frozen hash now records its `dataset_version`, and a test checks it in CI.
+- `--agreement` reads files that Excel saved with a byte order mark, refuses a file with empty or unknown labels, and exits 1 below 90%.
 
 ## Predictions, recorded before any pipeline run on this set
 
@@ -56,7 +67,8 @@ The 20 cases cover all 7 categories (3 each, 2 for language), 12 from dev and 8 
 
 ## Known limits
 
-- **`must_include` and ranges.** g003, g023, g024, g028 and g029 expect forms like "3 to 6 weeks". The README's normalisation ignores case, spaces and thousands separators, so "3–6 weeks" would fail. The harness should treat "3 to 6", "3-6" and "3–6" as the same, and also cover spelled-out units such as "square metres".
+- **`must_include` matching.** Fixed in v1.1 by `evals/scoring.py`, which the validator and the harness share. It matches whole values only, so "5 years" is not found in "15 years" and "0.6 m" is not found in "0.6 mm". "3 to 6", "3-6" and "3–6" are the same, "1.5 to 2.5 m" counts as 1.5 m, and "m2", "degrees" and the Greek letter μ are read as m², ° and µ. Still not matched: spelled-out numbers ("thirty days") and compound forms ("a 5-year warranty").
+- **Near misses and the real retriever.** A near miss is kept when plain BM25 retrieves its distractor, but the pipeline retrieves with dense embeddings. On dev, dense top 5 reaches the distractor for g053 (rank 4) and g054 (rank 1), but not for g050 (rank 19) or g055 (rank 10). The harness must count a near miss as a near-miss test only in runs where its distractor was actually in the context. The 2 holdout near misses were not run.
 - **Price questions.** The README's risk table lists "What is the price per kW?" as must-refuse. The knowledge base says there is no standard price per kWp, so g016 expects an answer that says so. The README row should use a question the knowledge base really cannot answer.
 - **Sample size.** 23 holdout cases detect only large differences. Report the holdout per category as counts, not percentages.
 - **Line endings change chunk ids.** Git stores `data/kb` with LF, and this Windows checkout has CRLF (checked against the blob hashes in `.git/index`). The chunker's offsets and ids depend on the raw text, so the same chunk gets a different id on Windows and in CI. The golden set avoids this by normalising line endings and never storing chunk ids. The harness should match gold to retrieved chunks by quote containment, not by id. A `.gitattributes` line `data/kb/*.md text eol=lf` would remove the difference at the source, but it changes the index fingerprint, so do it as its own commit.
