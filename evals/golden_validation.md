@@ -8,7 +8,7 @@ The set is accepted only when all three checks pass, and it is scored only case 
 | --- | --- | --- |
 | Validator | `python -m evals.validate_golden` exits 0 | **Passed** on 2026-11-02 for v1.2. Its 26 tests in `tests/unit/test_validate_golden.py` include a check that the set validates with both LF and CRLF line endings, and one that the holdout matches its frozen hash and version, which now runs in CI. `python -m evals.mutation_check --only golden:` breaks the validator 11 ways, all caught |
 | Blind second annotator | At least 90% agreement on expected behaviour for the 20 cases in `evals/annotation/blind_20.csv`. Below 80%, rewrite the disputed cases before anything else | **Pending.** Needs a person who is neither me nor an AI |
-| Baselines separate | The predictions below hold | **Pending.** Needs `run_evals.py` and the local models |
+| Baselines separate | The predictions below hold | **Passed** on 2026-11-02: all 5 hold on dev. See [Prediction results](#prediction-results) |
 
 ## Validation note
 
@@ -54,6 +54,26 @@ Written on 2026-10-31. If a prediction fails, the set or the metric is investiga
    - Run 2 gives no more unsupported answers on the 7 dev out-of-scope cases than run 1.
    - This is informed by the sanity runs, where abstentions went from 4 to 6 out of 10, but it is tested on 38 dev cases those runs never saw.
    - If the two runs differ by at most 1 case in every category, the set cannot see a change we already know mattered. Fix the set or the metric before using it to choose between pipeline changes.
+
+## Prediction results
+
+Run on 2026-11-02 at commit `3b5e4cb` with dataset v1.2, on the 52 dev cases, by Claude Code. The run files are in `reports/runs/`. Claude Code wrote this section and I have not reviewed it yet.
+
+| # | Prediction | Result | Holds |
+| --- | --- | --- | --- |
+| 1 | Always abstain: 7/52 on dev | 7/52 on dev. The unit tests also check 10/75 on the whole set | yes |
+| 2 | Always answer: 0 of the out-of-scope cases handled | 0 of 7 on dev. The unit tests also check 0 of 10 on the whole set | yes |
+| 3 | Random retriever: hit rate@5 between 0% and 15% (expected 6.2% on dev) | 4 of 42 (9.5%), seed 42 | yes |
+| 4 | Dense retrieval: hit rate@5 between 60% and 90%, at least 10 points lower on low-overlap cases | 35 of 42 (83%). Low-overlap 16 of 21 (76%), high-overlap 19 of 21 (90%): 14 points lower | yes |
+| 5 | Run 2 refuses at least 3 more of the 42 answerable dev cases than run 1, and answers no more out-of-scope cases | Run 1 refused 11 of 42, run 2 refused 22, and every case run 1 refused, run 2 refused too. Neither answered any of the 7 out-of-scope cases. Retrieval was the same in both runs for all 52 cases | yes |
+
+The run 2 commit `f9d5ed9` and `3b5e4cb` have the same code in `app/` and `prompts/`. Run 1 was served from a worktree of `a3c0e9c` and scored over HTTP by the same harness.
+
+What the results add:
+
+- **The contract fix doubled over-refusal on cases the sanity runs never saw.** On the 31 answerable dev cases that are not `seen`, run 1 refused 8 and run 2 refused 16. The 10 sanity questions showed the same direction (4 to 6 abstentions), and the set now measures it.
+- **Behaviour that code cannot decide.** The first version of the harness counted it as a pass, and an always-"Yes." system scored 0.38. It is now left for the judge: 8 of the 52 pipeline cases and 20 of the always-answer cases.
+- **A matcher bug found by the first pipeline run.** The rule that joined a number to its unit also joined "A4 fasteners" and "GF-2 would", so two correct answers scored as wrong. The rule was changed and both answers are now tests.
 
 ## Blind check: how to run it
 
