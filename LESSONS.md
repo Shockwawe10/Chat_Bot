@@ -61,3 +61,15 @@ Written by /aar-loop after each session's After Action Review. Read this file be
 - Actual: Commit dafea09 (Stage 2 harness) was made while the check was running and captured app/embedder.py with truncate set to true, one of the deliberate breaks. Stopping the run later also left app/generator.py without its output schema.
 - Why: The check wrote each break into the real file and restored it after the tests, so anything reading the working tree during that window, including git commit, saw broken code. Fixed in 11608dc and by running the breaks in a copy; the CLAUDE.md rule now says to keep it that way.
 - tags: evals,mutation,git,fix-applied
+
+## 2026-11-02 -- A background job dies when the Claude Code session ends, with no completion record. When resuming, read its output file and count finished items before saying anything about it; never assume it completed. Before starting a job longer than about 10 minutes, tell the owner how long it takes and that ending the session stops it.
+- Expected: The full 215-break mutation run started in one session would finish and be reported in the next.
+- Actual: The session ended and the task notification said 'stopped, no completion record'. The output file showed 78 of 215 breaks done, and the run had to be restarted from the beginning.
+- Why: Background shells belong to the session process. The mutation check has no resume point, so a partial run is lost, and the notification alone does not say how far it got.
+- tags: background,mutation,logged-only
+
+## 2026-11-02 -- Before running make calibrate, confirm with the owner that every label in evals/annotation/judge_labels.csv is their own judgement, and record who labelled it in reports/judge_calibration.json. Labels pasted as a ready-made block are a sign they may have been drafted by a model.
+- Expected: The owner would label the 30 answers themselves, as the README authorship rules require for calibration labels.
+- Actual: The labels arrived as a pasted block headed 'Ready to paste', in the style of an AI reviewer. I wrote them in and flagged the question in one line, but the calibration run started before the owner confirmed, and nothing in the result would record who labelled.
+- Why: evals/calibrate_judge.py reads only yes or no per row and stores no labeller, so a model-written label set would pass silently and the judge would be graded by a model.
+- tags: evals,judge,calibration,fix-applied

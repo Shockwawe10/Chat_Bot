@@ -54,7 +54,7 @@ Wind load and snow load are calculated to the Eurocodes: EN 1991-1-4 for wind an
 | Maximum wind speed | 28 m/s |
 | Maximum snow load | 2.0 kN/m² |
 | Added roof load | 18 to 30 kg/m², including ballast |
-| Maximum roof slope | 5° |",,
+| Maximum roof slope | 5° |",yes,"every claim is true, but the answer is incomplete: it picks one product. Tests whether the judge mixes up faithfulness with completeness."
 2,g007,20261102T103932Z-pipeline-dev,"When your people come for the yearly check-up, what do they actually look at?","They look at bolt torque on a sample of connections, coating condition (scratches, white rust and red rust), post and pile movement on ground-mount plants, ballast position on flat roofs, and module clamps.","## Repairs
 
 Small coating damage is repaired with zinc-rich paint during the inspection. Damaged parts are replaced after the customer approves a repair offer.
@@ -95,7 +95,7 @@ The warranty applies only if all of these are true:
 
 ## When it happens
 
-The survey is usually scheduled within 10 working days of the request. The customer confirms the date before the visit is booked.",,
+The survey is usually scheduled within 10 working days of the request. The customer confirms the date before the visit is booked.",yes,
 3,g003,20261102T104200Z-http-dev,"After we sign, how long do your engineers need before the build drawings are ready?","After the contract is signed, the detailed design takes 3 to 6 weeks to complete, as stated in the typical durations for each stage.","## Two design steps
 
 1. **Preliminary design.** Made after the site survey. It gives the layout, the chosen mounting system and the plant size in kWp. The commercial offer is based on it.
@@ -132,7 +132,7 @@ The customer approves the detailed design before production starts. Changes afte
 
 ## Typical duration
 
-Supply usually takes 6 to 10 weeks after the customer approves the detailed design. This is a typical range, not a commitment. The delivery dates for a specific project are set in the contract.",,
+Supply usually takes 6 to 10 weeks after the customer approves the detailed design. This is a typical range, not a commitment. The delivery dates for a specific project are set in the contract.",yes,
 4,g025,20261102T104200Z-http-dev,How much zinc is on the single-post ground system?,"The single-post ground system has an average coating thickness of 85 µm, which is the hot-dip galvanising coating.","## Specifications
 
 | Parameter | Value |
@@ -186,7 +186,7 @@ GF-1 is a ground-mount system with one row of posts per table. It is the standar
 - **Hot-dip galvanising.** Used on GroundFrame GF-1 and CarportFrame CP-1. Parts are galvanised after cutting and drilling, so the edges and holes are also protected. Average coating thickness: 85 µm.
 - **Zinc-magnesium coating.** Used on GroundFrame GF-2. The coating is applied to the steel strip before forming. Cut edges are protected by the coating itself, which flows over them as it corrodes slowly. Coating thickness: 25 µm per side.
 
-Bolts and nuts on steel systems are hot-dip galvanised.",,
+Bolts and nuts on steel systems are hot-dip galvanised.",yes,
 5,g021,20261102T104200Z-http-dev,What is the minimum ground clearance of GroundFrame GF-2?,The minimum ground clearance of GroundFrame GF-2 is at least 0.6 m.,"## Specifications
 
 | Parameter | Value |
@@ -237,7 +237,7 @@ GF-2 is a ground-mount system with two rows of posts per table. It carries large
 
 ## Where not to use it
 
-GF-1 is not used in corrosivity category C5, for example within 10 km of the sea. GroundFrame GF-2 is used there instead. Installing GF-1 at a site with a higher corrosivity category than C4 voids the coating warranty.",,
+GF-1 is not used in corrosivity category C5, for example within 10 km of the sea. GroundFrame GF-2 is used there instead. Installing GF-1 at a site with a higher corrosivity category than C4 voids the coating warranty.",yes,
 6,g021,20261102T103932Z-pipeline-dev,What is the minimum ground clearance of GroundFrame GF-2?,At least 0.6 m,"## Specifications
 
 | Parameter | Value |
@@ -288,7 +288,7 @@ GF-2 is a ground-mount system with two rows of posts per table. It carries large
 
 ## Where not to use it
 
-GF-1 is not used in corrosivity category C5, for example within 10 km of the sea. GroundFrame GF-2 is used there instead. Installing GF-1 at a site with a higher corrosivity category than C4 voids the coating warranty.",,
+GF-1 is not used in corrosivity category C5, for example within 10 km of the sea. GroundFrame GF-2 is used there instead. Installing GF-1 at a site with a higher corrosivity category than C4 voids the coating warranty.",yes,
 7,g010,20261102T103932Z-pipeline-dev,A different firm put up the racking you sold us. Will you still service it?,"Yes, maintenance is offered for any mounting system the company supplied, also when another contractor installed it.","Installation is offered only for mounting systems that the company also supplied.
 
 Maintenance is offered for any mounting system the company supplied, also when another contractor installed it.
@@ -339,7 +339,7 @@ The warranty applies only if all of these are true:
 - The system was built to the company's approved design.
 - The corrosivity category of the site is not higher than the category the product is rated for.
 - An inspection was done every 12 months, by the company or a contractor approved by the company, and the inspection reports are kept.
-- The system was not modified without written approval from the company.",,
+- The system was not modified without written approval from the company.",yes,
 8,g006,20261102T103932Z-pipeline-dev,"Is there one person at your end for our region, or do we deal with a different contact each time?","Each sales region (North, Central and South) has its own project manager. The sales team assigns the manager after the first request, based on the project location.","## Regional managers
 
 Each sales region (North, Central and South) has its own project manager. The sales team assigns the manager after the first request, based on the project location.
@@ -375,7 +375,7 @@ The company does not publish a phone number. A project manager calls the custome
 
 ## When it happens
 
-The survey is usually scheduled within 10 working days of the request. The customer confirms the date before the visit is booked.",,
+The survey is usually scheduled within 10 working days of the request. The customer confirms the date before the visit is booked.",yes,
 9,g039,20261102T104200Z-http-dev,We'd like panels on the warehouse but we've lost all the building plans. Can it still happen?,"Yes, it can still happen because the company can order a roof assessment from a partner engineer at the customer's cost if neither roof drawings nor an existing structural report exists.","## For every project
 
 - Company name and a contact person with an email address.
@@ -410,7 +410,7 @@ The company's own crews build the mounting system and fix the PV modules to it. 
 
 ## Who does it
 
-The customer provides roof drawings or an existing structural report. If neither exists, the company can order a roof assessment from a partner engineer at the customer's cost. The cost is stated in the commercial offer.",,
+The customer provides roof drawings or an existing structural report. If neither exists, the company can order a roof assessment from a partner engineer at the customer's cost. The cost is stated in the commercial offer.",yes,
 10,g006,20261102T104200Z-http-dev,"Is there one person at your end for our region, or do we deal with a different contact each time?","Each sales region (North, Central and South) has its own project manager, and the sales team assigns the manager after the first request based on the project location. Therefore, you deal with a different contact each time depending on the project location.","## Regional managers
 
 Each sales region (North, Central and South) has its own project manager. The sales team assigns the manager after the first request, based on the project location.
@@ -446,7 +446,7 @@ The company does not publish a phone number. A project manager calls the custome
 
 ## When it happens
 
-The survey is usually scheduled within 10 working days of the request. The customer confirms the date before the visit is booked.",,
+The survey is usually scheduled within 10 working days of the request. The customer confirms the date before the visit is booked.",no,"“you deal with a different contact each time” contradicts the context, which says each region has its own project manager."
 11,g036,20261102T104200Z-http-dev,"Which fasteners does RF-2 use, and why those?","RF-2 uses stainless steel A4 fasteners because they resist chlorides from salt and are suitable for systems rated up to C4, which matches the corrosionivity category of RF-2.","## Stainless steel fasteners
 
 Aluminium systems use stainless steel fasteners:
@@ -491,7 +491,7 @@ RF-2 is a flat-roof system with modules facing east and west in pairs. The low t
 | Maximum wind speed | 30 m/s |
 | Maximum snow load | 2.4 kN/m² |
 | Added roof load | 12 to 20 kg/m², including ballast |
-| Maximum roof slope | 5° |",,
+| Maximum roof slope | 5° |",no,“suitable for systems rated up to C4” reverses the source. A4 is for C4 and above; A2 is for up to C3.
 12,g003,20261102T103932Z-pipeline-dev,"After we sign, how long do your engineers need before the build drawings are ready?",The engineers need 3 to 6 weeks after the contract is signed before the build drawings are ready.,"## Two design steps
 
 1. **Preliminary design.** Made after the site survey. It gives the layout, the chosen mounting system and the plant size in kWp. The commercial offer is based on it.
@@ -528,7 +528,7 @@ The customer approves the detailed design before production starts. Changes afte
 
 ## Typical duration
 
-Supply usually takes 6 to 10 weeks after the customer approves the detailed design. This is a typical range, not a commitment. The delivery dates for a specific project are set in the contract.",,
+Supply usually takes 6 to 10 weeks after the customer approves the detailed design. This is a typical range, not a commitment. The delivery dates for a specific project are set in the contract.",yes,
 13,g066,20261102T104200Z-http-dev,What corrosivity category are your systems?,"The company's mounting systems are rated for a maximum corrosivity category, and each system is designed for use at that category or a lower one. The company does not offer any system for category CX.","## What the category means for the product choice
 
 Every mounting system is rated for one maximum category. A system can be used at sites with that category or a lower one. The company does not offer any system for category CX.
@@ -560,7 +560,7 @@ The engineer decides the category during the site survey, using the distance to 
 
 ## Where not to use it
 
-GF-1 is not used in corrosivity category C5, for example within 10 km of the sea. GroundFrame GF-2 is used there instead. Installing GF-1 at a site with a higher corrosivity category than C4 voids the coating warranty.",,
+GF-1 is not used in corrosivity category C5, for example within 10 km of the sea. GroundFrame GF-2 is used there instead. Installing GF-1 at a site with a higher corrosivity category than C4 voids the coating warranty.",yes,"every claim is true, but it gives no category. Tests whether the judge mixes up faithfulness with completeness."
 14,g042,20261102T104200Z-http-dev,What happens between your engineer's visit and us signing a contract?,"Between the engineer's visit and the customer signing a contract, the company prepares a preliminary design and sends a commercial offer based on the layout and mounting system proposed in the preliminary design.","4. **Contract.** The customer and the company sign a contract with the scope, price and dates.
 5. **Detailed design.** The engineering team prepares the structural calculation and drawings. The customer approves them.
 6. **Supply.** Parts are produced and delivered to the site.
@@ -603,7 +603,7 @@ These durations are typical, not promised. The dates for a specific project are 
 
 After installation the company checks the torque of a sample of bolts, makes a photo report and signs a handover certificate with the customer.
 
-Installation times above are typical values, not a commitment. The dates for a specific project are set in the contract.",,
+Installation times above are typical values, not a commitment. The dates for a specific project are set in the contract.",yes,"every claim is true, but the answer is incomplete or doesn’t answer the question. Tests whether the judge mixes up faithfulness with completeness."
 15,g043,20261102T104200Z-http-dev,Our 'flat' roof actually falls at about 7 degrees. Which of your ballasted systems would fit it?,Neither RoofFlat RF-1 nor RoofFlat RF-2 would fit a roof with a 7-degree slope because both systems have a maximum roof slope of 5° as specified in the context.,"## Specifications
 
 | Parameter | Value |
@@ -654,7 +654,7 @@ RF-2 is a flat-roof system with modules facing east and west in pairs. The low t
 
 - RF-2 fits about 20% more modules on the same roof area than RF-1.
 - It is the usual choice for roofs with a low load reserve.
-- RF-2 needs a positive roof assessment before installation.",,
+- RF-2 needs a positive roof assessment before installation.",yes,by inference: the “Specifications” and “Where it is used” chunks in the context have no product name. The model had to infer which product they belong to.
 16,g067,20261102T104200Z-http-dev,How thick is the coating?,"The coating thickness varies by system: 85 µm for hot-dip galvanising on GroundFrame GF-1 and CarportFrame CP-1, 25 µm per side for zinc-magnesium coating on GroundFrame GF-2, 15 µm for anodised aluminium on RoofFlat RF-1 and RP-1, and 20 µm for anodised aluminium on RoofFlat RF-2.","# Coatings and materials
 
 ## Steel systems
@@ -706,7 +706,7 @@ The zinc-magnesium coating on GF-2 is thinner than the hot-dip galvanising on GF
 | Maximum wind speed | 28 m/s |
 | Maximum snow load | 2.0 kN/m² |
 | Added roof load | 18 to 30 kg/m², including ballast |
-| Maximum roof slope | 5° |",,
+| Maximum roof slope | 5° |",yes,
 17,g022,20261102T103932Z-pipeline-dev,How strong a wind can the south-facing flat-roof system take?,The south-facing flat-roof system can take a maximum wind speed of 28 m/s.,"## Notes
 
 - The ballast weight depends on the wind load at the site and on the position on the roof. Corners and edges need more ballast.
@@ -755,7 +755,7 @@ RF-2 is a flat-roof system with modules facing east and west in pairs. The low t
 | Maximum wind speed | 30 m/s |
 | Maximum snow load | 2.4 kN/m² |
 | Added roof load | 12 to 20 kg/m², including ballast |
-| Maximum roof slope | 5° |",,
+| Maximum roof slope | 5° |",yes,by inference: the “Specifications” and “Where it is used” chunks in the context have no product name. The model had to infer which product they belong to.
 18,g028,20261102T104200Z-http-dev,Our barn roof is pitched at about 45°. Is that within range for RP-1?,"Yes, a roof pitch of 45° is within the range for RP-1 because the RP-1 system supports roof slopes from 10° to 60°.","## Specifications
 
 | Parameter | Value |
@@ -814,7 +814,7 @@ RP-1 is not used on roofs covered with asbestos-cement sheets. The company does 
 | Maximum wind speed | 30 m/s |
 | Maximum snow load | 2.4 kN/m² |
 | Added roof load | 12 to 20 kg/m², including ballast |
-| Maximum roof slope | 5° |",,
+| Maximum roof slope | 5° |",yes,
 19,g001,20261102T103932Z-pipeline-dev,How long is a commercial offer valid?,A commercial offer is valid for 30 days from its date.,"## Commercial offer
 
 - The offer states the scope, the price and the payment terms for one specific project.
@@ -852,7 +852,7 @@ A request with this information gets a reply within 2 working days and an offer 
 
 1. Send the project data (see the document about what to provide for a quote).
 2. The company does a site survey and a preliminary design.
-3. The company sends a written commercial offer.",,
+3. The company sends a written commercial offer.",yes,
 20,g065,20261102T103932Z-pipeline-dev,How long is the warranty?,The product warranty is 15 years and the installation warranty is 5 years. Both periods start on the date of the handover certificate.,"# Warranty
 
 ## What is covered
@@ -898,7 +898,7 @@ Supply usually takes 6 to 10 weeks after the customer approves the detailed desi
 | Detailed design | 3 to 6 weeks after the contract |
 | Supply | 6 to 10 weeks after design approval |
 
-These durations are typical, not promised. The dates for a specific project are only those written in its contract.",,
+These durations are typical, not promised. The dates for a specific project are only those written in its contract.",yes,
 21,g037,20261102T104200Z-http-dev,"Our plot borders a fertiliser works. Which ground system would you use, and what protects it from rusting?","The GroundFrame GF-2 twin-post ground-mount system would be used because it is suitable for sites near chemical plants, fertiliser storage or other sources of aggressive air. It is protected from rusting by its zinc-magnesium coating.","## Thin but stronger coating
 
 The zinc-magnesium coating on GF-2 is thinner than the hot-dip galvanising on GF-1, but it protects better in salty air. Coating thickness alone does not show which system resists corrosion better; the corrosivity category does.
@@ -948,7 +948,7 @@ Bolts and nuts on steel systems are hot-dip galvanised.
 | Maximum snow load | 3.5 kN/m² |
 | Ground clearance | At least 0.6 m |
 | Foundation | Rammed posts or screw piles |
-| Typical plant size | 1 MWp to 100 MWp |",,
+| Typical plant size | 1 MWp to 100 MWp |",yes,by inference: the “Specifications” and “Where it is used” chunks in the context have no product name. The model had to infer which product they belong to.
 22,g032,20261102T104200Z-http-dev,Can you build a 50 kWp system on our office roof?,"Yes, Example Solar Ltd. can build a 50 kWp system on your office roof because the company designs mounting systems for flat roofs, and the roof-mounted systems are suitable for office roofs.","## For every project
 
 - Company name and a contact person with an email address.
@@ -987,7 +987,7 @@ For contact details, see the document about contacts and working hours.
 
 ## Ground-mount installation
 
-Posts are driven by the company's ramming machines. A typical crew installs the structure for up to 1 MWp per week on a prepared site. Stony soil, frozen ground and bad weather make it slower.",,
+Posts are driven by the company's ramming machines. A typical crew installs the structure for up to 1 MWp per week on a prepared site. Stony soil, frozen ground and bad weather make it slower.",no,"the “Yes” and “roof-mounted systems are suitable for office roofs” aren’t in the context. The 100 kWp minimum wasn’t retrieved, so the honest answer was to abstain."
 23,g028,20261102T103932Z-pipeline-dev,Our barn roof is pitched at about 45°. Is that within range for RP-1?,"Yes, a roof pitch of 45° is within the range for RP-1 because the roof slope range for RP-1 is 10° to 60°.","## Specifications
 
 | Parameter | Value |
@@ -1046,7 +1046,7 @@ RP-1 is not used on roofs covered with asbestos-cement sheets. The company does 
 | Maximum wind speed | 30 m/s |
 | Maximum snow load | 2.4 kN/m² |
 | Added roof load | 12 to 20 kg/m², including ballast |
-| Maximum roof slope | 5° |",,
+| Maximum roof slope | 5° |",yes,
 24,g035,20261102T104200Z-http-dev,We're doing a 5 MWp ground-mount plant. How much laydown space should we keep free for your deliveries?,"You should provide a flat, dry storage area of about 200 m² for each MWp of a ground-mount plant. For a 5 MWp plant, this means 1000 m² of laydown space.","## Ground-mount installation
 
 Posts are driven by the company's ramming machines. A typical crew installs the structure for up to 1 MWp per week on a prepared site. Stony soil, frozen ground and bad weather make it slower.
@@ -1085,7 +1085,7 @@ Posts are driven by the company's ramming machines. A typical crew installs the 
 
 The company has supplied mounting systems for more than 400 MWp of solar plants. It works with business customers, developers and EPC contractors in three sales regions: North, Central and South.
 
-For contact details, see the document about contacts and working hours.",,
+For contact details, see the document about contacts and working hours.",yes,
 25,g020,20261102T104200Z-http-dev,Our old shed has a corrugated asbestos-cement roof. Can you mount panels on it?,"No, the company does not work on roofs covered with asbestos-cement sheets.","## Roof coverings
 
 - Clay and concrete tiles: roof hooks fixed to the rafters.
@@ -1127,7 +1127,7 @@ RP-1 is not used on roofs covered with asbestos-cement sheets. The company does 
 
 ## Old waterproofing
 
-If the waterproofing has less than 10 years of expected life left, the company recommends replacing it before installation. Replacing it later means removing the whole solar plant.",,
+If the waterproofing has less than 10 years of expected life left, the company recommends replacing it before installation. Replacing it later means removing the whole solar plant.",yes,
 26,g037,20261102T103932Z-pipeline-dev,"Our plot borders a fertiliser works. Which ground system would you use, and what protects it from rusting?","GroundFrame GF-2 would be used, and its zinc-magnesium coating protects it from rusting.","## Thin but stronger coating
 
 The zinc-magnesium coating on GF-2 is thinner than the hot-dip galvanising on GF-1, but it protects better in salty air. Coating thickness alone does not show which system resists corrosion better; the corrosivity category does.
@@ -1177,7 +1177,7 @@ Bolts and nuts on steel systems are hot-dip galvanised.
 | Maximum snow load | 3.5 kN/m² |
 | Ground clearance | At least 0.6 m |
 | Foundation | Rammed posts or screw piles |
-| Typical plant size | 1 MWp to 100 MWp |",,
+| Typical plant size | 1 MWp to 100 MWp |",yes,
 27,g064,20261102T103932Z-pipeline-dev,What is the maximum wind speed?,"The maximum wind speed is 36 m/s for the GroundFrame GF-2 product, 30 m/s for the RoofFlat RF-2 and CarportFrame CP-1, 28 m/s for the RoofFlat RF-1, and 30 m/s for the RoofPitch RP-1.","## Maximum values per product
 
 | Product | Maximum wind speed | Maximum snow load |
@@ -1233,7 +1233,7 @@ Wind load and snow load are calculated to the Eurocodes: EN 1991-1-4 for wind an
 | Maximum wind speed | 28 m/s |
 | Maximum snow load | 2.0 kN/m² |
 | Added roof load | 18 to 30 kg/m², including ballast |
-| Maximum roof slope | 5° |",,
+| Maximum roof slope | 5° |",yes,"every claim is true, but it leaves out GF-1. Tests whether the judge mixes up faithfulness with completeness."
 28,g060,20261102T104200Z-http-dev,Our installer said your installation warranty runs 15 years. When does it end for a plant handed over in March 2026?,"The installation warranty ends 5 years after the date of the handover certificate. For a plant handed over in March 2026, the installation warranty ends in March 2031.","# Warranty
 
 ## What is covered
@@ -1274,7 +1274,7 @@ Installation times above are typical values, not a commitment. The dates for a s
 
 ## Ground-mount installation
 
-Posts are driven by the company's ramming machines. A typical crew installs the structure for up to 1 MWp per week on a prepared site. Stony soil, frozen ground and bad weather make it slower.",,
+Posts are driven by the company's ramming machines. A typical crew installs the structure for up to 1 MWp per week on a prepared site. Stony soil, frozen ground and bad weather make it slower.",yes,
 29,g035,20261102T103932Z-pipeline-dev,We're doing a 5 MWp ground-mount plant. How much laydown space should we keep free for your deliveries?,"You should provide a flat, dry storage area of about 200 m² for each MWp of a ground-mount plant. For a 5 MWp plant, this means 1000 m².","## Ground-mount installation
 
 Posts are driven by the company's ramming machines. A typical crew installs the structure for up to 1 MWp per week on a prepared site. Stony soil, frozen ground and bad weather make it slower.
@@ -1313,7 +1313,7 @@ Posts are driven by the company's ramming machines. A typical crew installs the 
 
 The company has supplied mounting systems for more than 400 MWp of solar plants. It works with business customers, developers and EPC contractors in three sales regions: North, Central and South.
 
-For contact details, see the document about contacts and working hours.",,
+For contact details, see the document about contacts and working hours.",yes,
 30,g038,20261102T103932Z-pipeline-dev,What do we need to have sorted on our land before your crew turns up to build?,"A geotechnical survey, including soil drilling, pull-out tests on sample posts, and a check for groundwater and frost depth, must be completed before the crew turns up to build.","## Geotechnical survey
 
 Every ground-mount project needs a geotechnical survey before the detailed design. It includes:
@@ -1361,4 +1361,4 @@ The survey is ordered by the company from a partner laboratory. Its cost is part
 
 ## Where the site values come from
 
-The engineer takes the values from the national annex of the Eurocode for the site location and checks local conditions during the site survey, for example a hilltop or an open field near the coast.",,
+The engineer takes the values from the national annex of the Eurocode for the site location and checks local conditions during the site survey, for example a hilltop or an open field near the coast.",yes,"borderline: the context says the geotechnical survey comes “before the detailed design”, so “before the crew turns up” follows from it. But the answer is off-target: the question is what the customer must prepare, and the survey is ordered by the company. A judge that marks it no is scoring relevance, not support."
