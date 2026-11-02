@@ -37,3 +37,21 @@ Written by /aar-loop after each session's After Action Review. Read this file be
 - Actual: Reading the 52 dev cases against data/kb plus id-only checks on the 23 holdout cases found the defects, including g070, without exposing a holdout question. Holdout facts stay unverified by me, and the 2 holdout near misses were not run.
 - Why: I tune prompts in Stage 3, so holdout text I read stops being held out. The trade-off is that holdout facts need a human reviewer.
 - tags: evals,holdout,what-worked,fix-applied
+
+## 2026-11-02 -- A scorer also needs testing on known-correct answers from a saved pipeline run, and on the reference systems (python -m evals.run_evals --system always-abstain and --system always-answer), before its metric is trusted. Wrong-answer tests alone missed two scorer bugs.
+- Expected: evals/scoring.py and evals/metrics.py, which passed refusal-sentence and near-value tests, would score the first pipeline run correctly.
+- Actual: The always-answer system, which replies Yes. to every question, scored 0.38 behaviour accuracy, because undecided cases counted as passes. Later the first pipeline run marked 'stainless steel A4 fasteners' and 'GroundFrame GF-2 would' as missing A4 and GF-2.
+- Why: The unit-gap rule removed the space after any number, so 'a4 fasteners' became 'a4fasteners' and failed the whole-value check. The tests had A4 and GF-2 only at the end of a sentence. The 0.38 came from treating 'cannot decide' as 'pass'. Both bugs showed only on real outputs, not on hand-made wrong answers.
+- tags: evals,scoring,fix-applied
+
+## 2026-11-02 -- Put any Python longer than about 15 lines, or containing nested quotes, in a scratchpad .py file written with the Write tool, and run that file. Never pass it through a bash heredoc. The 2026-10-28 lesson already said this, and the same failure happened again.
+- Expected: A python heredoc with 9 multi-line string edits would patch evals/validate_golden.py.
+- Actual: bash failed with 'unexpected EOF while looking for matching quote' and applied nothing. The same edits ran cleanly from a file written with the Write tool.
+- Why: The heredoc mixed triple quotes, f-strings and backslashes, which the shell tried to parse. The 2026-10-28 lesson lives only in LESSONS.md and was not applied, because its wording was about writing files, not about running Python.
+- tags: bash,files,recurring,fix-applied
+
+## 2026-11-02 -- While python -m evals.mutation_check runs, do not run anything that imports app/ or evals/ (evals, scripts, pytest). It rewrites those files one break at a time, so another process can import a broken version.
+- Expected: A count script run beside the mutation check would read the same code as the committed tree.
+- Actual: I ran a script that imported evals.validate_golden and app.chunker while the mutation check was rewriting chunker files. The counts it gave had to be recomputed after the run before they could be written into golden_validation.md. They matched, but only by luck of timing.
+- Why: mutation_check writes broken copies of app/ and evals/ files to disk and restores them after each test run, so any process that imports during that window can get a broken module.
+- tags: evals,mutation,fix-applied

@@ -28,6 +28,8 @@ METRICS = ROOT / "evals" / "metrics.py"
 SYSTEMS_FILE = ROOT / "evals" / "systems.py"
 RUN_EVALS = ROOT / "evals" / "run_evals.py"
 RENDER = ROOT / "evals" / "render_results.py"
+JUDGE = ROOT / "evals" / "judge.py"
+CALIBRATE = ROOT / "evals" / "calibrate_judge.py"
 
 PACK = "if joined > cfg.max or (joined > cfg.target and can_stop):"
 MERGE = "if fits and (_size(group) < cfg.min or _only_headings(group)):"
@@ -405,9 +407,45 @@ BREAKS = {
     "harness: smoke run updates latest": [(RUN_EVALS, 'full_dev = report["system"] == "pipeline" and report["split"] == "dev" and not report["smoke"]', 'full_dev = report["system"] == "pipeline" and report["split"] == "dev"')],
     "harness: any run can be the baseline": [(RUN_EVALS, "        if not full_dev:\n            raise SystemExit", "        if False:\n            raise SystemExit")],
     "harness: holdout without a flag": [(RUN_EVALS, 'if args.split == "holdout" and not args.allow_holdout:', "if False:")],
-    "render: baseline shown as current": [(RENDER, "cells[2] = fill(current) if current else DASH", "cells[2] = fill(baseline) if baseline else DASH")],
+    "render: baseline shown as current": [
+        (RENDER, "cells[2] = fill(current, calibration) if current else DASH", "cells[2] = fill(baseline, calibration) if baseline else DASH")
+    ],
     "render: another k accepted": [(RENDER, 'if current and current["top_k"] != 5:', "if False:")],
-    "render: unmeasured shown as zero": [(RENDER, 'return DASH if value is None else f"{value:.2f}"', 'return f"{value or 0:.2f}"')],
+    "render: unmeasured shown as zero": [
+        (
+            RENDER,
+            "        if value is None or (judged and not trusted(report, calibration)):\n            return DASH\n",
+            "        if judged and not trusted(report, calibration):\n            return DASH\n        value = value or 0\n",
+        )
+    ],
+    # Judge and calibration
+    "judge: refusals judged for faithfulness": [
+        (JUDGE, 'answered = scored.get("status") == 200 and scored.get("refused") is False', 'answered = scored.get("status") == 200')
+    ],
+    "judge: language cases judged": [(JUDGE, 'if answered and case["expected_behaviour"] != "language refusal":', "if answered:")],
+    "judge: retrieval metrics without gold": [(JUDGE, 'if case["gold"] and scored.get("retrieved"):', 'if scored.get("retrieved"):')],
+    "judge: answer model may judge itself": [(JUDGE, 'if model == env.get("LLM_MODEL"):', "if False:")],
+    "judge: failures hidden": [(JUDGE, "                        values.append(None)\n", "                        values.append(1.0)\n")],
+    "judge: spread from one pass": [
+        (JUDGE, 'max(per_pass) - min(per_pass) if len(per_pass) > 1 else None', "max(per_pass) - min(per_pass) if per_pass else None")
+    ],
+    "judge: reference missing from context metrics": [
+        (JUDGE, '"reference": case["expected_answer"]', '"reference": scored["answer"]')
+    ],
+    "calibrate: kappa ignores chance": [(CALIBRATE, "return None if expected == 1 else (observed - expected) / (1 - expected)", "return observed")],
+    "calibrate: almost-all counts as supported": [(CALIBRATE, "SUPPORTED_AT = 1.0 - 1e-9", "SUPPORTED_AT = 0.5")],
+    "calibrate: agreement alone passes": [
+        (CALIBRATE, '"passed": agreement >= AGREEMENT and kappa is not None and kappa >= KAPPA,', '"passed": agreement >= AGREEMENT,')
+    ],
+    "calibrate: labels overwritten": [(CALIBRATE, "    if path.exists():\n        raise SystemExit", "    if False:\n        raise SystemExit")],
+    "calibrate: refusals labelled": [
+        (CALIBRATE, 'if item["split"] != "dev" or item.get("status") != 200 or item.get("refused") is not False:', 'if item["split"] != "dev":')
+    ],
+    "calibrate: empty label allowed": [(CALIBRATE, 'not in ("yes", "no")', 'not in ("yes", "no", "")')],
+    "render: uncalibrated judge shown": [(RENDER, "        if value is None or (judged and not trusted(report, calibration)):", "        if value is None:")],
+    "render: another judge's calibration trusted": [
+        (RENDER, '        and calibration.get("judge_model") == report.get("judge_model")\n', "")
+    ],
     # Golden dataset validator
     "golden: substring match for must_include": [
         (VALIDATOR, 'if not contains_fact(case["expected_answer"], fact):', 'if fact.lower() not in case["expected_answer"].lower():')
@@ -480,7 +518,7 @@ def main():
     parser.add_argument("--only", default="", help="run only breaks whose name contains this text")
     args = parser.parse_args()
     selected = {name: edits for name, edits in BREAKS.items() if args.only in name}
-    files = (CHUNKER, EMBEDDER, INDEX, SETTINGS, RETRIEVER, GENERATOR, API, SCORING, VALIDATOR, METRICS, SYSTEMS_FILE, RUN_EVALS, RENDER)
+    files = (CHUNKER, EMBEDDER, INDEX, SETTINGS, RETRIEVER, GENERATOR, API, SCORING, VALIDATOR, METRICS, SYSTEMS_FILE, RUN_EVALS, RENDER, JUDGE, CALIBRATE)
     originals = {path: path.read_bytes() for path in files}
     check_breaks_apply(selected, originals)
 

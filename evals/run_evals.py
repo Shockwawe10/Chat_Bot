@@ -7,6 +7,7 @@ Run from the repository root:
     python -m evals.run_evals --system always-abstain # also always-answer, random-retriever
     python -m evals.run_evals --system http --url http://127.0.0.1:8017 --commit a3c0e9c
     python -m evals.run_evals --split holdout --allow-holdout   # end of a stage only
+    python -m evals.run_evals --judge --judge-passes 3          # add the Ragas metrics
 
 Only reviewed cases run; drafts are counted and skipped. Every run writes
 reports/runs/<run_id>.json (holdout runs: reports/holdout/). A full dev run of the
@@ -26,6 +27,7 @@ from app.chunker import CHUNKER_VERSION, ChunkConfig
 from app.generator import PromptTemplate
 from app.settings import ROOT, read_env
 from evals.chunk_report import KB_DIR
+from evals.judge import JUDGED, RagasJudge, aggregate_judged, judge_cases
 from evals.metrics import aggregate, score_case
 from evals.systems import (
     AlwaysAbstain,
@@ -58,6 +60,9 @@ HISTORY_FIELDS = [
     "refusal_accuracy",
     "over_refusal_rate",
     "numeric_fidelity",
+    *JUDGED,
+    "judge_model",
+    "judge_passes",
     "latency_p95_ms",
 ]
 
@@ -129,6 +134,7 @@ def build_manifest(run_id, system, args, env, cases_run, drafts, dataset_version
         "chunk_min": cfg.min,
         "top_k": int(env.get("TOP_K") or 5),
         "index_fingerprint": served.get("index_fingerprint") or (store.fingerprint if store else None),
+        "judge_passes": args.judge_passes if args.judge else 0,
         "total_cost": 0.0,
         "latency_p95_ms": metrics["latency_p95_ms"],
         "metrics": metrics,
@@ -202,6 +208,8 @@ def summary(report):
         "numeric_fidelity",
         "out_of_scope_answered",
         "errors",
+        *JUDGED,
+        "judge_errors",
         "latency_p95_ms",
     ):
         if key in m:
@@ -222,6 +230,8 @@ def main(argv=None):
     parser.add_argument("--smoke", action="store_true", help="only the smoke cases")
     parser.add_argument("--seed", type=int, default=42, help="for --system random-retriever")
     parser.add_argument("--record-baseline", action="store_true", help="also copy the run to reports/baseline.json")
+    parser.add_argument("--judge", action="store_true", help="add the LLM-judged Ragas metrics")
+    parser.add_argument("--judge-passes", type=int, default=1, help="judge every case this many times")
     args = parser.parse_args(argv)
     if args.split == "holdout" and not args.allow_holdout:
         parser.error("the holdout runs only at the end of a stage: add --allow-holdout to mean it")
@@ -241,6 +251,10 @@ def main(argv=None):
     with ExitStack() as stack:
         system, store = make_system(args, env, stack)
         scored, metrics = run(selected, system, store, stats["overlap"])
+        if args.judge:
+            judge = RagasJudge.from_env(env)
+            judge_cases(judge, {c["id"]: c for c in selected}, scored, store, args.judge_passes)
+            metrics.update(aggregate_judged(scored, args.judge_passes))
         report = build_manifest(
             run_id, system, args, env, len(selected), drafts, cases[0]["dataset_version"], metrics, store
         )

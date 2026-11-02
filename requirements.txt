@@ -18,3 +18,12 @@ uvicorn==0.54.0
 
 # Stage 1: lint
 ruff==0.17.3
+
+# Stage 2: LLM-judged metrics. Ragas 0.4.3 imports a module that langchain-community
+# 0.4 removed, so the langchain family stays on 0.3.
+ragas==0.4.3
+langchain==0.3.30
+langchain-core==0.3.86
+langchain-community==0.3.31
+langchain-openai==0.3.35
+openai==1.109.1

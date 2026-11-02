@@ -5,7 +5,7 @@ else
 PYTHON ?= .venv/bin/python
 endif
 
-.PHONY: ingest run test test-real lint mutation eval eval-smoke results
+.PHONY: ingest run test test-real lint mutation eval eval-smoke results judge-labels calibrate
 
 ingest:
 	$(PYTHON) -m app.index build
@@ -33,3 +33,9 @@ eval-smoke:
 
 results:
 	$(PYTHON) -m evals.render_results
+
+judge-labels:
+	$(PYTHON) -m evals.calibrate_judge --make-labels
+
+calibrate:
+	$(PYTHON) -m evals.calibrate_judge

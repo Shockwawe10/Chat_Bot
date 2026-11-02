@@ -246,6 +246,9 @@ pytest -m real                  # end-to-end test with the real models, needs Ol
 make eval                       # full dev run, writes reports/runs/<run_id>.json and reports/latest.json
 make eval-smoke                 # 21 dev cases, the same set CI uses
 make results                    # regenerate the Results table in README.md
+python -m evals.run_evals --judge   # add the Ragas metrics, judged by JUDGE_MODEL
+make judge-labels               # write the blind file of 30 answers to label, once
+make calibrate                  # agreement and kappa between my labels and the judge
 
 # Stage 4
 make redteam                    # promptfoo red teaming
@@ -357,6 +360,10 @@ LLM-judged metrics are trusted only after the judge is checked against a human:
 3. Both must pass: agreement ≥ 0.85 and κ ≥ 0.60. Kappa is required because most answers are expected to be correct, and with labels that skewed a judge that says "correct" every time would still show high raw agreement.
 4. If either check fails, the judge prompt is fixed before any judged metric is reported.
 5. The judge model is always different from the model that answers. Provider and model are set separately (`JUDGE_PROVIDER`, `JUDGE_MODEL`).
+
+How it runs: `make judge-labels` writes `evals/annotation/judge_labels.csv` with 30 answered dev cases, their context and an empty `supported` column, and no judge score. I mark each answer `yes` only if every claim in it is backed by the context. `make calibrate` then asks the judge for faithfulness on the same 30, counts it as `yes` when the score is 1.0, and writes `reports/judge_calibration.json`. `make results` shows judged metrics only when that file records a pass for the same judge model as the run.
+
+The first judge, `phi4-mini:3.8b` on Ollama, failed a quick check before any labels existed: it scored a correct answer ("at least 0.6 m") at 0.5, and the same answer with a wrong value (0.8 m) at 1.0. Calibration decides whether it stays.
 
 Calibration is repeated at the end of every stage that changes the judge prompt or judge model.
 
@@ -494,7 +501,7 @@ About 8 weeks at 25–35 hours a week, in stages 0 to 8. Every stage ends with s
 - [x] `run_evals.py`: runs the dataset, saves answers, contexts (as chunk ids, with the index fingerprint), metrics and the run manifest
 - [x] `render_results.py` and `make results`: Results table generated from `reports/latest.json`
 - [x] Retrieval metrics in my own code: hit rate@k, MRR
-- [ ] Answer metrics with Ragas: faithfulness, answer relevancy, context precision, context recall
+- [x] Answer metrics with Ragas: faithfulness, answer relevancy, context precision, context recall (shown only after the judge passes calibration)
 - [x] Numeric fidelity check based on `must_include`, with normalisation
 - [ ] Judge calibration on 30 hand-labeled answers: agreement and Cohen's kappa
 
@@ -623,6 +630,10 @@ A program grades the answers. It is strict with numbers: "15 years" does not cou
 ### Stage 2, part 3: the first report card
 
 One command runs the whole practice exam and writes a report card. First we tried the grader on two silly robots, one that always says "I don't know" and one that always says "Yes." Both got exactly the scores we predicted before the test, so the grader can be trusted. Then the real robot took the exam. It finds the right card 83% of the time, but it says "I don't know" to 22 of the 42 questions it should answer. That is the main thing to fix next.
+
+### Stage 2, part 4: a robot grader that must pass its own test
+
+Some answers are too hard to grade with simple rules, like "did the robot only say things the notebooks support?". For those, a second, smaller robot (the judge) reads the answer and the cards and gives a score. But a grader can be wrong too. In a quick test it gave a right answer half marks and gave full marks to the same answer with a wrong number in it. So its scores stay hidden until it passes a test of its own: I grade 30 answers by hand, the judge grades the same 30, and only if we agree often enough do its scores appear on the report card.
 
 ---
 

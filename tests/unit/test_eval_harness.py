@@ -276,6 +276,10 @@ def test_render_is_idempotent_and_works_without_runs():
     assert f"| Hit rate@5 | {DASH} | 0.50 |" in once
 
 
+def test_render_shows_a_dash_not_zero_for_a_metric_with_no_value():
+    assert f"| Hit rate@5 | {DASH} | {DASH} |" in render(TABLE, report(hit_rate=None), report(hit_rate=None))
+
+
 def test_render_refuses_a_run_with_another_k():
     with pytest.raises(SystemExit):
         render(TABLE, None, {**report(), "top_k": 8})
