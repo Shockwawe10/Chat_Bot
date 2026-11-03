@@ -652,6 +652,12 @@ Next we tried a grader made only for this kind of check. It got easy one-line ex
 
 The fourth grader passed. It is a small model trained only to answer one question: "does this text support this sentence?". It agreed with me on 29 of the 30 answers. It never marked a good answer wrong, and it caught 2 of the 3 wrong ones. So now the report card can show how often the robot only says things the notebooks support. We will still give this grader a second test with new answers, because one test with only 3 wrong answers is a small test.
 
+### Stage 2, part 5: deciding what counts as a fail
+
+Before every change, the robot takes a short practice test of 21 questions, and we had to decide when that test fails. If we used the goals we hope to reach one day, like finding the right card 85% of the time, the robot would fail every test today and nothing could ever change. So the rule is simpler: the robot may not get worse. Every question it gets right today has to stay right. One rule has no exceptions at all: never answer a question the notebooks cannot answer. Today it never does, 0 times out of 7. The bigger goals are kept as targets for the next stage.
+
+One surprise came out of this. When the robot fails a question about a number, it is almost never because it got the number wrong. In 10 of 11 cases it just said "I don't know". So the biggest thing to fix is still the same: the robot gives up too often. The full reasoning is in `reports/thresholds.md`.
+
 ---
 
 ## Findings

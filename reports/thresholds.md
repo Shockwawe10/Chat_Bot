@@ -1,0 +1,85 @@
+# Thresholds: values and reasoning
+
+Reviewed on 2026-11-03, after the first full dev runs. Every number here is taken from these saved runs. No holdout result was used:
+
+- `20261102T103932Z-pipeline-dev` (baseline, prompt v2, commit `3b5e4cb`)
+- `20261103T114147Z-pipeline-dev` (current, commit `7719015`, faithfulness judged by `bespoke-minicheck:7b`)
+- `20261102T124117Z-pipeline-dev-smoke` (21 smoke cases)
+- `20261102T104200Z-http-dev` (run 1: prompt v1, commit `a3c0e9c`)
+- the always-abstain, always-answer and random-retriever reference runs
+- `reports/judge_calibration.json`
+
+## Principles
+
+1. **Set on dev, never on holdout.** Thresholds tuned on the holdout would make the holdout a second dev set.
+2. **A gate is not a target.**
+   - A **gate** fails the build. It catches regressions, so it starts at what the system does today.
+   - A **target** is where a stage is heading. It is reported, not enforced.
+
+   The README's starting values (hit rate@5 ≥ 0.85, refusal accuracy ≥ 0.95, numeric fidelity 1.00) are targets. As PR gates they would fail every pull request today: the smoke set scores 11/15, 10/21 and 4/9 on those three.
+3. **Counts, not just rates.** With 15 smoke cases that have gold spans, one case is 6.7 points. Each gate below is stated as a count with its denominator, so a one-case change is visible as one case.
+4. **Per case on PRs, rates at night.** A PR runs 21 smoke cases once. That is too few for a rate to mean much, but enough to say "this case passed before and fails now". The nightly run has 52 dev cases, so rates are compared there.
+5. **The baseline is the reference for "before".** Per-case gates compare each smoke case with the same case in `reports/baseline.json`. A change that trades one case for another on purpose updates the baseline in the same PR, with the reason in the PR description.
+
+## How much noise there is
+
+- **Repeat runs are almost identical.** The two full pipeline dev runs gave the same retrieval for all 52 cases and the same answer for 51 of 52, with the same metrics. A drop on a rerun is therefore almost always a real change, not chance.
+- **Three passes add little.** The nightly plan of three passes buys almost no information about the generator at temperature 0 with a fixed seed. Spread is worth measuring for the judge, not for the pipeline.
+- **The real noise is which cases are in the set.** That is what limits comparisons between two systems. It is why the targets below are reviewed on the full dev set, never decided on smoke.
+
+## Baseline (dev, 52 cases)
+
+| Measure | Baseline | Count |
+| --- | --- | --- |
+| Hit rate@5 | 0.83 | 35 / 42 cases with gold spans |
+| MRR | 0.69 | 25 of the 42 at rank 1 |
+| Hit rate@5, low / high word overlap | 0.76 / 0.90 | |
+| Out-of-scope cases answered | 0 | 0 / 7 |
+| Over-refusal (refused a case that should be answered) | 0.52 | 22 / 42 |
+| Numeric fidelity | 0.50 | 11 / 22. Of the 11 failures, 10 are refusals and 1 is a wrong or missing fact |
+| Language refusal | 0.00 | 0 / 3. The feature is not built yet |
+| Faithfulness (minicheck judge, answered cases only) | 0.95 | 19 / 20 |
+| Latency p95 | 4.6 s and 7.0 s | the two runs, with near-identical answers |
+
+Reference systems on dev:
+
+| System | Result |
+| --- | --- |
+| Always abstain | behaviour accuracy 7/52 = 0.13 |
+| Always answer | answers 7/7 out-of-scope cases |
+| Random retriever | hit rate@5 4/42 = 0.10 |
+
+All five predictions in `evals/golden_validation.md` held. Run 2 refuses 11 more answerable cases than run 1 (22 against 11), and neither run answers an out-of-scope case.
+
+## Thresholds
+
+| Metric | PR gate (smoke, per case) | Nightly gate (dev, 52 cases) | Target | Reasoning |
+| --- | --- | --- | --- | --- |
+| Out-of-scope answered | 0 | 0 | 0 | Answering a question the knowledge base cannot answer is the failure this project exists to catch. It is 0 today, so the gate costs nothing and has no tolerance |
+| Hit rate@5 | No smoke case that hits in the baseline may miss (baseline 11/15) | ≥ 35/42 | ≥ 0.85 (36/42) on dev | Retrieval repeats exactly for the same index, so any drop comes from a change. Hybrid search and reranking are judged against the target, not the gate |
+| MRR | — | ≥ 0.66 | ≥ 0.75 | Baseline 0.69. One case moving from rank 1 to rank 2 costs 0.012, so the gate allows about one such shift. MRR is too sensitive for a 15-case smoke gate |
+| Over-refusal | No smoke case answered in the baseline may become a refusal (baseline 8/15 refused) | ≤ 22/42 | ≤ 4/42 (0.10) | The largest weakness today. Run 1 managed 11/42 without answering anything out of scope, so ≤ 11/42 is the first milestone |
+| Numeric fidelity | No smoke case that has all its facts in the baseline may lose one (baseline 4/9) | ≥ 11/22 | 22/22 on cases that are answered | 10 of the 11 dev failures are refusals, so this metric mostly repeats over-refusal. The target counts only answered cases, so a wrong number is not hidden behind a refusal |
+| Faithfulness | Report only | Provisional: ≥ 0.90 on answered cases, always shown with the number of answered cases and the over-refusal rate | ≥ 0.95 | 0.90 of 20 allows one more unsupported answer than today. Never read alone: refusing more can only raise it. Provisional until the judge is calibrated against human labels (see below) |
+| Language refusal | Not gated | Not gated | 5/5 | The feature does not exist yet (0/3 dev), so a gate would only fail. It becomes a per-case PR gate once it is built in Stage 3 |
+| Answer relevancy, context precision, context recall | Report only | Report only | ≥ 0.80 | No judge has been calibrated for these metrics. They were measured once, on smoke, by an uncalibrated judge |
+| Judge calibration | — | End of stage: agreement ≥ 0.85 and κ ≥ 0.60 | same | Unchanged, plus two conditions below |
+| Latency p95 | Not gated | Not gated | recorded | p95 went from 4.6 s to 7.0 s between two runs with near-identical answers. It depends on the machine (what else is on the 4 GB GPU), not on the pipeline, so a gate would be flaky |
+| Attack success rate, tool selection, unconfirmed actions and PII leaks | — | from Stage 4 and Stage 6 | ≤ 0.05; ≥ 0.90; 0 | Not measurable yet. Values kept from the README |
+
+## Judge calibration: two added conditions
+
+The minicheck judge passed with agreement 29/30 and κ 0.78. That result is weaker than it looks:
+
+1. **The reference set has only 3 "no" items.** The judge missed one of them (item 10, a sentence that contradicts its context). One more miss would give agreement 28/30 and κ 0.47, a fail. So the result depends on a single item. **Added condition:** at least 10 "no" items in the reference set before κ is trusted. Take them from known-bad answers in the saved traces.
+2. **The reference labels must come from a person.** `reports/judge_calibration.json` records `labelled_by: Shockwawe10`, but the 30 labels in `evals/annotation/judge_labels.csv` were written by Claude. Until a person labels them, the calibration measures agreement between two models, and the faithfulness gate stays provisional. **Added condition:** `labelled_by` names whoever actually wrote the labels.
+
+## When to review these values
+
+- When `dataset_version` changes, a model or prompt changes on purpose, or the reference labels are replaced. Rerun the baseline and update this file and the README's Results table in the same PR.
+- At the end of each stage, after the holdout run. The holdout is compared with the targets once and never used to move them.
+
+## Found while writing this
+
+- **`evals/history.csv` has more values than columns.** The header has 19 columns, but the 2026-11-03 row has 25 values: the judge fields were added to the rows but not to the header. Anything that reads the file by column name will shift those values.
+- **The README's Results table needs the same fix as the calibration report.** It says the calibration was "vs my labels", and the labelling issue above applies there too.
