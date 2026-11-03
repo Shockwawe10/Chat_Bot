@@ -75,6 +75,12 @@ What the results add:
 - **Behaviour that code cannot decide.** The first version of the harness counted it as a pass, and an always-"Yes." system scored 0.38. It is now left for the judge: 8 of the 52 pipeline cases and 20 of the always-answer cases.
 - **A matcher bug found by the first pipeline run.** The rule that joined a number to its unit also joined "A4 fasteners" and "GF-2 would", so two correct answers scored as wrong. The rule was changed and both answers are now tests.
 
+## Holdout exposure (2026-11-03)
+
+Eight holdout cases (g019, g029, g034, g045, g051, g061, g070, g075) were shown, with expected behaviour and short answers, to a session that also works on the pipeline. They came in through the blind-check sheet. Holdout results are reported twice from now on: on all 23 cases and on the 15 unexposed cases, both as counts. The pre-exposure holdout run 20261102T111832Z is the clean reference. No pipeline change may be justified by results on the 8 exposed cases.
+
+Caveat on the reference run, from its manifest only (its scores were not read): it ran at commit `3b5e4cb` with `git_dirty: true`, at 11:18 UTC on 2026-11-02, while the in-place mutation check was rewriting `app/` and `evals/` files one break at a time (run started about 10:47 UTC; its result was committed at 11:24 UTC). It may have been scored, or answered, with a broken file. Before it is used as the reference, its saved answers, refusals and retrieved chunk ids are rescored with the current code, which does not run the pipeline on the holdout again. If the rescored numbers differ from the stored ones, the run is not clean and a new reference is needed.
+
 ## Blind check: how to run it
 
 1. Give the annotator the `data/kb` folder and `evals/annotation/blind_20.csv`, and nothing else. They must not open `golden_dataset.jsonl`.
