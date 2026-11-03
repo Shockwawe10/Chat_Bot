@@ -81,6 +81,8 @@ Eight holdout cases (g019, g029, g034, g045, g051, g061, g070, g075) were shown,
 
 Caveat on the reference run, from its manifest only (its scores were not read): it ran at commit `3b5e4cb` with `git_dirty: true`, at 11:18 UTC on 2026-11-02, while the in-place mutation check was rewriting `app/` and `evals/` files one break at a time (run started about 10:47 UTC; its result was committed at 11:24 UTC). It may have been scored, or answered, with a broken file. Before it is used as the reference, its saved answers, refusals and retrieved chunk ids are rescored with the current code, which does not run the pipeline on the holdout again. If the rescored numbers differ from the stored ones, the run is not clean and a new reference is needed.
 
+Rescored on 2026-11-03 with `python -m evals.run_evals --rescore reports/holdout/20261102T111832Z-pipeline-holdout.json --allow-holdout`: every plain-code metric matches the saved run (only that result was read, not the metrics). So the scoring was not broken. The rescore reuses the saved answers and retrieved chunks, so it cannot show whether `app/` was broken when they were produced. The mutation check broke `app/` files early in its run and `evals/` files near the end, which makes a broken `app/` at 11:18 unlikely, but only a new pipeline run on the holdout, at the end of a stage, can settle it.
+
 ## Blind check: how to run it
 
 1. Give the annotator the `data/kb` folder and `evals/annotation/blind_20.csv`, and nothing else. They must not open `golden_dataset.jsonl`.

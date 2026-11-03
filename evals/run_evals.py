@@ -8,6 +8,11 @@ Run from the repository root:
     python -m evals.run_evals --system http --url http://127.0.0.1:8017 --commit a3c0e9c
     python -m evals.run_evals --split holdout --allow-holdout   # end of a stage only
     python -m evals.run_evals --judge --judge-passes 3          # add the Ragas metrics
+    python -m evals.run_evals --rescore reports/runs/<run_id>.json        # rescore, call nothing
+    python -m evals.run_evals --rescore reports/holdout/<run_id>.json --allow-holdout
+
+A holdout run also reports counts on all cases and on the cases outside
+evals/exposure.py's EXPOSED_HOLDOUT (see "Holdout exposure" in evals/golden_validation.md).
 
 Only reviewed cases run; drafts are counted and skipped. Every run writes
 reports/runs/<run_id>.json (holdout runs: reports/holdout/). A full dev run of the
@@ -17,16 +22,19 @@ pipeline also copies it to reports/latest.json and adds a row to evals/history.c
 import argparse
 import csv
 import json
+import math
 import shutil
 import subprocess
 import sys
 from contextlib import ExitStack
 from datetime import UTC, datetime
+from pathlib import Path
 
 from app.chunker import CHUNKER_VERSION, ChunkConfig
 from app.generator import PromptTemplate
 from app.settings import ROOT, read_env
 from evals.chunk_report import KB_DIR
+from evals.exposure import check_exposed, exposure_report, format_report
 from evals.judge import JUDGED, aggregate_judged, judge_cases, make_judge
 from evals.metrics import aggregate, score_case
 from evals.systems import (
@@ -218,10 +226,102 @@ def summary(report):
             lines.append(f"  {key}: {show(m[key])}")
     for category, (passed, failed, judge) in m["behaviour_by_category"].items():
         lines.append(f"  behaviour, {category}: {passed} passed, {failed} failed, {judge} for the judge")
+    if "exposure" in m:
+        lines.extend(format_report(m["exposure"]))
     return "\n".join(lines)
 
 
-def main(argv=None):
+# What each system can produce, so a saved run is rescored the way it was scored.
+CAPABILITIES = {
+    "pipeline": (True, True),
+    "http": (True, True),
+    **{cls.name: (cls.has_retrieval, cls.has_generation) for cls in (AlwaysAbstain, AlwaysAnswer, RandomRetriever)},
+}
+
+
+def rescore(report, cases, overlap, store):
+    """Score a saved run again with the current scoring code and dataset, without asking any system.
+
+    Returns (scored, metrics, changed). LLM-judged values are copied from the run, because
+    rescoring never calls a model. `changed` maps every plain-code metric that differs from
+    the saved one to (saved, rescored).
+    """
+    by_id = {case["id"]: case for case in cases}
+    unknown = [saved["id"] for saved in report["cases"] if saved["id"] not in by_id]
+    if unknown:
+        raise SystemExit(f"the run has cases the dataset no longer has: {', '.join(unknown)}")
+    has_retrieval, has_generation = CAPABILITIES[report["system"]]
+    scored = []
+    for saved in report["cases"]:
+        response = {key: saved[key] for key in ("status", "latency_ms", "retrieved", "flags") if key in saved}
+        if has_generation:
+            response["answer"] = saved.get("answer", "")
+            response["abstained"] = saved.get("refused", False)
+        new = score_case(by_id[saved["id"]], response, store, has_retrieval, has_generation)
+        new.update({key: saved[key] for key in ("judged", "judge_errors") if key in saved})
+        scored.append(new)
+    metrics = aggregate(scored, overlap, LOW_OVERLAP)
+    plain = [key for key in metrics if key not in JUDGED]
+    judged_prefixes = tuple(f"{name}_" for name in JUDGED)
+    for key, value in report["metrics"].items():
+        if key in JUDGED or key.startswith(judged_prefixes) or key == "judge_errors":
+            metrics[key] = value
+    if report["split"] == "holdout":
+        metrics["exposure"] = exposure_report(scored)
+    changed = {
+        key: (report["metrics"][key], metrics[key])
+        for key in plain
+        if key in report["metrics"] and not same(report["metrics"][key], metrics[key])
+    }
+    return scored, metrics, changed
+
+
+def same(a, b):
+    """Equal, with floats compared to 1e-9: the same sum can differ in its last digit."""
+    if isinstance(a, float) or isinstance(b, float):
+        return a is not None and b is not None and math.isclose(a, b, rel_tol=1e-9, abs_tol=1e-12)
+    if isinstance(a, dict) and isinstance(b, dict):
+        return a.keys() == b.keys() and all(same(a[key], b[key]) for key in a)
+    if isinstance(a, (list, tuple)) and isinstance(b, (list, tuple)):
+        return len(a) == len(b) and all(same(x, y) for x, y in zip(a, b))
+    return a == b
+
+
+def rescore_main(path, allow_holdout=False, store=None):
+    """Rescore one saved run file and print it. Writes nothing. Returns 1 if a metric changed."""
+    report = json.loads(path.read_text(encoding="utf-8"))
+    if report["split"] == "holdout" and not allow_holdout:
+        raise SystemExit("rescoring a holdout run shows holdout results: add --allow-holdout to mean it")
+    cases = load_dataset()
+    errors, stats = check(cases, load_corpus(KB_DIR, ChunkConfig()))
+    if errors:
+        raise SystemExit("the golden dataset does not validate: run python -m evals.validate_golden")
+    if report["split"] == "holdout" and check_exposed(cases):
+        raise SystemExit("; ".join(check_exposed(cases)))
+    if CAPABILITIES[report["system"]][0]:
+        store = store or ChunkStore.from_index()
+        if report.get("index_fingerprint") and store.fingerprint != report["index_fingerprint"]:
+            raise SystemExit(
+                f"the run used index {report['index_fingerprint']}, the active index is {store.fingerprint}: "
+                "chunk ids would not match. Rebuild the run's index before rescoring."
+            )
+    if report.get("dataset_version") != cases[0]["dataset_version"]:
+        print(
+            f"note: the run used dataset {report.get('dataset_version')}, rescored with "
+            f"{cases[0]['dataset_version']}, so case changes show up as metric changes"
+        )
+    _, metrics, changed = rescore(report, cases, stats["overlap"], store)
+    print(summary({**report, "metrics": metrics}))
+    print(f"rescored {path.name} without calling any system; nothing written")
+    if not changed:
+        print("every plain-code metric matches the saved run")
+        return 0
+    for key, (saved, now) in changed.items():
+        print(f"CHANGED {key}: saved {saved}, rescored {now}")
+    return 1
+
+
+def main(argv=None, store=None):
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--system", choices=SYSTEMS, default="pipeline")
     parser.add_argument("--url", help="base URL for --system http")
@@ -234,7 +334,11 @@ def main(argv=None):
     parser.add_argument("--record-baseline", action="store_true", help="also copy the run to reports/baseline.json")
     parser.add_argument("--judge", action="store_true", help="add the LLM-judged Ragas metrics")
     parser.add_argument("--judge-passes", type=int, default=1, help="judge every case this many times")
+    parser.add_argument("--rescore", metavar="RUN_JSON", help="score a saved run file again; calls no system")
     args = parser.parse_args(argv)
+    if args.rescore:
+        path = Path(args.rescore)
+        return rescore_main(path if path.is_absolute() else ROOT / path, args.allow_holdout, store)
     if args.split == "holdout" and not args.allow_holdout:
         parser.error("the holdout runs only at the end of a stage: add --allow-holdout to mean it")
     if args.system == "http" and not args.url:
@@ -244,6 +348,8 @@ def main(argv=None):
     errors, stats = check(cases, load_corpus(KB_DIR, ChunkConfig()))
     if errors:
         raise SystemExit("the golden dataset does not validate: run python -m evals.validate_golden")
+    if args.split == "holdout" and check_exposed(cases):
+        raise SystemExit("; ".join(check_exposed(cases)))
     selected, drafts = select_cases(cases, args.split, args.smoke)
     if not selected:
         raise SystemExit("no reviewed cases to run")
@@ -258,6 +364,8 @@ def main(argv=None):
             metrics["judge_method"] = judge.method
             judge_cases(judge, {c["id"]: c for c in selected}, scored, store, args.judge_passes)
             metrics.update(aggregate_judged(scored, args.judge_passes))
+        if args.split == "holdout":
+            metrics["exposure"] = exposure_report(scored)
         report = build_manifest(
             run_id, system, args, env, len(selected), drafts, cases[0]["dataset_version"], metrics, store
         )
