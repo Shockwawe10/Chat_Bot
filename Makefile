@@ -38,4 +38,4 @@ judge-labels:
 	$(PYTHON) -m evals.calibrate_judge --make-labels
 
 calibrate:
-	$(PYTHON) -m evals.calibrate_judge
+	$(PYTHON) -m evals.calibrate_judge --labelled-by "$(LABELLED_BY)"

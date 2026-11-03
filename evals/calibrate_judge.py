@@ -3,7 +3,7 @@
 Run from the repository root:
 
     python -m evals.calibrate_judge --make-labels   # write the blind label file, once
-    python -m evals.calibrate_judge                 # score my labels against the judge
+    python -m evals.calibrate_judge --labelled-by NAME   # score my labels against the judge
 
 I fill `supported` with yes or no for each answer: yes only if every claim in it is
 backed by the context shown. The file never contains a judge score. The judge says yes
@@ -94,13 +94,14 @@ def read_labels(path):
     return rows, problems
 
 
-def summarise(rows, scores, judge_model):
+def summarise(rows, scores, judge_model, labelled_by):
     human = [row["supported"].strip().lower() == "yes" for row in rows]
     judge = [score is not None and score >= SUPPORTED_AT for score in scores]
     agreement = sum(a == b for a, b in zip(human, judge)) / len(rows)
     kappa = cohen_kappa(human, judge)
     return {
         "date": datetime.now(UTC).date().isoformat(),
+        "labelled_by": labelled_by,
         "judge_model": judge_model,
         "items": len(rows),
         "human_yes": sum(human),
@@ -147,7 +148,11 @@ def latest_run(system):
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--make-labels", action="store_true", help="write the blind label file")
+    parser.add_argument("--labelled-by", default="", help="the person who chose every label, recorded in the result")
     args = parser.parse_args(argv)
+    if not args.make_labels and not args.labelled_by.strip():
+        # The labels are the human reference, so the result must say which human gave them.
+        parser.error("--labelled-by is required: name the person who chose every label")
     if args.make_labels:
         runs = [latest_run("pipeline"), latest_run("http")]
         chosen = make_labels(runs, ChunkStore.from_index(), LABELS)
@@ -159,7 +164,7 @@ def main(argv=None):
     if problems:
         return 1
     judge = RagasJudge.from_env(read_env())
-    result = summarise(rows, judge_scores(judge, rows), judge.model)
+    result = summarise(rows, judge_scores(judge, rows), judge.model, args.labelled_by.strip())
     RESULT.parent.mkdir(parents=True, exist_ok=True)
     RESULT.write_text(json.dumps(result, indent=1) + "\n", encoding="utf-8")
     kappa = "undefined" if result["kappa"] is None else f"{result['kappa']:.2f}"

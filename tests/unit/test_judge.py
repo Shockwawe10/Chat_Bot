@@ -179,19 +179,31 @@ def test_labels_must_all_be_yes_or_no(tmp_path):
 
 def test_summary_passes_only_at_both_thresholds():
     rows = [{"item": str(i), "case_id": f"g{i}", "supported": "yes" if i < 6 else "no"} for i in range(10)]
-    exact = summarise(rows, [1.0] * 6 + [0.5] * 4, "j:1")
+    exact = summarise(rows, [1.0] * 6 + [0.5] * 4, "j:1", "me")
     assert (exact["agreement"], exact["kappa"], exact["passed"]) == (1.0, 1.0, True)
-    always_yes = summarise(rows, [0.9999999999] * 10, "j:1")
+    always_yes = summarise(rows, [0.9999999999] * 10, "j:1", "me")
     assert always_yes["agreement"] == 0.6 and not always_yes["passed"]
-    errors = summarise(rows, [None] * 10, "j:1")
+    errors = summarise(rows, [None] * 10, "j:1", "me")
     assert errors["judge_errors"] == 10 and not errors["passed"]
 
 
 def test_high_agreement_with_no_kappa_does_not_pass():
     # 9 of 10 answers are supported, and a judge that always says yes agrees 90% of the time.
     rows = [{"item": str(i), "case_id": f"g{i}", "supported": "yes" if i < 9 else "no"} for i in range(10)]
-    result = summarise(rows, [1.0] * 10, "j:1")
+    result = summarise(rows, [1.0] * 10, "j:1", "me")
     assert result["agreement"] == 0.9 and result["kappa"] == 0.0 and not result["passed"]
+
+
+def test_the_result_records_who_labelled():
+    rows = [{"item": "1", "case_id": "g1", "supported": "yes"}, {"item": "2", "case_id": "g2", "supported": "no"}]
+    assert summarise(rows, [1.0, 0.5], "j:1", "Shockwawe10")["labelled_by"] == "Shockwawe10"
+
+
+@pytest.mark.parametrize("argv", [[], ["--labelled-by", "  "]], ids=["missing", "blank"])
+def test_calibration_will_not_run_without_naming_the_labeller(argv):
+    with pytest.raises(SystemExit) as error:
+        calibrate_judge.main(argv)
+    assert error.value.code == 2
 
 
 TABLE = f"""{START}

@@ -1,0 +1,198 @@
+{
+ "date": "2026-11-03",
+ "labelled_by": "Shockwawe10",
+ "judge_model": "phi4-mini:3.8b",
+ "items": 30,
+ "human_yes": 27,
+ "judge_yes": 17,
+ "judge_errors": 0,
+ "agreement": 0.6666666666666666,
+ "kappa": 0.253731343283582,
+ "passed": false,
+ "thresholds": {
+  "agreement": 0.85,
+  "kappa": 0.6
+ },
+ "pairs": [
+  {
+   "item": "1",
+   "case_id": "g064",
+   "human": true,
+   "judge_score": 0.8
+  },
+  {
+   "item": "2",
+   "case_id": "g007",
+   "human": true,
+   "judge_score": 1.0
+  },
+  {
+   "item": "3",
+   "case_id": "g003",
+   "human": true,
+   "judge_score": 1.0
+  },
+  {
+   "item": "4",
+   "case_id": "g025",
+   "human": true,
+   "judge_score": 0.6666666666666666
+  },
+  {
+   "item": "5",
+   "case_id": "g021",
+   "human": true,
+   "judge_score": 0.5
+  },
+  {
+   "item": "6",
+   "case_id": "g021",
+   "human": true,
+   "judge_score": 1.0
+  },
+  {
+   "item": "7",
+   "case_id": "g010",
+   "human": true,
+   "judge_score": 1.0
+  },
+  {
+   "item": "8",
+   "case_id": "g006",
+   "human": true,
+   "judge_score": 1.0
+  },
+  {
+   "item": "9",
+   "case_id": "g039",
+   "human": true,
+   "judge_score": 0.5
+  },
+  {
+   "item": "10",
+   "case_id": "g006",
+   "human": false,
+   "judge_score": 0.6666666666666666
+  },
+  {
+   "item": "11",
+   "case_id": "g036",
+   "human": false,
+   "judge_score": 0.75
+  },
+  {
+   "item": "12",
+   "case_id": "g003",
+   "human": true,
+   "judge_score": 0.6666666666666666
+  },
+  {
+   "item": "13",
+   "case_id": "g066",
+   "human": true,
+   "judge_score": 1.0
+  },
+  {
+   "item": "14",
+   "case_id": "g042",
+   "human": true,
+   "judge_score": 0.5
+  },
+  {
+   "item": "15",
+   "case_id": "g043",
+   "human": true,
+   "judge_score": 1.0
+  },
+  {
+   "item": "16",
+   "case_id": "g067",
+   "human": true,
+   "judge_score": 0.8
+  },
+  {
+   "item": "17",
+   "case_id": "g022",
+   "human": true,
+   "judge_score": 1.0
+  },
+  {
+   "item": "18",
+   "case_id": "g028",
+   "human": true,
+   "judge_score": 1.0
+  },
+  {
+   "item": "19",
+   "case_id": "g001",
+   "human": true,
+   "judge_score": 1.0
+  },
+  {
+   "item": "20",
+   "case_id": "g065",
+   "human": true,
+   "judge_score": 1.0
+  },
+  {
+   "item": "21",
+   "case_id": "g037",
+   "human": true,
+   "judge_score": 0.8
+  },
+  {
+   "item": "22",
+   "case_id": "g032",
+   "human": false,
+   "judge_score": 0.3333333333333333
+  },
+  {
+   "item": "23",
+   "case_id": "g028",
+   "human": true,
+   "judge_score": 1.0
+  },
+  {
+   "item": "24",
+   "case_id": "g035",
+   "human": true,
+   "judge_score": 1.0
+  },
+  {
+   "item": "25",
+   "case_id": "g020",
+   "human": true,
+   "judge_score": 0.6666666666666666
+  },
+  {
+   "item": "26",
+   "case_id": "g037",
+   "human": true,
+   "judge_score": 0.0
+  },
+  {
+   "item": "27",
+   "case_id": "g064",
+   "human": true,
+   "judge_score": 1.0
+  },
+  {
+   "item": "28",
+   "case_id": "g060",
+   "human": true,
+   "judge_score": 1.0
+  },
+  {
+   "item": "29",
+   "case_id": "g035",
+   "human": true,
+   "judge_score": 1.0
+  },
+  {
+   "item": "30",
+   "case_id": "g038",
+   "human": true,
+   "judge_score": 1.0
+  }
+ ]
+}

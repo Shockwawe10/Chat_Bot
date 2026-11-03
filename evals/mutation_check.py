@@ -446,6 +446,10 @@ BREAKS = {
     "calibrate: refusals labelled": [
         (CALIBRATE, 'if item["split"] != "dev" or item.get("status") != 200 or item.get("refused") is not False:', 'if item["split"] != "dev":')
     ],
+    "calibrate: labeller not required": [
+        (CALIBRATE, "    if not args.make_labels and not args.labelled_by.strip():\n", "    if False:\n")
+    ],
+    "calibrate: labeller not recorded": [(CALIBRATE, '        "labelled_by": labelled_by,\n', "")],
     "calibrate: empty label allowed": [(CALIBRATE, 'not in ("yes", "no")', 'not in ("yes", "no", "")')],
     "render: uncalibrated judge shown": [(RENDER, "        if value is None or (judged and not trusted(report, calibration)):", "        if value is None:")],
     "render: another judge's calibration trusted": [
