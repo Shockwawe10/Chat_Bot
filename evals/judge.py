@@ -24,7 +24,7 @@ from app.embedder import DEFAULT_URL
 from app.settings import ROOT
 
 JUDGED = ("faithfulness", "answer_relevancy", "context_precision", "context_recall")
-METHODS = ("claim-check", "ragas")
+METHODS = ("claim-check", "ragas", "guardian")
 CLAIM_PROMPT = ROOT / "prompts" / "judge_claim_v1.txt"
 CLAIM_SCHEMA = {
     "type": "object",
@@ -102,6 +102,7 @@ class ClaimCheckJudge:
         self.prompt = Template(CLAIM_PROMPT.read_bytes().decode("utf-8").replace("\r\n", "\n"))
         self.client = client or httpx.AsyncClient(base_url=ollama_url, timeout=180)
         self.others = others  # a RagasJudge for the other three metrics
+        self.metrics = JUDGED if others else ("faithfulness",)
         self.seed = seed
         self.last_verdicts = []
 
@@ -136,9 +137,51 @@ class ClaimCheckJudge:
         return sum(v["supported"] for v in self.last_verdicts) / len(self.last_verdicts)
 
 
+class GuardianJudge:
+    """IBM Granite Guardian's groundedness check on the whole answer: one call, Yes or No.
+
+    Used the way the model was trained: the passages in a "context" message, the answer as
+    the assistant message, and "groundedness" as the system prompt, which picks that risk in
+    its Ollama template. "Yes" means the answer is not grounded, so it scores 0.0.
+    """
+
+    method = "guardian"
+    metrics = ("faithfulness",)
+
+    def __init__(self, model, ollama_url=DEFAULT_URL, client=None):
+        self.model = model
+        self.client = client or httpx.AsyncClient(base_url=ollama_url, timeout=180)
+        self.last_verdicts = []
+
+    async def ascore(self, name, **inputs):
+        if name != "faithfulness":
+            raise JudgeUnavailable(f"guardian judges only faithfulness, not {name}")
+        payload = {
+            "model": self.model,
+            "stream": False,
+            "messages": [
+                {"role": "system", "content": "groundedness"},
+                {"role": "context", "content": "\n\n".join(inputs["retrieved_contexts"])},
+                {"role": "assistant", "content": inputs["response"]},
+            ],
+            "options": {"temperature": 0, "num_ctx": 8192, "num_predict": 4},
+        }
+        response = await self.client.post("/api/chat", json=payload)
+        if response.status_code != 200:
+            raise JudgeUnavailable(f"Ollama returned {response.status_code}: {response.text}")
+        reply = response.json()["message"]["content"].strip()
+        word = reply.split()[0].strip(".").lower() if reply else ""
+        if word not in ("yes", "no"):
+            raise ValueError(f"guardian answered {reply!r}, not Yes or No")
+        self.last_verdicts = [{"sentence": inputs["response"], "supported": word == "no", "reason": reply}]
+        return 1.0 if word == "no" else 0.0
+
+
 def make_judge(env, ragas_for_others=True):
     model, method = check_config(env)
     url = env.get("OLLAMA_URL") or DEFAULT_URL
+    if method == "guardian":
+        return GuardianJudge(model, url)
     embedding = env.get("EMBEDDING_MODEL") or "nomic-embed-text:v1.5"
     ragas = RagasJudge(model, url, embedding) if (method == "ragas" or ragas_for_others) else None
     return ragas if method == "ragas" else ClaimCheckJudge(model, url, others=ragas)
@@ -184,7 +227,7 @@ def judge_cases(judge, cases, scored, store, passes=1):
             case = cases[item["id"]]
             contexts = [store.context(chunk_id) for chunk_id in item.get("retrieved", [])]
             item["judged"], item["judge_errors"] = {}, []
-            for name in needed(item, case):
+            for name in [n for n in needed(item, case) if n in getattr(judge, "metrics", JUDGED)]:
                 values = []
                 for _ in range(passes):
                     try:

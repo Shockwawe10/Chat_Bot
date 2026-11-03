@@ -18,10 +18,12 @@ from evals.calibrate_judge import (
 from evals.judge import (
     CLAIM_SCHEMA,
     ClaimCheckJudge,
+    GuardianJudge,
     JudgeUnavailable,
     aggregate_judged,
     check_config,
     judge_cases,
+    make_judge,
     needed,
     sentences,
 )
@@ -207,6 +209,53 @@ def test_an_answer_with_no_sentence_is_an_error():
     judge, _ = claim_judge([])
     with pytest.raises(ValueError):
         score(judge, response="   ")
+
+
+def guardian(reply):
+    sent = []
+
+    def handler(request):
+        sent.append(json.loads(request.content))
+        return httpx.Response(200, json={"message": {"content": reply}})
+
+    client = httpx.AsyncClient(base_url="http://test", transport=httpx.MockTransport(handler))
+    return GuardianJudge("granite3-guardian:2b", client=client), sent
+
+
+@pytest.mark.parametrize(("reply", "expected"), [("No", 1.0), ("Yes", 0.0), (" yes.", 0.0)])
+def test_guardian_yes_means_not_grounded(reply, expected):
+    judge, _ = guardian(reply)
+    assert score(judge) == expected
+    assert judge.last_verdicts[0]["supported"] is (expected == 1.0)
+
+
+def test_guardian_sends_the_groundedness_risk_the_context_and_the_whole_answer():
+    judge, sent = guardian("No")
+    score(judge, response="Alpha is one. Beta is two.", contexts=("Heading A\nAlpha text.", "B\nBeta text."))
+    assert [m["role"] for m in sent[0]["messages"]] == ["system", "context", "assistant"]
+    assert sent[0]["messages"][0]["content"] == "groundedness"
+    assert sent[0]["messages"][1]["content"] == "Heading A\nAlpha text.\n\nB\nBeta text."
+    assert sent[0]["messages"][2]["content"] == "Alpha is one. Beta is two."
+    assert sent[0]["options"]["temperature"] == 0 and len(sent) == 1
+
+
+def test_guardian_rejects_an_answer_that_is_not_yes_or_no():
+    judge, _ = guardian("Maybe")
+    with pytest.raises(ValueError):
+        score(judge)
+
+
+def test_guardian_judges_faithfulness_only():
+    judge, sent = guardian("No")
+    assert judge.metrics == ("faithfulness",)
+    item = scored()  # an answered case with gold, so all four metrics would apply
+    judge_cases(judge, {"c1": case()}, [item], STORE)
+    assert item["judged"] == {"faithfulness": [1.0]} and len(sent) == 1
+
+
+def test_make_judge_picks_the_guardian_method():
+    env = {"JUDGE_PROVIDER": "ollama", "JUDGE_MODEL": "granite3-guardian:2b", "LLM_MODEL": "m:1", "JUDGE_METHOD": "guardian"}
+    assert isinstance(make_judge(env), GuardianJudge)
 
 
 def test_other_metrics_go_to_the_ragas_judge_or_are_refused():

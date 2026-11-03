@@ -435,6 +435,13 @@ BREAKS = {
     "render: calibration counts for any metric": [(RENDER, '        and calibration.get("metric", "faithfulness") == key\n', "")],
     "render: calibration counts for any method": [(RENDER, '        and calibration.get("method") == report.get("judge_method")\n', "")],
     "calibrate: contexts from another run": [(CALIBRATE, 'retrieved = runs[row["run_id"]][row["case_id"]]["retrieved"]', 'retrieved = runs[row["run_id"]][row["case_id"]]["retrieved"][::-1]')],
+    # Guardian judge
+    "guardian: yes read as grounded": [(JUDGE, 'return 1.0 if word == "no" else 0.0', 'return 1.0 if word == "yes" else 0.0')],
+    "guardian: risk not selected": [(JUDGE, '{"role": "system", "content": "groundedness"},', '{"role": "system", "content": "harm"},')],
+    "guardian: any reply accepted": [(JUDGE, '        if word not in ("yes", "no"):\n', "        if False:\n")],
+    "guardian: unsupported metrics judged": [
+        (JUDGE, '[n for n in needed(item, case) if n in getattr(judge, "metrics", JUDGED)]', "needed(item, case)")
+    ],
     # Judge and calibration
     "judge: refusals judged for faithfulness": [
         (JUDGE, 'answered = scored.get("status") == 200 and scored.get("refused") is False', 'answered = scored.get("status") == 200')
