@@ -24,7 +24,7 @@ from app.embedder import DEFAULT_URL
 from app.settings import ROOT
 
 JUDGED = ("faithfulness", "answer_relevancy", "context_precision", "context_recall")
-METHODS = ("claim-check", "ragas", "guardian")
+METHODS = ("claim-check", "ragas", "guardian", "minicheck")
 CLAIM_PROMPT = ROOT / "prompts" / "judge_claim_v1.txt"
 CLAIM_SCHEMA = {
     "type": "object",
@@ -177,11 +177,44 @@ class GuardianJudge:
         return 1.0 if word == "no" else 0.0
 
 
+class MiniCheckJudge(ClaimCheckJudge):
+    """Bespoke-MiniCheck: a model trained to say whether a document supports one sentence.
+
+    The same per-sentence scoring as claim-check, with the model's own two-line prompt from
+    its model card ("Document: ..." then "Claim: ..."). It replies Yes or No.
+    """
+
+    method = "minicheck"
+
+    def __init__(self, model, ollama_url=DEFAULT_URL, client=None):
+        super().__init__(model, ollama_url, client=client)
+
+    async def check(self, question, sentence, contexts):
+        document = "\n\n".join(contexts)
+        prompt = f"Document: {document}\nClaim: {sentence}"
+        payload = {
+            "model": self.model,
+            "stream": False,
+            "messages": [{"role": "user", "content": prompt}],
+            "options": {"temperature": 0, "num_ctx": 8192, "num_predict": 4},
+        }
+        response = await self.client.post("/api/chat", json=payload)
+        if response.status_code != 200:
+            raise JudgeUnavailable(f"Ollama returned {response.status_code}: {response.text}")
+        reply = response.json()["message"]["content"].strip()
+        word = reply.split()[0].strip(".").lower() if reply else ""
+        if word not in ("yes", "no"):
+            raise ValueError(f"minicheck answered {reply!r}, not Yes or No")
+        return {"sentence": sentence, "supported": word == "yes", "reason": reply}
+
+
 def make_judge(env, ragas_for_others=True):
     model, method = check_config(env)
     url = env.get("OLLAMA_URL") or DEFAULT_URL
     if method == "guardian":
         return GuardianJudge(model, url)
+    if method == "minicheck":
+        return MiniCheckJudge(model, url)
     embedding = env.get("EMBEDDING_MODEL") or "nomic-embed-text:v1.5"
     ragas = RagasJudge(model, url, embedding) if (method == "ragas" or ragas_for_others) else None
     return ragas if method == "ragas" else ClaimCheckJudge(model, url, others=ragas)

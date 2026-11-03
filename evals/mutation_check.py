@@ -435,6 +435,16 @@ BREAKS = {
     "render: calibration counts for any metric": [(RENDER, '        and calibration.get("metric", "faithfulness") == key\n', "")],
     "render: calibration counts for any method": [(RENDER, '        and calibration.get("method") == report.get("judge_method")\n', "")],
     "calibrate: contexts from another run": [(CALIBRATE, 'retrieved = runs[row["run_id"]][row["case_id"]]["retrieved"]', 'retrieved = runs[row["run_id"]][row["case_id"]]["retrieved"][::-1]')],
+    # MiniCheck judge
+    "minicheck: no read as supported": [
+        (JUDGE, 'return {"sentence": sentence, "supported": word == "yes", "reason": reply}', 'return {"sentence": sentence, "supported": word == "no", "reason": reply}')
+    ],
+    "minicheck: prompt not the model card format": [
+        (JUDGE, 'prompt = f"Document: {document}\\nClaim: {sentence}"', 'prompt = f"{document}\\n\\nIs this supported? {sentence}"')
+    ],
+    "minicheck: whole answer in one claim": [
+        (JUDGE, "        return MiniCheckJudge(model, url)\n", "        return GuardianJudge(model, url)\n")
+    ],
     # Guardian judge
     "guardian: yes read as grounded": [(JUDGE, 'return 1.0 if word == "no" else 0.0', 'return 1.0 if word == "yes" else 0.0')],
     "guardian: risk not selected": [(JUDGE, '{"role": "system", "content": "groundedness"},', '{"role": "system", "content": "harm"},')],

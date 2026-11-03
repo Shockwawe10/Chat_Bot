@@ -371,6 +371,8 @@ A second method, `claim-check` (`JUDGE_METHOD`), was written before it was score
 
 A third judge, IBM's `granite3-guardian:2b`, is trained to check groundedness (`JUDGE_METHOD=guardian`). It reads the passages and the whole answer and replies `Yes` when the answer is not grounded, set up exactly as its model card describes. It got 4 of 4 obvious one-line cases right, but on the 30 labels it scored agreement 0.50 and κ −0.19, worse than chance: it passed all 3 unsupported answers and rejected 12 of the 27 supported ones. It **failed**. Three judges have now been tried on the same 30 labels, so a later pass needs confirming on fresh labels before its scores are trusted.
 
+The fourth judge, `bespoke-minicheck:7b` (`JUDGE_METHOD=minicheck`), is trained for exactly this check: one document and one sentence in, `Yes` or `No` out. It runs on each sentence of the answer with the prompt from its model card. It got 4 of 4 obvious cases right, and on the 30 labels it scored agreement 0.97 and κ 0.78, so it **passed** and is now the configured judge. It accepted all 27 supported answers and caught 2 of the 3 unsupported ones. The one it missed, "you deal with a different contact each time", draws a wrong conclusion from correct facts. Two limits: the pass rests on only 3 unsupported answers, and this was the fourth judge tried on these labels. Its scores are reported, and it is checked again on fresh labels (the planned 50) before Stage 3 decisions lean on them.
+
 Calibration is repeated at the end of every stage that changes the judge prompt or judge model.
 
 ### Run manifest
@@ -647,6 +649,8 @@ It failed. We agreed on 20 of the 30 answers. It spotted all 3 answers that were
 Then we gave the same small grader simpler instructions: check one sentence at a time and just say yes or no. Now it agreed with me on 25 of the 30, but it let 2 of the 3 wrong answers through, like a teacher who is now too kind. It was too strict once and too kind once, so the instructions were not the real problem: this grader is too small for the job. The next step is a bigger grader, tested on the same 30 answers.
 
 Next we tried a grader made only for this kind of check. It got easy one-line examples right, but on the real answers it agreed with me on just 15 of the 30, no better than flipping a coin. It let all 3 wrong answers through and marked 12 good ones wrong. A tool built for a job still has to pass the test.
+
+The fourth grader passed. It is a small model trained only to answer one question: "does this text support this sentence?". It agreed with me on 29 of the 30 answers. It never marked a good answer wrong, and it caught 2 of the 3 wrong ones. So now the report card can show how often the robot only says things the notebooks support. We will still give this grader a second test with new answers, because one test with only 3 wrong answers is a small test.
 
 ---
 

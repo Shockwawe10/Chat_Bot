@@ -20,6 +20,7 @@ from evals.judge import (
     ClaimCheckJudge,
     GuardianJudge,
     JudgeUnavailable,
+    MiniCheckJudge,
     aggregate_judged,
     check_config,
     judge_cases,
@@ -256,6 +257,47 @@ def test_guardian_judges_faithfulness_only():
 def test_make_judge_picks_the_guardian_method():
     env = {"JUDGE_PROVIDER": "ollama", "JUDGE_MODEL": "granite3-guardian:2b", "LLM_MODEL": "m:1", "JUDGE_METHOD": "guardian"}
     assert isinstance(make_judge(env), GuardianJudge)
+
+
+def minicheck(replies):
+    sent = []
+    answers = iter(replies)
+
+    def handler(request):
+        sent.append(json.loads(request.content))
+        return httpx.Response(200, json={"message": {"content": next(answers)}})
+
+    client = httpx.AsyncClient(base_url="http://test", transport=httpx.MockTransport(handler))
+    return MiniCheckJudge("bespoke-minicheck:7b", client=client), sent
+
+
+def test_minicheck_scores_the_share_of_sentences_it_finds_supported():
+    judge, _ = minicheck(["Yes", "No", "Yes"])
+    assert score(judge, response="Alpha is one. Beta is two. Gamma is three.") == pytest.approx(2 / 3)
+    assert [v["supported"] for v in judge.last_verdicts] == [True, False, True]
+
+
+def test_minicheck_uses_the_model_card_prompt_one_sentence_at_a_time():
+    judge, sent = minicheck(["Yes", "Yes"])
+    score(judge, response="Alpha is one. Beta is two.", contexts=("Heading A\nAlpha text.", "B\nBeta text."))
+    assert len(sent) == 2
+    assert sent[0]["messages"] == [
+        {"role": "user", "content": "Document: Heading A\nAlpha text.\n\nB\nBeta text.\nClaim: Alpha is one."}
+    ]
+    assert sent[1]["messages"][0]["content"].endswith("\nClaim: Beta is two.")
+    assert sent[0]["options"]["temperature"] == 0
+
+
+def test_minicheck_rejects_a_reply_that_is_not_yes_or_no():
+    judge, _ = minicheck(["Probably"])
+    with pytest.raises(ValueError):
+        score(judge, response="Alpha is one.")
+
+
+def test_make_judge_picks_the_minicheck_method():
+    env = {"JUDGE_PROVIDER": "ollama", "JUDGE_MODEL": "bespoke-minicheck:7b", "LLM_MODEL": "m:1", "JUDGE_METHOD": "minicheck"}
+    judge = make_judge(env)
+    assert isinstance(judge, MiniCheckJudge) and judge.metrics == ("faithfulness",)
 
 
 def test_other_metrics_go_to_the_ragas_judge_or_are_refused():
