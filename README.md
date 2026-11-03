@@ -512,7 +512,7 @@ About 8 weeks at 25–35 hours a week, in stages 0 to 8. Every stage ends with s
 - [x] Retrieval metrics in my own code: hit rate@k, MRR
 - [x] Answer metrics with Ragas: faithfulness, answer relevancy, context precision, context recall (shown only after the judge passes calibration)
 - [x] Numeric fidelity check based on `must_include`, with normalisation
-- [ ] Judge calibration on 30 hand-labeled answers: agreement and Cohen's kappa
+- [x] Judge calibration on 30 hand-labeled answers: agreement and Cohen's kappa (faithfulness: `bespoke-minicheck:7b` passed after 3 judges failed; to be confirmed on fresh labels)
 
 **Exit criteria:** `make eval` produces a manifest, `reports/latest.json` and a row in `history.csv`; the baseline appears in [Results](#results) through `make results`; judge agreement and kappa are measured and reported.
 
