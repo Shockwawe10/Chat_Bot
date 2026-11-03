@@ -14,6 +14,10 @@ python -m evals.mutation_check breaks a temporary copy of the project, never the
 
 Do not print or read holdout cases from evals/golden_dataset.jsonl. Filter to split == dev, and report holdout as ids and booleans only.
 
+evals/annotation/blind_20.csv and any filled copy hold 8 holdout questions: score them only with python -m evals.validate_golden --agreement and read only its summary line. If holdout question text reaches the session, add the ids to EXPOSED_HOLDOUT in evals/exposure.py and to Holdout exposure in evals/golden_validation.md the same day.
+
+Stage files by name, never with git add <folder>. Before every commit, run git status --short and check that each new or changed file is one this session made or the owner asked for; ask about anything else.
+
 Before running make calibrate, confirm with the owner that every label in evals/annotation/judge_labels.csv is their own judgement, and record who labelled it in reports/judge_calibration.json.
 
 After finishing each part of the work, add a short part to the README's "Explained simply" section, written so a 10-year-old could follow it: what was built, why, and how we know it works. Use plain words and an everyday comparison, and keep every number true to the saved results.

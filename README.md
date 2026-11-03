@@ -652,11 +652,25 @@ Next we tried a grader made only for this kind of check. It got easy one-line ex
 
 The fourth grader passed. It is a small model trained only to answer one question: "does this text support this sentence?". It agreed with me on 29 of the 30 answers. It never marked a good answer wrong, and it caught 2 of the 3 wrong ones. So now the report card can show how often the robot only says things the notebooks support. We will still give this grader a second test with new answers, because one test with only 3 wrong answers is a small test.
 
+Then the new grader marked the real robot's practice exam: 19 of its 20 answers said only things the notebooks support. The one it caught said "Yes, you can use GF-1 near the sea", which the notebooks rule out. The number-checking grader had passed that answer, because the right number was in the sentence. So the two graders catch different mistakes, and we keep both.
+
 ### Stage 2, part 5: deciding what counts as a fail
 
 Before every change, the robot takes a short practice test of 21 questions, and we had to decide when that test fails. If we used the goals we hope to reach one day, like finding the right card 85% of the time, the robot would fail every test today and nothing could ever change. So the rule is simpler: the robot may not get worse. Every question it gets right today has to stay right. One rule has no exceptions at all: never answer a question the notebooks cannot answer. Today it never does, 0 times out of 7. The bigger goals are kept as targets for the next stage.
 
 One surprise came out of this. When the robot fails a question about a number, it is almost never because it got the number wrong. In 10 of 11 cases it just said "I don't know". So the biggest thing to fix is still the same: the robot gives up too often. The full reasoning is in `reports/thresholds.md`.
+
+### Stage 2, part 6: keeping the locked drawer honest
+
+A second person was supposed to read 20 exam questions and say what a good reply should do, without seeing our answers. If they agree with us, the exam is fair. No such person did it yet. A small robot tried instead and agreed on only 7 of 20, but it even got the easy rule wrong ("a question in another language gets an English-only reply"), so that says more about the robot than about the exam. Then the person who wrote the exam filled in the sheet and agreed 20 of 20, which only shows the answer key is consistent, not that a stranger would agree.
+
+That sheet held 8 questions from the locked drawer, and it was shown to me, the helper who will work on the robot. That is like a student seeing part of the final exam. So from now on, final results are counted twice: on all 23 locked questions, and on the 15 I never saw. No change to the robot may be justified by the 8 seen questions.
+
+### Stage 2, part 7: checking old results again
+
+We built a way to mark an old exam paper again with today's grader, without asking the robot anything. An earlier locked-drawer test was marked again this way, and every number came out the same, so it was graded correctly.
+
+We also fixed the tool that breaks our code on purpose to check the tests. It used to break the real files for a moment, and once a save happened during that moment and kept a broken file. Now it breaks a copy, and the real files are never touched.
 
 ---
 

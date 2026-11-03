@@ -73,3 +73,21 @@ Written by /aar-loop after each session's After Action Review. Read this file be
 - Actual: The labels arrived as a pasted block headed 'Ready to paste', in the style of an AI reviewer. I wrote them in and flagged the question in one line, but the calibration run started before the owner confirmed, and nothing in the result would record who labelled.
 - Why: evals/calibrate_judge.py reads only yes or no per row and stores no labeller, so a model-written label set would pass silently and the judge would be graded by a model.
 - tags: evals,judge,calibration,fix-applied
+
+## 2026-11-03 -- Stage files by name, never with git add <folder>. Before every commit, run git status --short and check that each new or changed file is one this session made or the owner asked for; anything else gets asked about, not committed.
+- Expected: git add reports in commit bfdf625 would stage only the reference and baseline runs made in that session.
+- Actual: It also committed reports/holdout/20261102T111832Z-pipeline-holdout.json, a holdout run this session never made or opened. It was found a day later, when the owner named it as the clean reference.
+- Why: git add on a folder stages every file in it, and the commit was checked only by its diff stat, which did not list the folder's new files.
+- tags: git,holdout,fix-applied
+
+## 2026-11-03 -- evals/annotation/blind_20.csv and any filled copy of it hold 8 holdout questions. In a session that works on the pipeline, score such a sheet only with python -m evals.validate_golden --agreement and read only its summary line. If holdout question text reaches the session anyway, add the ids to EXPOSED_HOLDOUT in evals/exposure.py and a line to Holdout exposure in evals/golden_validation.md the same day.
+- Expected: The holdout would stay unseen by the session that tunes the pipeline, as the 2026-10-31 lesson requires.
+- Actual: The filled blind sheet was pasted into the chat twice, with questions and short answers for g019, g029, g034, g045, g051, g061, g070 and g075. The exposure was recorded, and holdout results are now reported on all 23 and on the 15 unexposed cases.
+- Why: The 2026-10-31 rule names only evals/golden_dataset.jsonl. The blind sheet was not seen as a holdout source, so nobody warned before it was pasted.
+- tags: evals,holdout,fix-applied
+
+## 2026-11-03 -- For a narrow judging task, try a small model trained for exactly that task before general models, and judge it only by calibration on real labelled answers. Passing a few obvious hand-made cases says little: granite3-guardian:2b got 4 of 4 obvious cases right and then scored kappa -0.19 on the 30 labels.
+- Expected: phi4-mini with Ragas, phi4-mini with claim-check, or granite3-guardian:2b would pass calibration (agreement 0.85, kappa 0.60).
+- Actual: All three failed (kappa 0.25, 0.19, -0.19). bespoke-minicheck:7b, trained only to say whether a document supports one sentence, passed at agreement 0.97 and kappa 0.78.
+- Why: General 3.8B models do not follow multi-step grounding instructions reliably, and granite was trained on response-level risks, not short claim checks. Obvious one-line cases do not exercise multi-passage contexts.
+- tags: evals,judge,models,logged-only
