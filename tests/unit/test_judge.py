@@ -1,17 +1,29 @@
 """The judge step, judge calibration and the rule that uncalibrated judged scores stay hidden."""
 
+import asyncio
 import csv
+import json
 
+import httpx
 import pytest
 
 from evals import calibrate_judge
-from evals.calibrate_judge import cohen_kappa, make_labels, read_labels, summarise
+from evals.calibrate_judge import (
+    cohen_kappa,
+    contexts_for,
+    make_labels,
+    read_labels,
+    summarise,
+)
 from evals.judge import (
+    CLAIM_SCHEMA,
+    ClaimCheckJudge,
     JudgeUnavailable,
-    RagasJudge,
     aggregate_judged,
+    check_config,
     judge_cases,
     needed,
+    sentences,
 )
 from evals.render_results import DASH, END, START, render
 from evals.systems import ChunkStore
@@ -115,11 +127,117 @@ def test_one_pass_has_no_spread_and_no_metric_without_cases():
         ({"JUDGE_PROVIDER": "ollama", "JUDGE_MODEL": "m:1", "LLM_MODEL": "m:1"}, "must differ"),
         ({"JUDGE_PROVIDER": "anthropic", "JUDGE_MODEL": "j:1", "LLM_MODEL": "m:1"}, "not set up"),
         ({"JUDGE_PROVIDER": "ollama", "JUDGE_MODEL": "", "LLM_MODEL": "m:1"}, "not set"),
+        ({"JUDGE_PROVIDER": "ollama", "JUDGE_MODEL": "j:1", "LLM_MODEL": "m:1", "JUDGE_METHOD": "vibes"}, "JUDGE_METHOD"),
     ],
 )
 def test_judge_config_is_refused_when_it_breaks_the_rules(env, message):
     with pytest.raises(JudgeUnavailable, match=message):
-        RagasJudge.from_env(env)
+        check_config(env)
+
+
+def test_claim_check_is_the_default_method():
+    assert check_config({"JUDGE_PROVIDER": "ollama", "JUDGE_MODEL": "j:1", "LLM_MODEL": "m:1"}) == ("j:1", "claim-check")
+
+
+@pytest.mark.parametrize(
+    ("text", "expected"),
+    [
+        ("One. Two!", ["One.", "Two!"]),
+        ("Example Solar Ltd. can build it. It is 0.6 m.", ["Example Solar Ltd. can build it.", "It is 0.6 m."]),
+        ("Use e.g. RF-2 here. Done.", ["Use e.g. RF-2 here.", "Done."]),
+        ("At least 0.6 m", ["At least 0.6 m"]),
+        ("  Spread\n over lines.  ", ["Spread over lines."]),
+        ("", []),
+    ],
+)
+def test_sentences(text, expected):
+    assert sentences(text) == expected
+
+
+def claim_judge(verdicts, others=None):
+    """A claim-check judge whose Ollama replies in order with the given verdicts."""
+    sent = []
+    replies = iter(verdicts)
+
+    def handler(request):
+        sent.append(json.loads(request.content))
+        reply = next(replies)
+        content = reply if isinstance(reply, str) else json.dumps({"reason": "r", "supported": reply})
+        return httpx.Response(200, json={"message": {"content": content}})
+
+    client = httpx.AsyncClient(base_url="http://test", transport=httpx.MockTransport(handler))
+    return ClaimCheckJudge("j:1", client=client, others=others), sent
+
+
+def score(judge, response="Alpha is one. Beta is two.", contexts=("Heading A\nAlpha text.",)):
+    inputs = {"user_input": "What are they?", "response": response, "retrieved_contexts": list(contexts)}
+    return asyncio.run(judge.ascore("faithfulness", **inputs))
+
+
+def test_claim_check_scores_the_share_of_supported_sentences():
+    judge, _ = claim_judge([True, True, False])
+    assert score(judge, response="Alpha is one. Beta is two. Gamma is three.") == pytest.approx(2 / 3)
+    assert [v["supported"] for v in judge.last_verdicts] == [True, True, False]
+
+
+def test_claim_check_asks_one_constrained_question_per_sentence():
+    judge, sent = claim_judge([True, True])
+    score(judge)
+    assert len(sent) == 2
+    assert sent[0]["format"] == CLAIM_SCHEMA
+    assert sent[0]["options"]["temperature"] == 0 and sent[0]["options"]["seed"] == 42
+    prompt = sent[0]["messages"][0]["content"]
+    assert "Heading A\nAlpha text." in prompt and "What are they?" in prompt and "Alpha is one." in prompt
+    assert "Beta is two." not in prompt
+
+
+def test_claim_check_schema_puts_the_reason_before_the_verdict():
+    # Ollama writes keys in alphabetical order, so the model gives its reason before deciding.
+    assert sorted(CLAIM_SCHEMA["properties"]) == ["reason", "supported"]
+    assert set(CLAIM_SCHEMA["required"]) == {"reason", "supported"}
+
+
+def test_a_verdict_without_a_boolean_is_an_error():
+    judge, _ = claim_judge(['{"reason": "r", "supported": "yes"}'])
+    with pytest.raises(TypeError):
+        score(judge, response="Alpha is one.")
+
+
+def test_an_answer_with_no_sentence_is_an_error():
+    judge, _ = claim_judge([])
+    with pytest.raises(ValueError):
+        score(judge, response="   ")
+
+
+def test_other_metrics_go_to_the_ragas_judge_or_are_refused():
+    judge, _ = claim_judge([])
+    with pytest.raises(JudgeUnavailable):
+        asyncio.run(judge.ascore("context_recall", user_input="q", reference="r", retrieved_contexts=[]))
+    delegated, _ = claim_judge([], others=FakeJudge({"context_recall": [0.25]}))
+    assert asyncio.run(delegated.ascore("context_recall", user_input="q", reference="r", retrieved_contexts=[])) == 0.25
+
+
+def test_store_context_is_the_heading_then_the_text():
+    store = ChunkStore({"x:0": ("x", "Line one.\r\nLine two.", "Doc > Section")})
+    assert store.context("x:0") == "Doc > Section\nLine one.\nLine two."
+    assert STORE.context("a:0") == "Alpha text."
+
+
+def test_calibration_rebuilds_each_context_from_its_run(tmp_path):
+    store = ChunkStore({"a:0": ("a", "Alpha text.", "A > Specs"), "b:0": ("b", "Beta text.", "B")})
+    run = {"cases": [{"id": "g1", "retrieved": ["b:0", "a:0"]}]}
+    (tmp_path / "r1.json").write_text(json.dumps(run), encoding="utf-8")
+    rows = [{"item": "1", "run_id": "r1", "case_id": "g1"}]
+    assert contexts_for(rows, store, tmp_path) == [["B\nBeta text.", "A > Specs\nAlpha text."]]
+    with pytest.raises(SystemExit):
+        contexts_for([{"item": "2", "run_id": "missing", "case_id": "g1"}], store, tmp_path)
+
+
+def test_calibration_records_its_method_and_metric():
+    rows = [{"item": "1", "case_id": "g1", "supported": "yes"}]
+    result = summarise(rows, [1.0], "j:1", "me", "claim-check", [[{"sentence": "s", "supported": True, "reason": ""}]])
+    assert (result["method"], result["metric"]) == ("claim-check", "faithfulness")
+    assert result["pairs"][0]["verdicts"][0]["supported"] is True
 
 
 def test_kappa():
@@ -249,6 +367,23 @@ def test_judged_scores_show_after_calibration_passes():
 def test_a_failed_calibration_is_still_reported():
     calibration = {"passed": False, "judge_model": "j:1", "agreement": 0.5, "kappa": None}
     assert "| — | 0.50 / undefined |" in render(TABLE, None, judged_report(), calibration)
+
+
+@pytest.mark.parametrize(
+    ("calibration_method", "run_method", "shown"),
+    [("claim-check", "claim-check", True), ("claim-check", "ragas", False), ("ragas", "claim-check", False)],
+)
+def test_a_calibration_counts_only_for_the_same_method(calibration_method, run_method, shown):
+    calibration = {"passed": True, "judge_model": "j:1", "method": calibration_method, "agreement": 0.9, "kappa": 0.7}
+    new = render(TABLE, None, judged_report(judge_method=run_method), calibration)
+    assert ("| Faithfulness | — | 0.80 |" in new) is shown
+
+
+def test_a_faithfulness_calibration_never_shows_the_other_judged_metrics():
+    table = TABLE.replace("| Faithfulness |", "| Context recall |")
+    calibration = {"passed": True, "judge_model": "j:1", "agreement": 0.9, "kappa": 0.7}
+    report = judged_report(metrics={"context_recall": 0.9, "context_recall_spread": None})
+    assert f"| Context recall | {DASH} | {DASH} |" in render(table, None, report, calibration)
 
 
 def test_an_unjudged_run_shows_no_judged_score():

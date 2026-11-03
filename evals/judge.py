@@ -1,19 +1,39 @@
-"""LLM-judged answer metrics with Ragas: faithfulness, answer relevancy, context precision, context recall.
+"""LLM-judged answer metrics: faithfulness, answer relevancy, context precision, context recall.
 
 The judge is JUDGE_PROVIDER / JUDGE_MODEL and must differ from the model that answers.
-Its scores are stored in every run, but the README shows them only after the same judge
-has passed calibration against human labels (reports/judge_calibration.json).
+JUDGE_METHOD picks how faithfulness is judged: "claim-check" (one schema-constrained
+yes/no per sentence) or "ragas". The other three metrics always come from Ragas.
+Scores are stored in every run, but the README shows a judged metric only after the same
+model and method have passed calibration for it (reports/judge_calibration.json).
 
 Which cases get which metric:
 - faithfulness, answer_relevancy: answered cases (status 200, not refused, not a language case)
 - context_precision, context_recall: cases with gold spans, scored against expected_answer
+
+Every judge sees each chunk as the answering model did: its heading, then its text.
 """
 
 import asyncio
+import json
+import re
+from string import Template
+
+import httpx
 
 from app.embedder import DEFAULT_URL
+from app.settings import ROOT
 
 JUDGED = ("faithfulness", "answer_relevancy", "context_precision", "context_recall")
+METHODS = ("claim-check", "ragas")
+CLAIM_PROMPT = ROOT / "prompts" / "judge_claim_v1.txt"
+CLAIM_SCHEMA = {
+    "type": "object",
+    "properties": {"reason": {"type": "string"}, "supported": {"type": "boolean"}},
+    "required": ["reason", "supported"],
+    "additionalProperties": False,
+}
+SENTENCE_END = re.compile(r"(?<=[.!?])\s+(?=[A-Z0-9\"'(])")
+ABBREVIATIONS = ("ltd.", "e.g.", "i.e.", "etc.", "approx.", "no.")
 
 
 class JudgeUnavailable(RuntimeError):
@@ -39,8 +59,95 @@ def metric_inputs(name, case, scored, contexts):
     return {"user_input": case["question"], "reference": case["expected_answer"], "retrieved_contexts": contexts}
 
 
+def sentences(text):
+    """Split an answer into sentences with plain code, keeping "Ltd." and "e.g." inside one."""
+    parts, current = [], ""
+    for piece in SENTENCE_END.split(" ".join(text.split())):
+        current = f"{current} {piece}" if current else piece
+        if not current.lower().endswith(ABBREVIATIONS):
+            parts.append(current)
+            current = ""
+    if current:
+        parts.append(current)
+    return [part for part in parts if part.strip()]
+
+
+def check_config(env):
+    """Return (model, method) or raise JudgeUnavailable."""
+    provider, model = env.get("JUDGE_PROVIDER") or "", env.get("JUDGE_MODEL") or ""
+    method = env.get("JUDGE_METHOD") or "claim-check"
+    if not model:
+        raise JudgeUnavailable("JUDGE_MODEL is not set")
+    if model == env.get("LLM_MODEL"):
+        raise JudgeUnavailable("JUDGE_MODEL must differ from LLM_MODEL, the model that answers")
+    if provider != "ollama":
+        raise JudgeUnavailable(f"JUDGE_PROVIDER {provider!r} is not set up yet; only ollama is")
+    if method not in METHODS:
+        raise JudgeUnavailable(f"JUDGE_METHOD must be one of {METHODS}, got {method!r}")
+    return model, method
+
+
+class ClaimCheckJudge:
+    """Faithfulness as the share of sentences the judge finds supported, one call per sentence.
+
+    Ragas first asks the judge to rewrite the answer into statements; a small model often
+    gets that step wrong. Here plain code splits the sentences, and each call answers one
+    narrow question with schema-constrained JSON at temperature 0.
+    """
+
+    method = "claim-check"
+
+    def __init__(self, model, ollama_url=DEFAULT_URL, others=None, client=None, seed=42):
+        self.model = model
+        self.prompt = Template(CLAIM_PROMPT.read_bytes().decode("utf-8").replace("\r\n", "\n"))
+        self.client = client or httpx.AsyncClient(base_url=ollama_url, timeout=180)
+        self.others = others  # a RagasJudge for the other three metrics
+        self.seed = seed
+        self.last_verdicts = []
+
+    async def check(self, question, sentence, contexts):
+        prompt = self.prompt.substitute(passages="\n\n".join(contexts), question=question, sentence=sentence)
+        payload = {
+            "model": self.model,
+            "stream": False,
+            "format": CLAIM_SCHEMA,
+            "messages": [{"role": "user", "content": prompt}],
+            "options": {"temperature": 0, "seed": self.seed, "num_ctx": 4096, "num_predict": 256},
+        }
+        response = await self.client.post("/api/chat", json=payload)
+        if response.status_code != 200:
+            raise JudgeUnavailable(f"Ollama returned {response.status_code}: {response.text}")
+        verdict = json.loads(response.json()["message"]["content"])
+        if not isinstance(verdict.get("supported"), bool):
+            raise TypeError(f"no supported verdict in {verdict!r}")
+        return {"sentence": sentence, "supported": verdict["supported"], "reason": verdict.get("reason", "")}
+
+    async def ascore(self, name, **inputs):
+        if name != "faithfulness":
+            if self.others is None:
+                raise JudgeUnavailable(f"claim-check judges only faithfulness, not {name}")
+            return await self.others.ascore(name, **inputs)
+        parts = sentences(inputs["response"])
+        if not parts:
+            raise ValueError("the answer has no sentence to check")
+        self.last_verdicts = [
+            await self.check(inputs["user_input"], sentence, inputs["retrieved_contexts"]) for sentence in parts
+        ]
+        return sum(v["supported"] for v in self.last_verdicts) / len(self.last_verdicts)
+
+
+def make_judge(env, ragas_for_others=True):
+    model, method = check_config(env)
+    url = env.get("OLLAMA_URL") or DEFAULT_URL
+    embedding = env.get("EMBEDDING_MODEL") or "nomic-embed-text:v1.5"
+    ragas = RagasJudge(model, url, embedding) if (method == "ragas" or ragas_for_others) else None
+    return ragas if method == "ragas" else ClaimCheckJudge(model, url, others=ragas)
+
+
 class RagasJudge:
     """Ragas metrics on a local Ollama model, through Ollama's OpenAI-compatible endpoint."""
+
+    method = "ragas"
 
     def __init__(self, model, ollama_url=DEFAULT_URL, embedding_model="nomic-embed-text:v1.5"):
         # Imported here so the unit tests and the rest of the harness do not load Ragas.
@@ -65,17 +172,6 @@ class RagasJudge:
             "context_recall": ContextRecall(llm=llm),
         }
 
-    @classmethod
-    def from_env(cls, env):
-        provider, model = env.get("JUDGE_PROVIDER") or "", env.get("JUDGE_MODEL") or ""
-        if not model:
-            raise JudgeUnavailable("JUDGE_MODEL is not set")
-        if model == env.get("LLM_MODEL"):
-            raise JudgeUnavailable("JUDGE_MODEL must differ from LLM_MODEL, the model that answers")
-        if provider != "ollama":
-            raise JudgeUnavailable(f"JUDGE_PROVIDER {provider!r} is not set up yet; only ollama is")
-        return cls(model, env.get("OLLAMA_URL") or DEFAULT_URL, env.get("EMBEDDING_MODEL") or "nomic-embed-text:v1.5")
-
     async def ascore(self, name, **inputs):
         return float((await self.metrics[name].ascore(**inputs)).value)
 
@@ -86,7 +182,7 @@ def judge_cases(judge, cases, scored, store, passes=1):
     async def run():
         for item in scored:
             case = cases[item["id"]]
-            contexts = [store.text(chunk_id) for chunk_id in item.get("retrieved", [])]
+            contexts = [store.context(chunk_id) for chunk_id in item.get("retrieved", [])]
             item["judged"], item["judge_errors"] = {}, []
             for name in needed(item, case):
                 values = []

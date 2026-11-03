@@ -20,7 +20,7 @@ class ChunkStore:
     """Chunk text and document by id, read once from the active Chroma collection."""
 
     def __init__(self, chunks, fingerprint=None):
-        self.chunks = chunks  # id: (doc_id, text)
+        self.chunks = chunks  # id: (doc_id, text) or (doc_id, text, heading path)
         self.fingerprint = fingerprint
 
     @classmethod
@@ -31,13 +31,19 @@ class ChunkStore:
         collection = open_client(index_dir).get_collection(manifest["active_collection"], embedding_function=None)
         found = collection.get(include=["documents", "metadatas"])
         chunks = {
-            chunk_id: (metadata["doc_id"], document)
+            chunk_id: (metadata["doc_id"], document, metadata["heading_path"])
             for chunk_id, document, metadata in zip(found["ids"], found["documents"], found["metadatas"])
         }
         return cls(chunks, manifest["fingerprint"])
 
     def text(self, chunk_id):
         return self.chunks[chunk_id][1]
+
+    def context(self, chunk_id):
+        """Heading, then text: what the answering model saw for this chunk, without its number."""
+        entry = self.chunks[chunk_id]
+        text = entry[1].replace("\r\n", "\n")
+        return f"{entry[2]}\n{text}" if len(entry) > 2 and entry[2] else text
 
     def doc_id(self, chunk_id):
         return self.chunks[chunk_id][0]

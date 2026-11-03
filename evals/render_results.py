@@ -21,20 +21,25 @@ START, END = "<!-- results:start -->", "<!-- results:end -->"
 DASH = "—"
 
 
-def trusted(report, calibration):
-    """A judged score is shown only if this run was judged by a model that passed calibration."""
+def trusted(report, calibration, key):
+    """A judged score is shown only if the same model and method passed calibration for that metric.
+
+    Calibration checks faithfulness only, so the other judged metrics stay a dash.
+    """
     return bool(
         report.get("judge_passes")
         and calibration
         and calibration.get("passed")
+        and calibration.get("metric", "faithfulness") == key
         and calibration.get("judge_model") == report.get("judge_model")
+        and calibration.get("method") == report.get("judge_method")
     )
 
 
 def ratio(key, judged=False):
     def cell(report, calibration):
         value = report["metrics"].get(key)
-        if value is None or (judged and not trusted(report, calibration)):
+        if value is None or (judged and not trusted(report, calibration, key)):
             return DASH
         spread = report["metrics"].get(f"{key}_spread")
         return f"{value:.2f}" if spread is None else f"{value:.2f} (spread {spread:.2f})"

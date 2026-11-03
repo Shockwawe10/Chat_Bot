@@ -2,12 +2,14 @@
  "date": "2026-11-03",
  "labelled_by": "Shockwawe10",
  "judge_model": "phi4-mini:3.8b",
+ "method": "claim-check",
+ "metric": "faithfulness",
  "items": 30,
  "human_yes": 27,
- "judge_yes": 17,
+ "judge_yes": 26,
  "judge_errors": 0,
- "agreement": 0.6666666666666666,
- "kappa": 0.253731343283582,
+ "agreement": 0.8333333333333334,
+ "kappa": 0.19354838709677435,
  "passed": false,
  "thresholds": {
   "agreement": 0.85,
@@ -18,181 +20,432 @@
    "item": "1",
    "case_id": "g064",
    "human": true,
-   "judge_score": 0.8
+   "judge_score": 0.0,
+   "verdicts": [
+    {
+     "sentence": "The maximum wind speed is 36 m/s for the GroundFrame GF-2 product, as stated in passage [1].",
+     "supported": false,
+     "reason": "The sentence incorrectly states the maximum wind speed for GroundFrame GF-2 as 36 m/s, which is actually the maximum wind speed for GroundFrame GF-2."
+    }
+   ]
   },
   {
    "item": "2",
    "case_id": "g007",
    "human": true,
-   "judge_score": 1.0
+   "judge_score": 1.0,
+   "verdicts": [
+    {
+     "sentence": "They look at bolt torque on a sample of connections, coating condition (scratches, white rust and red rust), post and pile movement on ground-mount plants, ballast position on flat roofs, and module clamps.",
+     "supported": true,
+     "reason": "The sentence lists specific inspection items that are covered during a yearly check-up as mentioned in the passage 'What an inspection covers'."
+    }
+   ]
   },
   {
    "item": "3",
    "case_id": "g003",
    "human": true,
-   "judge_score": 1.0
+   "judge_score": 1.0,
+   "verdicts": [
+    {
+     "sentence": "After the contract is signed, the detailed design takes 3 to 6 weeks to complete, as stated in the typical durations for each stage.",
+     "supported": true,
+     "reason": "The sentence correctly states that after the contract is signed, the detailed design takes 3 to 6 weeks to complete, which is supported by the passage 'Typical durations' under 'How a project works, step by step'."
+    }
+   ]
   },
   {
    "item": "4",
    "case_id": "g025",
    "human": true,
-   "judge_score": 0.6666666666666666
+   "judge_score": 1.0,
+   "verdicts": [
+    {
+     "sentence": "The single-post ground system has an average coating thickness of 85 \u00b5m, which is the hot-dip galvanising coating.",
+     "supported": true,
+     "reason": "The sentence correctly states the average coating thickness for the single-post ground system as 85 \u00b5m, which is the hot-dip galvanising coating."
+    }
+   ]
   },
   {
    "item": "5",
    "case_id": "g021",
    "human": true,
-   "judge_score": 0.5
+   "judge_score": 1.0,
+   "verdicts": [
+    {
+     "sentence": "The minimum ground clearance of GroundFrame GF-2 is at least 0.6 m.",
+     "supported": true,
+     "reason": "The minimum ground clearance of GroundFrame GF-2 is stated in the specifications."
+    }
+   ]
   },
   {
    "item": "6",
    "case_id": "g021",
    "human": true,
-   "judge_score": 1.0
+   "judge_score": 1.0,
+   "verdicts": [
+    {
+     "sentence": "At least 0.6 m",
+     "supported": true,
+     "reason": "The minimum ground clearance of GroundFrame GF-2 is stated in the passage."
+    }
+   ]
   },
   {
    "item": "7",
    "case_id": "g010",
    "human": true,
-   "judge_score": 1.0
+   "judge_score": 1.0,
+   "verdicts": [
+    {
+     "sentence": "Yes, maintenance is offered for any mounting system the company supplied, also when another contractor installed it.",
+     "supported": true,
+     "reason": "The sentence is supported by the passage stating that maintenance is offered for any mounting system the company supplied, even if another contractor installed it."
+    }
+   ]
   },
   {
    "item": "8",
    "case_id": "g006",
    "human": true,
-   "judge_score": 1.0
+   "judge_score": 1.0,
+   "verdicts": [
+    {
+     "sentence": "Each sales region (North, Central and South) has its own project manager.",
+     "supported": true,
+     "reason": "The sentence directly follows from the passage about Regional managers stating that each sales region has its own project manager."
+    },
+    {
+     "sentence": "The sales team assigns the manager after the first request, based on the project location.",
+     "supported": true,
+     "reason": "The sentence implies that the manager assigned is specific to the region and project location, which is consistent with the passage stating that each sales region has its own project manager."
+    }
+   ]
   },
   {
    "item": "9",
    "case_id": "g039",
    "human": true,
-   "judge_score": 0.5
+   "judge_score": 1.0,
+   "verdicts": [
+    {
+     "sentence": "Yes, it can still happen because the company can order a roof assessment from a partner engineer at the customer's cost if neither roof drawings nor an existing structural report exists.",
+     "supported": true,
+     "reason": "The sentence is supported by the passage 'Who does it' which states that if neither roof drawings nor an existing structural report exists, the company can order a roof assessment from a partner engineer at the customer's cost."
+    }
+   ]
   },
   {
    "item": "10",
    "case_id": "g006",
    "human": false,
-   "judge_score": 0.6666666666666666
+   "judge_score": 1.0,
+   "verdicts": [
+    {
+     "sentence": "Each sales region (North, Central and South) has its own project manager, and the sales team assigns the manager after the first request based on the project location.",
+     "supported": true,
+     "reason": "The sentence directly follows from the passage about Regional managers, stating that each sales region has its own project manager."
+    },
+    {
+     "sentence": "Therefore, you deal with a different contact each time depending on the project location.",
+     "supported": true,
+     "reason": "The passage 'Regional managers' states that each sales region has its own project manager, implying different contacts for different regions."
+    }
+   ]
   },
   {
    "item": "11",
    "case_id": "g036",
    "human": false,
-   "judge_score": 0.75
+   "judge_score": 1.0,
+   "verdicts": [
+    {
+     "sentence": "RF-2 uses stainless steel A4 fasteners because they resist chlorides from salt and are suitable for systems rated up to C4, which matches the corrosionivity category of RF-2.",
+     "supported": true,
+     "reason": "The passage states that A4 stainless steel is used in systems rated C4 and above because it resists chlorides from salt better, and RF-2 is rated for C4, making the choice of A4 fasteners suitable for its corrosion resistance needs."
+    }
+   ]
   },
   {
    "item": "12",
    "case_id": "g003",
    "human": true,
-   "judge_score": 0.6666666666666666
+   "judge_score": 1.0,
+   "verdicts": [
+    {
+     "sentence": "The engineers need 3 to 6 weeks after the contract is signed before the build drawings are ready.",
+     "supported": true,
+     "reason": "The sentence states a duration for preparing build drawings after the contract is signed, which is supported by the passage stating 'Detailed design' takes 3 to 6 weeks after the contract."
+    }
+   ]
   },
   {
    "item": "13",
    "case_id": "g066",
    "human": true,
-   "judge_score": 1.0
+   "judge_score": 1.0,
+   "verdicts": [
+    {
+     "sentence": "The company's mounting systems are rated for a maximum corrosivity category, and each system is designed for use at that category or a lower one.",
+     "supported": true,
+     "reason": "The sentence is supported by the passage stating that every mounting system is rated for one maximum category and can be used at sites with that category or a lower one."
+    },
+    {
+     "sentence": "The company does not offer any system for category CX.",
+     "supported": true,
+     "reason": "The sentence directly follows from the passage stating 'The company does not offer any system for category CX.'"
+    }
+   ]
   },
   {
    "item": "14",
    "case_id": "g042",
    "human": true,
-   "judge_score": 0.5
+   "judge_score": 1.0,
+   "verdicts": [
+    {
+     "sentence": "Between the engineer's visit and the customer signing a contract, the company prepares a preliminary design and sends a commercial offer based on the layout and mounting system proposed in the preliminary design.",
+     "supported": true,
+     "reason": "The sentence correctly states that after the site survey (engineer's visit), the company prepares a preliminary design and sends a commercial offer, which is supported by the passage 'How a project works, step by step > Typical durations' and 'How a project works, step by step > Two design steps'."
+    }
+   ]
   },
   {
    "item": "15",
    "case_id": "g043",
    "human": true,
-   "judge_score": 1.0
+   "judge_score": 1.0,
+   "verdicts": [
+    {
+     "sentence": "Neither RoofFlat RF-1 nor RoofFlat RF-2 would fit a roof with a 7-degree slope because both systems have a maximum roof slope of 5\u00b0 as specified in the context.",
+     "supported": true,
+     "reason": "Both systems have a maximum roof slope of 5\u00b0 as specified in the context, which is less than the 7-degree slope mentioned in the question."
+    }
+   ]
   },
   {
    "item": "16",
    "case_id": "g067",
    "human": true,
-   "judge_score": 0.8
+   "judge_score": 1.0,
+   "verdicts": [
+    {
+     "sentence": "The coating thickness varies by system: 85 \u00b5m for hot-dip galvanising on GroundFrame GF-1 and CarportFrame CP-1, 25 \u00b5m per side for zinc-magnesium coating on GroundFrame GF-2, 15 \u00b5m for anodised aluminium on RoofFlat RF-1 and RP-1, and 20 \u00b5m for anodised aluminium on RoofFlat RF-2.",
+     "supported": true,
+     "reason": "The sentence provides specific coating thicknesses for different systems as mentioned in the passages."
+    }
+   ]
   },
   {
    "item": "17",
    "case_id": "g022",
    "human": true,
-   "judge_score": 1.0
+   "judge_score": 1.0,
+   "verdicts": [
+    {
+     "sentence": "The south-facing flat-roof system can take a maximum wind speed of 28 m/s.",
+     "supported": true,
+     "reason": "The maximum wind speed for the south-facing flat-roof system is given in the specifications."
+    }
+   ]
   },
   {
    "item": "18",
    "case_id": "g028",
    "human": true,
-   "judge_score": 1.0
+   "judge_score": 1.0,
+   "verdicts": [
+    {
+     "sentence": "Yes, a roof pitch of 45\u00b0 is within the range for RP-1 because the RP-1 system supports roof slopes from 10\u00b0 to 60\u00b0.",
+     "supported": true,
+     "reason": "The sentence correctly states that the RP-1 system supports roof slopes from 10\u00b0 to 60\u00b0, which includes a 45\u00b0 pitch."
+    }
+   ]
   },
   {
    "item": "19",
    "case_id": "g001",
    "human": true,
-   "judge_score": 1.0
+   "judge_score": 1.0,
+   "verdicts": [
+    {
+     "sentence": "A commercial offer is valid for 30 days from its date.",
+     "supported": true,
+     "reason": "The validity period of a commercial offer is stated in the passage."
+    }
+   ]
   },
   {
    "item": "20",
    "case_id": "g065",
    "human": true,
-   "judge_score": 1.0
+   "judge_score": 0.5,
+   "verdicts": [
+    {
+     "sentence": "The product warranty is 15 years and the installation warranty is 5 years.",
+     "supported": true,
+     "reason": "The sentence directly states the durations of the product and installation warranties as mentioned in the passages."
+    },
+    {
+     "sentence": "Both periods start on the date of the handover certificate.",
+     "supported": false,
+     "reason": "The sentence states that both warranty periods start on the date of the handover certificate, which is a fact about the warranty but not its duration."
+    }
+   ]
   },
   {
    "item": "21",
    "case_id": "g037",
    "human": true,
-   "judge_score": 0.8
+   "judge_score": 1.0,
+   "verdicts": [
+    {
+     "sentence": "The GroundFrame GF-2 twin-post ground-mount system would be used because it is suitable for sites near chemical plants, fertiliser storage or other sources of aggressive air.",
+     "supported": true,
+     "reason": "The GroundFrame GF-2 twin-post ground-mount system is suitable for sites near chemical plants, fertiliser storage or other sources of aggressive air as stated in the passages."
+    },
+    {
+     "sentence": "It is protected from rusting by its zinc-magnesium coating.",
+     "supported": true,
+     "reason": "The passage states that GroundFrame GF-2 uses a zinc-magnesium coating, which protects it from rusting, especially in sites near chemical plants like fertiliser works."
+    }
+   ]
   },
   {
    "item": "22",
    "case_id": "g032",
    "human": false,
-   "judge_score": 0.3333333333333333
+   "judge_score": 0.0,
+   "verdicts": [
+    {
+     "sentence": "Yes, Example Solar Ltd. can build a 50 kWp system on your office roof because the company designs mounting systems for flat roofs, and the roof-mounted systems are suitable for office roofs.",
+     "supported": false,
+     "reason": "The passage mentions that the company designs mounting systems for flat roofs, but it does not specify if they can build a 50 kWp system on an office roof. The suitability for office roofs is not directly stated."
+    }
+   ]
   },
   {
    "item": "23",
    "case_id": "g028",
    "human": true,
-   "judge_score": 1.0
+   "judge_score": 1.0,
+   "verdicts": [
+    {
+     "sentence": "Yes, a roof pitch of 45\u00b0 is within the range for RP-1 because the roof slope range for RP-1 is 10\u00b0 to 60\u00b0.",
+     "supported": true,
+     "reason": "The sentence correctly states that a 45\u00b0 roof pitch is within the specified range for RP-1."
+    }
+   ]
   },
   {
    "item": "24",
    "case_id": "g035",
    "human": true,
-   "judge_score": 1.0
+   "judge_score": 1.0,
+   "verdicts": [
+    {
+     "sentence": "You should provide a flat, dry storage area of about 200 m\u00b2 for each MWp of a ground-mount plant.",
+     "supported": true,
+     "reason": "The sentence is directly supported by the passage 'Supply and delivery > Delivery' which states that a flat, dry storage area of about 200 m\u00b2 is required for each MWp of a ground-mount plant."
+    },
+    {
+     "sentence": "For a 5 MWp plant, this means 1000 m\u00b2 of laydown space.",
+     "supported": true,
+     "reason": "The passage states that for each MWp of a ground-mount plant, the customer provides a flat, dry storage area of about 200 m\u00b2. Therefore, for a 5 MWp plant, the required laydown space would be 5 MWp multiplied by 200 m\u00b2/MWp, which equals 1000 m\u00b2."
+    }
+   ]
   },
   {
    "item": "25",
    "case_id": "g020",
    "human": true,
-   "judge_score": 0.6666666666666666
+   "judge_score": 1.0,
+   "verdicts": [
+    {
+     "sentence": "No, the company does not work on roofs covered with asbestos-cement sheets.",
+     "supported": true,
+     "reason": "The sentence directly follows from the passage stating that RP-1 is not used on roofs covered with asbestos-cement sheets."
+    }
+   ]
   },
   {
    "item": "26",
    "case_id": "g037",
    "human": true,
-   "judge_score": 0.0
+   "judge_score": 1.0,
+   "verdicts": [
+    {
+     "sentence": "GroundFrame GF-2 would be used, and its zinc-magnesium coating protects it from rusting.",
+     "supported": true,
+     "reason": "The passage states that GroundFrame GF-2 is used near chemical plants, which includes fertiliser works, and its zinc-magnesium coating protects it from corrosion, which is a form of rusting."
+    }
+   ]
   },
   {
    "item": "27",
    "case_id": "g064",
    "human": true,
-   "judge_score": 1.0
+   "judge_score": 1.0,
+   "verdicts": [
+    {
+     "sentence": "The maximum wind speed is 36 m/s for the GroundFrame GF-2 product, 30 m/s for the RoofFlat RF-2 and CarportFrame CP-1, 28 m/s for the RoofFlat RF-1, and 30 m/s for the RoofPitch RP-1.",
+     "supported": true,
+     "reason": "The sentence correctly lists the maximum wind speeds for each product as stated in the passages."
+    }
+   ]
   },
   {
    "item": "28",
    "case_id": "g060",
    "human": true,
-   "judge_score": 1.0
+   "judge_score": 0.5,
+   "verdicts": [
+    {
+     "sentence": "The installation warranty ends 5 years after the date of the handover certificate.",
+     "supported": true,
+     "reason": "The sentence correctly states the duration of the installation warranty as per the passage."
+    },
+    {
+     "sentence": "For a plant handed over in March 2026, the installation warranty ends in March 2031.",
+     "supported": false,
+     "reason": "The installation warranty period is 5 years, not 15 years, and it starts on the date of the handover certificate, which would be March 2026 in this case."
+    }
+   ]
   },
   {
    "item": "29",
    "case_id": "g035",
    "human": true,
-   "judge_score": 1.0
+   "judge_score": 1.0,
+   "verdicts": [
+    {
+     "sentence": "You should provide a flat, dry storage area of about 200 m\u00b2 for each MWp of a ground-mount plant.",
+     "supported": true,
+     "reason": "The sentence is directly supported by the passage under 'Supply and delivery' which states that a flat, dry storage area of about 200 m\u00b2 is required for each MWp of a ground-mount plant."
+    },
+    {
+     "sentence": "For a 5 MWp plant, this means 1000 m\u00b2.",
+     "supported": true,
+     "reason": "The passage states that for each MWp of a ground-mount plant, the customer provides a flat, dry storage area of about 200 m\u00b2. Therefore, for a 5 MWp plant, the required laydown space would be 5 MWp multiplied by 200 m\u00b2/MWp, which equals 1000 m\u00b2."
+    }
+   ]
   },
   {
    "item": "30",
    "case_id": "g038",
    "human": true,
-   "judge_score": 1.0
+   "judge_score": 1.0,
+   "verdicts": [
+    {
+     "sentence": "A geotechnical survey, including soil drilling, pull-out tests on sample posts, and a check for groundwater and frost depth, must be completed before the crew turns up to build.",
+     "supported": true,
+     "reason": "The sentence correctly states that a geotechnical survey is needed before construction, which includes soil drilling, pull-out tests, and checks for groundwater and frost depth as mentioned in the passage."
+    }
+   ]
   }
- ]
+ ],
+ "prompt_sha256": "9966c2865a62856f5ce066469e5269ff7b57b829a825556201171355a36c1013"
 }

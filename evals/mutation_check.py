@@ -419,10 +419,22 @@ BREAKS = {
     "render: unmeasured shown as zero": [
         (
             RENDER,
-            "        if value is None or (judged and not trusted(report, calibration)):\n            return DASH\n",
-            "        if judged and not trusted(report, calibration):\n            return DASH\n        value = value or 0\n",
+            "        if value is None or (judged and not trusted(report, calibration, key)):\n            return DASH\n",
+            "        if judged and not trusted(report, calibration, key):\n            return DASH\n        value = value or 0\n",
         )
     ],
+    # Claim-check judge
+    "judge: abbreviation ends a sentence": [(JUDGE, "        if not current.lower().endswith(ABBREVIATIONS):\n", "        if True:\n")],
+    "judge: no output schema for the judge": [(JUDGE, '            "format": CLAIM_SCHEMA,\n', "")],
+    "judge: judge not at temperature 0": [(JUDGE, '"options": {"temperature": 0, "seed": self.seed,', '"options": {"temperature": 0.8, "seed": self.seed,')],
+    "judge: question left out of the check": [(JUDGE, "passages=\"\\n\\n\".join(contexts), question=question,", "passages=\"\\n\\n\".join(contexts), question=\"\",")],
+    "judge: non-boolean verdict accepted": [(JUDGE, '        if not isinstance(verdict.get("supported"), bool):\n', "        if False:\n")],
+    "judge: score counts unsupported sentences": [(JUDGE, 'return sum(v["supported"] for v in self.last_verdicts)', 'return sum(not v["supported"] for v in self.last_verdicts)')],
+    "judge: context without the heading": [(SYSTEMS_FILE, 'return f"{entry[2]}\\n{text}" if len(entry) > 2 and entry[2] else text', "return text")],
+    "judge: method not checked": [(JUDGE, "    if method not in METHODS:\n", "    if False:\n")],
+    "render: calibration counts for any metric": [(RENDER, '        and calibration.get("metric", "faithfulness") == key\n', "")],
+    "render: calibration counts for any method": [(RENDER, '        and calibration.get("method") == report.get("judge_method")\n', "")],
+    "calibrate: contexts from another run": [(CALIBRATE, 'retrieved = runs[row["run_id"]][row["case_id"]]["retrieved"]', 'retrieved = runs[row["run_id"]][row["case_id"]]["retrieved"][::-1]')],
     # Judge and calibration
     "judge: refusals judged for faithfulness": [
         (JUDGE, 'answered = scored.get("status") == 200 and scored.get("refused") is False', 'answered = scored.get("status") == 200')
@@ -451,7 +463,7 @@ BREAKS = {
     ],
     "calibrate: labeller not recorded": [(CALIBRATE, '        "labelled_by": labelled_by,\n', "")],
     "calibrate: empty label allowed": [(CALIBRATE, 'not in ("yes", "no")', 'not in ("yes", "no", "")')],
-    "render: uncalibrated judge shown": [(RENDER, "        if value is None or (judged and not trusted(report, calibration)):", "        if value is None:")],
+    "render: uncalibrated judge shown": [(RENDER, "        if value is None or (judged and not trusted(report, calibration, key)):", "        if value is None:")],
     "render: another judge's calibration trusted": [
         (RENDER, '        and calibration.get("judge_model") == report.get("judge_model")\n', "")
     ],

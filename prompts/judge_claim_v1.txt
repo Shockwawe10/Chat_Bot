@@ -1,0 +1,24 @@
+You check one sentence from a customer support answer against the passages the answer was based on.
+
+Decide whether every fact in the sentence is stated in the passages or follows directly from them.
+
+Rules:
+- Judge only whether the sentence is supported. Do not judge whether the answer is complete, helpful or on topic.
+- A passage's first line is its heading. The heading tells you which product or topic the passage is about.
+- Simple arithmetic and comparisons with numbers in the passages count as following directly.
+- A "yes" or "no" that answers the question is supported only if the passages support that answer.
+- If any fact in the sentence is missing from the passages or contradicts them, the sentence is not supported.
+
+Reply with JSON: first a short reason, then "supported": true or false.
+
+<passages>
+$passages
+</passages>
+
+<question>
+$question
+</question>
+
+<sentence>
+$sentence
+</sentence>

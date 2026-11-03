@@ -9,20 +9,24 @@ I fill `supported` with yes or no for each answer: yes only if every claim in it
 backed by the context shown. The file never contains a judge score. The judge says yes
 when its faithfulness score is 1.0, so both sides answer the same question. It passes at
 agreement >= 0.85 and kappa >= 0.60, and the result goes to reports/judge_calibration.json.
-The README shows judged metrics only after a pass for the same judge model.
+The README shows a judged metric only after a pass for the same model, method and metric.
+
+The judge sees each chunk as the answering model did, heading then text, rebuilt from the
+saved run that produced the answer. The context column in the label file has no headings.
 """
 
 import argparse
 import asyncio
 import csv
 import glob
+import hashlib
 import json
 import random
 import sys
 from datetime import UTC, datetime
 
 from app.settings import ROOT, read_env
-from evals.judge import RagasJudge
+from evals.judge import CLAIM_PROMPT, make_judge
 from evals.systems import ChunkStore
 
 LABELS = ROOT / "evals" / "annotation" / "judge_labels.csv"
@@ -94,7 +98,7 @@ def read_labels(path):
     return rows, problems
 
 
-def summarise(rows, scores, judge_model, labelled_by):
+def summarise(rows, scores, judge_model, labelled_by, method=None, verdicts=None):
     human = [row["supported"].strip().lower() == "yes" for row in rows]
     judge = [score is not None and score >= SUPPORTED_AT for score in scores]
     agreement = sum(a == b for a, b in zip(human, judge)) / len(rows)
@@ -103,6 +107,8 @@ def summarise(rows, scores, judge_model, labelled_by):
         "date": datetime.now(UTC).date().isoformat(),
         "labelled_by": labelled_by,
         "judge_model": judge_model,
+        "method": method,
+        "metric": "faithfulness",
         "items": len(rows),
         "human_yes": sum(human),
         "judge_yes": sum(judge),
@@ -112,28 +118,43 @@ def summarise(rows, scores, judge_model, labelled_by):
         "passed": agreement >= AGREEMENT and kappa is not None and kappa >= KAPPA,
         "thresholds": {"agreement": AGREEMENT, "kappa": KAPPA},
         "pairs": [
-            {"item": row["item"], "case_id": row["case_id"], "human": h, "judge_score": s}
-            for row, h, s in zip(rows, human, scores)
+            {"item": row["item"], "case_id": row["case_id"], "human": h, "judge_score": s, "verdicts": v}
+            for row, h, s, v in zip(rows, human, scores, verdicts or [None] * len(rows))
         ],
     }
 
 
-def judge_scores(judge, rows):
+def contexts_for(rows, store, runs_dir=ROOT / "reports" / "runs"):
+    """Each row's chunks as heading then text, from the run that produced its answer."""
+    runs, contexts = {}, []
+    for row in rows:
+        if row["run_id"] not in runs:
+            path = runs_dir / f"{row['run_id']}.json"
+            if not path.exists():
+                raise SystemExit(f"item {row['item']}: run file {path.name} is missing")
+            runs[row["run_id"]] = {c["id"]: c for c in json.loads(path.read_text(encoding="utf-8"))["cases"]}
+        retrieved = runs[row["run_id"]][row["case_id"]]["retrieved"]
+        contexts.append([store.context(chunk_id) for chunk_id in retrieved])
+    return contexts
+
+
+def judge_scores(judge, rows, contexts):
+    """Return (scores, per-sentence verdicts or None). A failed call scores None."""
+
     async def run():
-        scores = []
-        for row in rows:
+        scores, verdicts = [], []
+        for row, context in zip(rows, contexts):
             try:
                 scores.append(
                     await judge.ascore(
-                        "faithfulness",
-                        user_input=row["question"],
-                        response=row["answer"],
-                        retrieved_contexts=row["context"].split(SEPARATOR),
+                        "faithfulness", user_input=row["question"], response=row["answer"], retrieved_contexts=context
                     )
                 )
+                verdicts.append(list(getattr(judge, "last_verdicts", [])) or None)
             except Exception:  # noqa: BLE001 - counted as a judge error in the result
                 scores.append(None)
-        return scores
+                verdicts.append(None)
+        return scores, verdicts
 
     return asyncio.run(run())
 
@@ -163,12 +184,16 @@ def main(argv=None):
         print(f"ERROR {problem}")
     if problems:
         return 1
-    judge = RagasJudge.from_env(read_env())
-    result = summarise(rows, judge_scores(judge, rows), judge.model, args.labelled_by.strip())
+    judge = make_judge(read_env(), ragas_for_others=False)
+    scores, verdicts = judge_scores(judge, rows, contexts_for(rows, ChunkStore.from_index()))
+    result = summarise(rows, scores, judge.model, args.labelled_by.strip(), judge.method, verdicts)
+    if judge.method == "claim-check":
+        result["prompt_sha256"] = hashlib.sha256(CLAIM_PROMPT.read_bytes().replace(b"\r\n", b"\n")).hexdigest()
     RESULT.parent.mkdir(parents=True, exist_ok=True)
     RESULT.write_text(json.dumps(result, indent=1) + "\n", encoding="utf-8")
     kappa = "undefined" if result["kappa"] is None else f"{result['kappa']:.2f}"
-    print(f"agreement {result['agreement']:.2f}, kappa {kappa}: {'passed' if result['passed'] else 'not passed'}")
+    verdict = "passed" if result["passed"] else "not passed"
+    print(f"{judge.model} ({judge.method}): agreement {result['agreement']:.2f}, kappa {kappa}: {verdict}")
     return 0 if result["passed"] else 1
 
 

@@ -27,7 +27,7 @@ from app.chunker import CHUNKER_VERSION, ChunkConfig
 from app.generator import PromptTemplate
 from app.settings import ROOT, read_env
 from evals.chunk_report import KB_DIR
-from evals.judge import JUDGED, RagasJudge, aggregate_judged, judge_cases
+from evals.judge import JUDGED, aggregate_judged, judge_cases, make_judge
 from evals.metrics import aggregate, score_case
 from evals.systems import (
     AlwaysAbstain,
@@ -62,6 +62,7 @@ HISTORY_FIELDS = [
     "numeric_fidelity",
     *JUDGED,
     "judge_model",
+    "judge_method",
     "judge_passes",
     "latency_p95_ms",
 ]
@@ -135,6 +136,7 @@ def build_manifest(run_id, system, args, env, cases_run, drafts, dataset_version
         "top_k": int(env.get("TOP_K") or 5),
         "index_fingerprint": served.get("index_fingerprint") or (store.fingerprint if store else None),
         "judge_passes": args.judge_passes if args.judge else 0,
+        "judge_method": metrics.pop("judge_method", None),
         "total_cost": 0.0,
         "latency_p95_ms": metrics["latency_p95_ms"],
         "metrics": metrics,
@@ -252,7 +254,8 @@ def main(argv=None):
         system, store = make_system(args, env, stack)
         scored, metrics = run(selected, system, store, stats["overlap"])
         if args.judge:
-            judge = RagasJudge.from_env(env)
+            judge = make_judge(env)
+            metrics["judge_method"] = judge.method
             judge_cases(judge, {c["id"]: c for c in selected}, scored, store, args.judge_passes)
             metrics.update(aggregate_judged(scored, args.judge_passes))
         report = build_manifest(
