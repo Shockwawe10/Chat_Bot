@@ -7,7 +7,7 @@ The set is accepted only when all three checks pass, and it is scored only case 
 | Check | Pass criterion | Status |
 | --- | --- | --- |
 | Validator | `python -m evals.validate_golden` exits 0 | **Passed** on 2026-11-02 for v1.2. Its 26 tests in `tests/unit/test_validate_golden.py` include a check that the set validates with both LF and CRLF line endings, and one that the holdout matches its frozen hash and version, which now runs in CI. `python -m evals.mutation_check --only golden:` breaks the validator 11 ways, all caught |
-| Blind second annotator | At least 90% agreement on expected behaviour for the 20 cases in `evals/annotation/blind_20.csv`. Below 80%, rewrite the disputed cases before anything else | **Pending.** Needs a person who is neither me nor an AI |
+| Blind second annotator | At least 90% agreement on expected behaviour for the 20 cases in `evals/annotation/blind_20.csv`. Below 80%, rewrite the disputed cases before anything else | **Pending.** Needs a person who is neither me nor an AI. A model stand-in ran on 2026-11-03 (`python -m evals.blind_annotate`, `phi4-mini:3.8b`, output in `evals/annotation/blind_20_model.csv`, marked "not human"): 7 of 20 (35%). It labelled both non-English questions `answer` and chose `correct premise` for 9 questions when the sheet has 3 false premises, so the low score measures the annotator, not the set. No case was rewritten on it |
 | Baselines separate | The predictions below hold | **Passed** on 2026-11-02: all 5 hold on dev. See [Prediction results](#prediction-results) |
 
 ## Validation note
