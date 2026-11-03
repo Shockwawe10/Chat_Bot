@@ -6,12 +6,17 @@ Every break must make a test fail. A break that survives is a gap in the tests.
 Hypothesis saves failing examples and replays them, so the saved examples are
 deleted before each run; otherwise one break would make all the later ones look
 caught. The unbroken code must pass first, for the same reason.
+
+The breaks are made in a temporary copy of the project, never in the real files.
+Breaking the real files once put a broken app/embedder.py into a commit made while
+the check was running.
 """
 
 import argparse
 import shutil
 import subprocess
 import sys
+import tempfile
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -22,6 +27,14 @@ SETTINGS = ROOT / "app" / "settings.py"
 RETRIEVER = ROOT / "app" / "retriever.py"
 GENERATOR = ROOT / "app" / "generator.py"
 API = ROOT / "app" / "api.py"
+SCORING = ROOT / "evals" / "scoring.py"
+VALIDATOR = ROOT / "evals" / "validate_golden.py"
+METRICS = ROOT / "evals" / "metrics.py"
+SYSTEMS_FILE = ROOT / "evals" / "systems.py"
+RUN_EVALS = ROOT / "evals" / "run_evals.py"
+RENDER = ROOT / "evals" / "render_results.py"
+JUDGE = ROOT / "evals" / "judge.py"
+CALIBRATE = ROOT / "evals" / "calibrate_judge.py"
 
 PACK = "if joined > cfg.max or (joined > cfg.target and can_stop):"
 MERGE = "if fits and (_size(group) < cfg.min or _only_headings(group)):"
@@ -367,14 +380,156 @@ BREAKS = {
     "config ignores PROMPT_VERSION": [
         (API, 'PromptTemplate.load(env.get("PROMPT_VERSION") or "v2")', 'PromptTemplate.load("v2")')
     ],
+    # Scoring
+    "scoring: no boundary before a value": [(SCORING, 'before = r"(?<![a-z0-9.,])" if', 'before = "" if')],
+    "scoring: no boundary after a value": [(SCORING, 'after = r"(?![a-z0-9])" if', 'after = "" if')],
+    "scoring: thousands separators kept": [(SCORING, '    text = THOUSANDS.sub("", text)\n', "")],
+    "scoring: range forms not unified": [(SCORING, '    text = RANGE.sub(" to ", text)\n', "")],
+    "scoring: space after a number required": [(SCORING, r'body = r"\s?".join(', 'body = " ".join(')],
+    "scoring: number glued to the next word": [(SCORING, r'body = r"\s?".join(', 'body = "".join(')],
+    "scoring: range unit not copied": [(SCORING, r'return BARE_RANGE.sub(r"\1 \3 to \2 \3", text)', "return text")],
+    "scoring: degrees word kept": [(SCORING, '    text = DEGREES.sub("°", text)\n', "")],
+    "scoring: m2 not read as square metres": [(SCORING, '    text = SQUARE.sub("²", text)\n', "")],
+    "scoring: Greek mu kept": [(SCORING, "    text = text.replace(GREEK_MU, MICRO_SIGN)", "    text = text")],
+    "scoring: case kept": [(SCORING, "SPACES.sub(\" \", text.lower())", "SPACES.sub(\" \", text)")],
+    # Eval harness
+    "harness: gold matched in any document": [
+        (METRICS, 'if any(span["doc_id"] == doc_id and span["quote"] in text for span in group):', 'if any(span["quote"] in text for span in group):')
+    ],
+    "harness: CRLF chunk text not normalised": [(METRICS, 'return store.text(chunk_id).replace("\\r\\n", "\\n")', "return store.text(chunk_id)")],
+    "harness: hit rate counts any group": [(METRICS, 'scored["hit"] = ranks[0] is not None', 'scored["hit"] = any(rank is not None for rank in ranks)')],
+    "harness: reciprocal rank off by one": [(METRICS, 'scored["reciprocal_rank"] = 1 / ranks[0] if ranks[0] else 0.0', 'scored["reciprocal_rank"] = 1 / (ranks[0] + 1) if ranks[0] else 0.0')],
+    "harness: undecided counted as a pass": [(METRICS, "        behaviour_ok = None  # only the judge can tell\n", "        behaviour_ok = True\n")],
+    "harness: refusal passes a language case": [(METRICS, "        behaviour_ok = english\n", "        behaviour_ok = english or refused\n")],
+    "harness: missing facts ignored": [(METRICS, "    elif not ok or refused or missing:\n", "    elif not ok or refused:\n")],
+    "harness: server error ignored": [(METRICS, "    elif not ok or refused or missing:\n", "    elif refused or missing:\n")],
+    "harness: refusal accuracy ignores over-refusal": [(METRICS, 'else ok and not refused,', "else True,")],
+    "harness: distractor never found": [(METRICS, 'scored["distractor_in_context"] = any(', 'scored["distractor_in_context"] = False and any(')],
+    "harness: p95 is the maximum": [(METRICS, "return values[min(len(values) - 1, math.ceil(0.95 * len(values)) - 1)]", "return values[-1]")],
+    "harness: random retriever not seeded": [(SYSTEMS_FILE, "self.random = random.Random(seed)", "self.random = random.Random()")],
+    "harness: always-abstain answers": [(SYSTEMS_FILE, '"answer": ABSTAIN_SENTENCE, "abstained": True,', '"answer": ABSTAIN_SENTENCE, "abstained": False,')],
+    "harness: drafts are run": [(RUN_EVALS, 'reviewed = [c for c in chosen if c["reviewed_by"] is not None]', "reviewed = chosen")],
+    "harness: smoke run updates latest": [(RUN_EVALS, 'full_dev = report["system"] == "pipeline" and report["split"] == "dev" and not report["smoke"]', 'full_dev = report["system"] == "pipeline" and report["split"] == "dev"')],
+    "harness: any run can be the baseline": [(RUN_EVALS, "        if not full_dev:\n            raise SystemExit", "        if False:\n            raise SystemExit")],
+    "harness: holdout without a flag": [(RUN_EVALS, 'if args.split == "holdout" and not args.allow_holdout:', "if False:")],
+    "render: baseline shown as current": [
+        (RENDER, "cells[2] = fill(current, calibration) if current else DASH", "cells[2] = fill(baseline, calibration) if baseline else DASH")
+    ],
+    "render: another k accepted": [(RENDER, 'if current and current["top_k"] != 5:', "if False:")],
+    "render: unmeasured shown as zero": [
+        (
+            RENDER,
+            "        if value is None or (judged and not trusted(report, calibration, key)):\n            return DASH\n",
+            "        if judged and not trusted(report, calibration, key):\n            return DASH\n        value = value or 0\n",
+        )
+    ],
+    # Claim-check judge
+    "judge: abbreviation ends a sentence": [(JUDGE, "        if not current.lower().endswith(ABBREVIATIONS):\n", "        if True:\n")],
+    "judge: no output schema for the judge": [(JUDGE, '            "format": CLAIM_SCHEMA,\n', "")],
+    "judge: judge not at temperature 0": [(JUDGE, '"options": {"temperature": 0, "seed": self.seed,', '"options": {"temperature": 0.8, "seed": self.seed,')],
+    "judge: question left out of the check": [(JUDGE, "passages=\"\\n\\n\".join(contexts), question=question,", "passages=\"\\n\\n\".join(contexts), question=\"\",")],
+    "judge: non-boolean verdict accepted": [(JUDGE, '        if not isinstance(verdict.get("supported"), bool):\n', "        if False:\n")],
+    "judge: score counts unsupported sentences": [(JUDGE, 'return sum(v["supported"] for v in self.last_verdicts)', 'return sum(not v["supported"] for v in self.last_verdicts)')],
+    "judge: context without the heading": [(SYSTEMS_FILE, 'return f"{entry[2]}\\n{text}" if len(entry) > 2 and entry[2] else text', "return text")],
+    "judge: method not checked": [(JUDGE, "    if method not in METHODS:\n", "    if False:\n")],
+    "render: calibration counts for any metric": [(RENDER, '        and calibration.get("metric", "faithfulness") == key\n', "")],
+    "render: calibration counts for any method": [(RENDER, '        and calibration.get("method") == report.get("judge_method")\n', "")],
+    "calibrate: contexts from another run": [(CALIBRATE, 'retrieved = runs[row["run_id"]][row["case_id"]]["retrieved"]', 'retrieved = runs[row["run_id"]][row["case_id"]]["retrieved"][::-1]')],
+    # MiniCheck judge
+    "minicheck: no read as supported": [
+        (JUDGE, 'return {"sentence": sentence, "supported": word == "yes", "reason": reply}', 'return {"sentence": sentence, "supported": word == "no", "reason": reply}')
+    ],
+    "minicheck: prompt not the model card format": [
+        (JUDGE, 'prompt = f"Document: {document}\\nClaim: {sentence}"', 'prompt = f"{document}\\n\\nIs this supported? {sentence}"')
+    ],
+    "minicheck: whole answer in one claim": [
+        (JUDGE, "        return MiniCheckJudge(model, url)\n", "        return GuardianJudge(model, url)\n")
+    ],
+    # Guardian judge
+    "guardian: yes read as grounded": [(JUDGE, 'return 1.0 if word == "no" else 0.0', 'return 1.0 if word == "yes" else 0.0')],
+    "guardian: risk not selected": [(JUDGE, '{"role": "system", "content": "groundedness"},', '{"role": "system", "content": "harm"},')],
+    "guardian: any reply accepted": [(JUDGE, '        if word not in ("yes", "no"):\n', "        if False:\n")],
+    "guardian: unsupported metrics judged": [
+        (JUDGE, '[n for n in needed(item, case) if n in getattr(judge, "metrics", JUDGED)]', "needed(item, case)")
+    ],
+    # Judge and calibration
+    "judge: refusals judged for faithfulness": [
+        (JUDGE, 'answered = scored.get("status") == 200 and scored.get("refused") is False', 'answered = scored.get("status") == 200')
+    ],
+    "judge: language cases judged": [(JUDGE, 'if answered and case["expected_behaviour"] != "language refusal":', "if answered:")],
+    "judge: retrieval metrics without gold": [(JUDGE, 'if case["gold"] and scored.get("retrieved"):', 'if scored.get("retrieved"):')],
+    "judge: answer model may judge itself": [(JUDGE, 'if model == env.get("LLM_MODEL"):', "if False:")],
+    "judge: failures hidden": [(JUDGE, "                        values.append(None)\n", "                        values.append(1.0)\n")],
+    "judge: spread from one pass": [
+        (JUDGE, 'max(per_pass) - min(per_pass) if len(per_pass) > 1 else None', "max(per_pass) - min(per_pass) if per_pass else None")
+    ],
+    "judge: reference missing from context metrics": [
+        (JUDGE, '"reference": case["expected_answer"]', '"reference": scored["answer"]')
+    ],
+    "calibrate: kappa ignores chance": [(CALIBRATE, "return None if expected == 1 else (observed - expected) / (1 - expected)", "return observed")],
+    "calibrate: almost-all counts as supported": [(CALIBRATE, "SUPPORTED_AT = 1.0 - 1e-9", "SUPPORTED_AT = 0.5")],
+    "calibrate: agreement alone passes": [
+        (CALIBRATE, '"passed": agreement >= AGREEMENT and kappa is not None and kappa >= KAPPA,', '"passed": agreement >= AGREEMENT,')
+    ],
+    "calibrate: labels overwritten": [(CALIBRATE, "    if path.exists():\n        raise SystemExit", "    if False:\n        raise SystemExit")],
+    "calibrate: refusals labelled": [
+        (CALIBRATE, 'if item["split"] != "dev" or item.get("status") != 200 or item.get("refused") is not False:', 'if item["split"] != "dev":')
+    ],
+    "calibrate: labeller not required": [
+        (CALIBRATE, "    if not args.make_labels and not args.labelled_by.strip():\n", "    if False:\n")
+    ],
+    "calibrate: labeller not recorded": [(CALIBRATE, '        "labelled_by": labelled_by,\n', "")],
+    "calibrate: empty label allowed": [(CALIBRATE, 'not in ("yes", "no")', 'not in ("yes", "no", "")')],
+    "render: uncalibrated judge shown": [(RENDER, "        if value is None or (judged and not trusted(report, calibration, key)):", "        if value is None:")],
+    "render: another judge's calibration trusted": [
+        (RENDER, '        and calibration.get("judge_model") == report.get("judge_model")\n', "")
+    ],
+    # Golden dataset validator
+    "golden: substring match for must_include": [
+        (VALIDATOR, 'if not contains_fact(case["expected_answer"], fact):', 'if fact.lower() not in case["expected_answer"].lower():')
+    ],
+    "golden: clarify may require a value": [
+        (VALIDATOR, 'if case["expected_behaviour"] == "clarify" and case["must_include"]:', "if False:")
+    ],
+    "golden: empty reviewer allowed": [
+        (VALIDATOR, "if reviewer is not None and (not isinstance(reviewer, str) or not reviewer.strip()):", "if False:")
+    ],
+    "golden: any author allowed": [(VALIDATOR, 'if case["authored_by"] not in AUTHORS:', "if False:")],
+    "golden: mixed versions allowed": [(VALIDATOR, "    if len(versions) != 1:\n", "    if False:\n")],
+    "golden: holdout edit allowed": [(VALIDATOR, "    if digest != holdout_hash(cases):\n", "    if False:\n")],
+    "golden: unfrozen version allowed": [(VALIDATOR, "    if version != current:\n", "    if False:\n")],
+    "golden: byte order mark breaks the file": [(VALIDATOR, 'encoding="utf-8-sig", newline=""', 'encoding="utf-8", newline=""')],
+    "golden: empty labels skipped": [
+        (VALIDATOR, '        elif not label:\n            problems.append(f"{row[\'id\']}: behaviour is empty")\n', "")
+    ],
+    "golden: unknown labels allowed": [(VALIDATOR, "        elif label not in BEHAVIOURS:\n", "        elif False:\n")],
+    "golden: agreement always exits 0": [
+        (VALIDATOR, "return 0 if share is not None and share >= ACCEPT else 1", "return 0")
+    ],
 }
 
 
-def run_tests():
-    shutil.rmtree(ROOT / ".hypothesis", ignore_errors=True)
+LEFT_OUT = shutil.ignore_patterns(
+    ".git", ".venv", ".chroma", ".env", "runs", "reports", "__pycache__", ".hypothesis", ".pytest_cache", ".ruff_cache"
+)
+
+
+def copy_project(folder):
+    """A copy with what the unit and API tests need, like a clean CI checkout."""
+    work = folder / "project"
+    shutil.copytree(ROOT, work, ignore=LEFT_OUT)
+    return work
+
+
+def in_copy(path, work):
+    return work / path.relative_to(ROOT)
+
+
+def run_tests(work):
+    shutil.rmtree(work / ".hypothesis", ignore_errors=True)
     return subprocess.run(
         [sys.executable, "-m", "pytest", "tests/unit", "tests/api", "-q", "-x", "-p", "no:cacheprovider"],
-        cwd=ROOT,
+        cwd=work,
         check=False,
         capture_output=True,
         text=True,
@@ -403,13 +558,18 @@ def check_breaks_apply(selected, originals):
                 sys.exit(f"break {name!r} no longer matches {path.name}: {old}")
 
 
-def apply_break(edits, originals):
-    """Write the broken files. Edits to one file apply together."""
+def apply_break(edits, originals, work):
+    """Write the broken files into the copy. Edits to one file apply together."""
     sources = read_sources(originals)
     for path, old, new in edits:
         sources[path] = sources[path].replace(old, new)
     for path in {path for path, _, _ in edits}:
-        path.write_bytes(sources[path].encode("utf-8"))
+        in_copy(path, work).write_bytes(sources[path].encode("utf-8"))
+
+
+def restore(originals, work):
+    for path, original in originals.items():
+        in_copy(path, work).write_bytes(original)
 
 
 def main():
@@ -417,29 +577,25 @@ def main():
     parser.add_argument("--only", default="", help="run only breaks whose name contains this text")
     args = parser.parse_args()
     selected = {name: edits for name, edits in BREAKS.items() if args.only in name}
-    files = (CHUNKER, EMBEDDER, INDEX, SETTINGS, RETRIEVER, GENERATOR, API)
+    files = (CHUNKER, EMBEDDER, INDEX, SETTINGS, RETRIEVER, GENERATOR, API, SCORING, VALIDATOR, METRICS, SYSTEMS_FILE, RUN_EVALS, RENDER, JUDGE, CALIBRATE)
     originals = {path: path.read_bytes() for path in files}
     check_breaks_apply(selected, originals)
 
-    baseline = run_tests()
-    if baseline.returncode != 0:
-        sys.exit("the unbroken code fails, so the results would mean nothing:\n" + baseline.stdout[-1500:])
-    print("baseline passes", flush=True)
-
     survived = []
-    try:
+    with tempfile.TemporaryDirectory(prefix="mutation-") as folder:
+        work = copy_project(Path(folder))
+        baseline = run_tests(work)
+        if baseline.returncode != 0:
+            sys.exit("the unbroken code fails, so the results would mean nothing:\n" + baseline.stdout[-1500:])
+        print("baseline passes", flush=True)
         for name, edits in selected.items():
-            apply_break(edits, originals)
-            result = run_tests()
-            for path, original in originals.items():
-                path.write_bytes(original)
+            apply_break(edits, originals, work)
+            result = run_tests(work)
+            restore(originals, work)
             caught = result.returncode != 0
             print(f"{'caught  ' if caught else 'SURVIVED'} {name}  {failed_test(result) if caught else ''}", flush=True)
             if not caught:
                 survived.append(name)
-    finally:
-        for path, original in originals.items():
-            path.write_bytes(original)
     print(f"total {len(selected)}, caught {len(selected) - len(survived)}, survived: {survived or 'none'}")
     sys.exit(1 if survived else 0)
 

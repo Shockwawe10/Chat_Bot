@@ -1,0 +1,450 @@
+{
+ "date": "2026-11-03",
+ "labelled_by": "Shockwawe10",
+ "judge_model": "bespoke-minicheck:7b",
+ "method": "minicheck",
+ "metric": "faithfulness",
+ "items": 30,
+ "human_yes": 27,
+ "judge_yes": 28,
+ "judge_errors": 0,
+ "agreement": 0.9666666666666667,
+ "kappa": 0.7826086956521738,
+ "passed": true,
+ "thresholds": {
+  "agreement": 0.85,
+  "kappa": 0.6
+ },
+ "pairs": [
+  {
+   "item": "1",
+   "case_id": "g064",
+   "human": true,
+   "judge_score": 1.0,
+   "verdicts": [
+    {
+     "sentence": "The maximum wind speed is 36 m/s for the GroundFrame GF-2 product, as stated in passage [1].",
+     "supported": true,
+     "reason": "Yes"
+    }
+   ]
+  },
+  {
+   "item": "2",
+   "case_id": "g007",
+   "human": true,
+   "judge_score": 1.0,
+   "verdicts": [
+    {
+     "sentence": "They look at bolt torque on a sample of connections, coating condition (scratches, white rust and red rust), post and pile movement on ground-mount plants, ballast position on flat roofs, and module clamps.",
+     "supported": true,
+     "reason": "Yes"
+    }
+   ]
+  },
+  {
+   "item": "3",
+   "case_id": "g003",
+   "human": true,
+   "judge_score": 1.0,
+   "verdicts": [
+    {
+     "sentence": "After the contract is signed, the detailed design takes 3 to 6 weeks to complete, as stated in the typical durations for each stage.",
+     "supported": true,
+     "reason": "Yes"
+    }
+   ]
+  },
+  {
+   "item": "4",
+   "case_id": "g025",
+   "human": true,
+   "judge_score": 1.0,
+   "verdicts": [
+    {
+     "sentence": "The single-post ground system has an average coating thickness of 85 \u00b5m, which is the hot-dip galvanising coating.",
+     "supported": true,
+     "reason": "Yes"
+    }
+   ]
+  },
+  {
+   "item": "5",
+   "case_id": "g021",
+   "human": true,
+   "judge_score": 1.0,
+   "verdicts": [
+    {
+     "sentence": "The minimum ground clearance of GroundFrame GF-2 is at least 0.6 m.",
+     "supported": true,
+     "reason": "Yes"
+    }
+   ]
+  },
+  {
+   "item": "6",
+   "case_id": "g021",
+   "human": true,
+   "judge_score": 1.0,
+   "verdicts": [
+    {
+     "sentence": "At least 0.6 m",
+     "supported": true,
+     "reason": "Yes"
+    }
+   ]
+  },
+  {
+   "item": "7",
+   "case_id": "g010",
+   "human": true,
+   "judge_score": 1.0,
+   "verdicts": [
+    {
+     "sentence": "Yes, maintenance is offered for any mounting system the company supplied, also when another contractor installed it.",
+     "supported": true,
+     "reason": "Yes"
+    }
+   ]
+  },
+  {
+   "item": "8",
+   "case_id": "g006",
+   "human": true,
+   "judge_score": 1.0,
+   "verdicts": [
+    {
+     "sentence": "Each sales region (North, Central and South) has its own project manager.",
+     "supported": true,
+     "reason": "Yes"
+    },
+    {
+     "sentence": "The sales team assigns the manager after the first request, based on the project location.",
+     "supported": true,
+     "reason": "Yes"
+    }
+   ]
+  },
+  {
+   "item": "9",
+   "case_id": "g039",
+   "human": true,
+   "judge_score": 1.0,
+   "verdicts": [
+    {
+     "sentence": "Yes, it can still happen because the company can order a roof assessment from a partner engineer at the customer's cost if neither roof drawings nor an existing structural report exists.",
+     "supported": true,
+     "reason": "Yes"
+    }
+   ]
+  },
+  {
+   "item": "10",
+   "case_id": "g006",
+   "human": false,
+   "judge_score": 1.0,
+   "verdicts": [
+    {
+     "sentence": "Each sales region (North, Central and South) has its own project manager, and the sales team assigns the manager after the first request based on the project location.",
+     "supported": true,
+     "reason": "Yes"
+    },
+    {
+     "sentence": "Therefore, you deal with a different contact each time depending on the project location.",
+     "supported": true,
+     "reason": "Yes"
+    }
+   ]
+  },
+  {
+   "item": "11",
+   "case_id": "g036",
+   "human": false,
+   "judge_score": 0.0,
+   "verdicts": [
+    {
+     "sentence": "RF-2 uses stainless steel A4 fasteners because they resist chlorides from salt and are suitable for systems rated up to C4, which matches the corrosionivity category of RF-2.",
+     "supported": false,
+     "reason": "No"
+    }
+   ]
+  },
+  {
+   "item": "12",
+   "case_id": "g003",
+   "human": true,
+   "judge_score": 1.0,
+   "verdicts": [
+    {
+     "sentence": "The engineers need 3 to 6 weeks after the contract is signed before the build drawings are ready.",
+     "supported": true,
+     "reason": "Yes"
+    }
+   ]
+  },
+  {
+   "item": "13",
+   "case_id": "g066",
+   "human": true,
+   "judge_score": 1.0,
+   "verdicts": [
+    {
+     "sentence": "The company's mounting systems are rated for a maximum corrosivity category, and each system is designed for use at that category or a lower one.",
+     "supported": true,
+     "reason": "Yes"
+    },
+    {
+     "sentence": "The company does not offer any system for category CX.",
+     "supported": true,
+     "reason": "Yes"
+    }
+   ]
+  },
+  {
+   "item": "14",
+   "case_id": "g042",
+   "human": true,
+   "judge_score": 1.0,
+   "verdicts": [
+    {
+     "sentence": "Between the engineer's visit and the customer signing a contract, the company prepares a preliminary design and sends a commercial offer based on the layout and mounting system proposed in the preliminary design.",
+     "supported": true,
+     "reason": "Yes"
+    }
+   ]
+  },
+  {
+   "item": "15",
+   "case_id": "g043",
+   "human": true,
+   "judge_score": 1.0,
+   "verdicts": [
+    {
+     "sentence": "Neither RoofFlat RF-1 nor RoofFlat RF-2 would fit a roof with a 7-degree slope because both systems have a maximum roof slope of 5\u00b0 as specified in the context.",
+     "supported": true,
+     "reason": "Yes"
+    }
+   ]
+  },
+  {
+   "item": "16",
+   "case_id": "g067",
+   "human": true,
+   "judge_score": 1.0,
+   "verdicts": [
+    {
+     "sentence": "The coating thickness varies by system: 85 \u00b5m for hot-dip galvanising on GroundFrame GF-1 and CarportFrame CP-1, 25 \u00b5m per side for zinc-magnesium coating on GroundFrame GF-2, 15 \u00b5m for anodised aluminium on RoofFlat RF-1 and RP-1, and 20 \u00b5m for anodised aluminium on RoofFlat RF-2.",
+     "supported": true,
+     "reason": "Yes"
+    }
+   ]
+  },
+  {
+   "item": "17",
+   "case_id": "g022",
+   "human": true,
+   "judge_score": 1.0,
+   "verdicts": [
+    {
+     "sentence": "The south-facing flat-roof system can take a maximum wind speed of 28 m/s.",
+     "supported": true,
+     "reason": "Yes"
+    }
+   ]
+  },
+  {
+   "item": "18",
+   "case_id": "g028",
+   "human": true,
+   "judge_score": 1.0,
+   "verdicts": [
+    {
+     "sentence": "Yes, a roof pitch of 45\u00b0 is within the range for RP-1 because the RP-1 system supports roof slopes from 10\u00b0 to 60\u00b0.",
+     "supported": true,
+     "reason": "Yes"
+    }
+   ]
+  },
+  {
+   "item": "19",
+   "case_id": "g001",
+   "human": true,
+   "judge_score": 1.0,
+   "verdicts": [
+    {
+     "sentence": "A commercial offer is valid for 30 days from its date.",
+     "supported": true,
+     "reason": "Yes"
+    }
+   ]
+  },
+  {
+   "item": "20",
+   "case_id": "g065",
+   "human": true,
+   "judge_score": 1.0,
+   "verdicts": [
+    {
+     "sentence": "The product warranty is 15 years and the installation warranty is 5 years.",
+     "supported": true,
+     "reason": "Yes"
+    },
+    {
+     "sentence": "Both periods start on the date of the handover certificate.",
+     "supported": true,
+     "reason": "Yes"
+    }
+   ]
+  },
+  {
+   "item": "21",
+   "case_id": "g037",
+   "human": true,
+   "judge_score": 1.0,
+   "verdicts": [
+    {
+     "sentence": "The GroundFrame GF-2 twin-post ground-mount system would be used because it is suitable for sites near chemical plants, fertiliser storage or other sources of aggressive air.",
+     "supported": true,
+     "reason": "Yes"
+    },
+    {
+     "sentence": "It is protected from rusting by its zinc-magnesium coating.",
+     "supported": true,
+     "reason": "Yes"
+    }
+   ]
+  },
+  {
+   "item": "22",
+   "case_id": "g032",
+   "human": false,
+   "judge_score": 0.0,
+   "verdicts": [
+    {
+     "sentence": "Yes, Example Solar Ltd. can build a 50 kWp system on your office roof because the company designs mounting systems for flat roofs, and the roof-mounted systems are suitable for office roofs.",
+     "supported": false,
+     "reason": "No"
+    }
+   ]
+  },
+  {
+   "item": "23",
+   "case_id": "g028",
+   "human": true,
+   "judge_score": 1.0,
+   "verdicts": [
+    {
+     "sentence": "Yes, a roof pitch of 45\u00b0 is within the range for RP-1 because the roof slope range for RP-1 is 10\u00b0 to 60\u00b0.",
+     "supported": true,
+     "reason": "Yes"
+    }
+   ]
+  },
+  {
+   "item": "24",
+   "case_id": "g035",
+   "human": true,
+   "judge_score": 1.0,
+   "verdicts": [
+    {
+     "sentence": "You should provide a flat, dry storage area of about 200 m\u00b2 for each MWp of a ground-mount plant.",
+     "supported": true,
+     "reason": "Yes"
+    },
+    {
+     "sentence": "For a 5 MWp plant, this means 1000 m\u00b2 of laydown space.",
+     "supported": true,
+     "reason": "Yes"
+    }
+   ]
+  },
+  {
+   "item": "25",
+   "case_id": "g020",
+   "human": true,
+   "judge_score": 1.0,
+   "verdicts": [
+    {
+     "sentence": "No, the company does not work on roofs covered with asbestos-cement sheets.",
+     "supported": true,
+     "reason": "Yes"
+    }
+   ]
+  },
+  {
+   "item": "26",
+   "case_id": "g037",
+   "human": true,
+   "judge_score": 1.0,
+   "verdicts": [
+    {
+     "sentence": "GroundFrame GF-2 would be used, and its zinc-magnesium coating protects it from rusting.",
+     "supported": true,
+     "reason": "Yes"
+    }
+   ]
+  },
+  {
+   "item": "27",
+   "case_id": "g064",
+   "human": true,
+   "judge_score": 1.0,
+   "verdicts": [
+    {
+     "sentence": "The maximum wind speed is 36 m/s for the GroundFrame GF-2 product, 30 m/s for the RoofFlat RF-2 and CarportFrame CP-1, 28 m/s for the RoofFlat RF-1, and 30 m/s for the RoofPitch RP-1.",
+     "supported": true,
+     "reason": "Yes"
+    }
+   ]
+  },
+  {
+   "item": "28",
+   "case_id": "g060",
+   "human": true,
+   "judge_score": 1.0,
+   "verdicts": [
+    {
+     "sentence": "The installation warranty ends 5 years after the date of the handover certificate.",
+     "supported": true,
+     "reason": "Yes"
+    },
+    {
+     "sentence": "For a plant handed over in March 2026, the installation warranty ends in March 2031.",
+     "supported": true,
+     "reason": "Yes"
+    }
+   ]
+  },
+  {
+   "item": "29",
+   "case_id": "g035",
+   "human": true,
+   "judge_score": 1.0,
+   "verdicts": [
+    {
+     "sentence": "You should provide a flat, dry storage area of about 200 m\u00b2 for each MWp of a ground-mount plant.",
+     "supported": true,
+     "reason": "Yes"
+    },
+    {
+     "sentence": "For a 5 MWp plant, this means 1000 m\u00b2.",
+     "supported": true,
+     "reason": "Yes"
+    }
+   ]
+  },
+  {
+   "item": "30",
+   "case_id": "g038",
+   "human": true,
+   "judge_score": 1.0,
+   "verdicts": [
+    {
+     "sentence": "A geotechnical survey, including soil drilling, pull-out tests on sample posts, and a check for groundwater and frost depth, must be completed before the crew turns up to build.",
+     "supported": true,
+     "reason": "Yes"
+    }
+   ]
+  }
+ ]
+}

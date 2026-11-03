@@ -1,0 +1,201 @@
+"""Judge calibration: agreement and Cohen's kappa between my labels and the judge.
+
+Run from the repository root:
+
+    python -m evals.calibrate_judge --make-labels   # write the blind label file, once
+    python -m evals.calibrate_judge --labelled-by NAME   # score my labels against the judge
+
+I fill `supported` with yes or no for each answer: yes only if every claim in it is
+backed by the context shown. The file never contains a judge score. The judge says yes
+when its faithfulness score is 1.0, so both sides answer the same question. It passes at
+agreement >= 0.85 and kappa >= 0.60, and the result goes to reports/judge_calibration.json.
+The README shows a judged metric only after a pass for the same model, method and metric.
+
+The judge sees each chunk as the answering model did, heading then text, rebuilt from the
+saved run that produced the answer. The context column in the label file has no headings.
+"""
+
+import argparse
+import asyncio
+import csv
+import glob
+import hashlib
+import json
+import random
+import sys
+from datetime import UTC, datetime
+
+from app.settings import ROOT, read_env
+from evals.judge import CLAIM_PROMPT, make_judge
+from evals.systems import ChunkStore
+
+LABELS = ROOT / "evals" / "annotation" / "judge_labels.csv"
+RESULT = ROOT / "reports" / "judge_calibration.json"
+SIZE = 30
+AGREEMENT, KAPPA = 0.85, 0.60
+SUPPORTED_AT = 1.0 - 1e-9  # Ragas reports 0.9999999999 for "all supported"
+SEPARATOR = "\n\n---\n\n"
+FIELDS = ["item", "case_id", "run_id", "question", "answer", "context", "supported", "notes"]
+
+
+def cohen_kappa(first, second):
+    """Kappa for two lists of yes/no labels, or None when chance agreement is total."""
+    n = len(first)
+    observed = sum(a == b for a, b in zip(first, second)) / n
+    p_first, p_second = sum(first) / n, sum(second) / n
+    expected = p_first * p_second + (1 - p_first) * (1 - p_second)
+    return None if expected == 1 else (observed - expected) / (1 - expected)
+
+
+def candidates(runs, store):
+    """Distinct answered dev answers from saved runs, with the context they were given."""
+    found = {}
+    for report in runs:
+        for item in report["cases"]:
+            if item["split"] != "dev" or item.get("status") != 200 or item.get("refused") is not False:
+                continue
+            if item["expected_behaviour"] == "language refusal":
+                continue
+            key = (item["id"], item["answer"].strip())
+            if key not in found:
+                found[key] = {
+                    "case_id": item["id"],
+                    "run_id": report["run_id"],
+                    "question": item["question"],
+                    "answer": item["answer"].strip(),
+                    "context": SEPARATOR.join(store.text(chunk_id).replace("\r\n", "\n") for chunk_id in item["retrieved"]),
+                }
+    return [found[key] for key in sorted(found)]
+
+
+def make_labels(runs, store, path, size=SIZE, seed=42):
+    if path.exists():
+        raise SystemExit(f"{path.name} exists; labels are never overwritten")
+    pool = candidates(runs, store)
+    if len(pool) < size:
+        raise SystemExit(f"only {len(pool)} answers to label, need {size}")
+    chosen = random.Random(seed).sample(pool, size)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with open(path, "w", encoding="utf-8", newline="") as handle:
+        writer = csv.DictWriter(handle, FIELDS)
+        writer.writeheader()
+        for number, row in enumerate(chosen, start=1):
+            writer.writerow({**row, "item": number, "supported": "", "notes": ""})
+    return chosen
+
+
+def read_labels(path):
+    """Return (rows, problems). Every row needs supported = yes or no."""
+    with open(path, encoding="utf-8-sig", newline="") as handle:
+        rows = list(csv.DictReader(handle))
+    problems = [
+        f"item {row.get('item')}: supported must be yes or no, got {row.get('supported')!r}"
+        for row in rows
+        if (row.get("supported") or "").strip().lower() not in ("yes", "no")
+    ]
+    if not rows:
+        problems.append("the file has no rows")
+    return rows, problems
+
+
+def summarise(rows, scores, judge_model, labelled_by, method=None, verdicts=None):
+    human = [row["supported"].strip().lower() == "yes" for row in rows]
+    judge = [score is not None and score >= SUPPORTED_AT for score in scores]
+    agreement = sum(a == b for a, b in zip(human, judge)) / len(rows)
+    kappa = cohen_kappa(human, judge)
+    return {
+        "date": datetime.now(UTC).date().isoformat(),
+        "labelled_by": labelled_by,
+        "judge_model": judge_model,
+        "method": method,
+        "metric": "faithfulness",
+        "items": len(rows),
+        "human_yes": sum(human),
+        "judge_yes": sum(judge),
+        "judge_errors": sum(score is None for score in scores),
+        "agreement": agreement,
+        "kappa": kappa,
+        "passed": agreement >= AGREEMENT and kappa is not None and kappa >= KAPPA,
+        "thresholds": {"agreement": AGREEMENT, "kappa": KAPPA},
+        "pairs": [
+            {"item": row["item"], "case_id": row["case_id"], "human": h, "judge_score": s, "verdicts": v}
+            for row, h, s, v in zip(rows, human, scores, verdicts or [None] * len(rows))
+        ],
+    }
+
+
+def contexts_for(rows, store, runs_dir=ROOT / "reports" / "runs"):
+    """Each row's chunks as heading then text, from the run that produced its answer."""
+    runs, contexts = {}, []
+    for row in rows:
+        if row["run_id"] not in runs:
+            path = runs_dir / f"{row['run_id']}.json"
+            if not path.exists():
+                raise SystemExit(f"item {row['item']}: run file {path.name} is missing")
+            runs[row["run_id"]] = {c["id"]: c for c in json.loads(path.read_text(encoding="utf-8"))["cases"]}
+        retrieved = runs[row["run_id"]][row["case_id"]]["retrieved"]
+        contexts.append([store.context(chunk_id) for chunk_id in retrieved])
+    return contexts
+
+
+def judge_scores(judge, rows, contexts):
+    """Return (scores, per-sentence verdicts or None). A failed call scores None."""
+
+    async def run():
+        scores, verdicts = [], []
+        for row, context in zip(rows, contexts):
+            try:
+                scores.append(
+                    await judge.ascore(
+                        "faithfulness", user_input=row["question"], response=row["answer"], retrieved_contexts=context
+                    )
+                )
+                verdicts.append(list(getattr(judge, "last_verdicts", [])) or None)
+            except Exception:  # noqa: BLE001 - counted as a judge error in the result
+                scores.append(None)
+                verdicts.append(None)
+        return scores, verdicts
+
+    return asyncio.run(run())
+
+
+def latest_run(system):
+    paths = sorted(glob.glob(str(ROOT / "reports" / "runs" / f"*-{system}-dev.json")))
+    if not paths:
+        raise SystemExit(f"no saved {system} dev run in reports/runs")
+    return json.loads(open(paths[-1], encoding="utf-8").read())
+
+
+def main(argv=None):
+    parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
+    parser.add_argument("--make-labels", action="store_true", help="write the blind label file")
+    parser.add_argument("--labelled-by", default="", help="the person who chose every label, recorded in the result")
+    args = parser.parse_args(argv)
+    if not args.make_labels and not args.labelled_by.strip():
+        # The labels are the human reference, so the result must say which human gave them.
+        parser.error("--labelled-by is required: name the person who chose every label")
+    if args.make_labels:
+        runs = [latest_run("pipeline"), latest_run("http")]
+        chosen = make_labels(runs, ChunkStore.from_index(), LABELS)
+        print(f"wrote {len(chosen)} answers to {LABELS.relative_to(ROOT)}; fill in supported with yes or no")
+        return 0
+    rows, problems = read_labels(LABELS)
+    for problem in problems:
+        print(f"ERROR {problem}")
+    if problems:
+        return 1
+    judge = make_judge(read_env(), ragas_for_others=False)
+    scores, verdicts = judge_scores(judge, rows, contexts_for(rows, ChunkStore.from_index()))
+    result = summarise(rows, scores, judge.model, args.labelled_by.strip(), judge.method, verdicts)
+    if judge.method == "claim-check":
+        result["prompt_sha256"] = hashlib.sha256(CLAIM_PROMPT.read_bytes().replace(b"\r\n", b"\n")).hexdigest()
+    RESULT.parent.mkdir(parents=True, exist_ok=True)
+    RESULT.write_text(json.dumps(result, indent=1) + "\n", encoding="utf-8")
+    kappa = "undefined" if result["kappa"] is None else f"{result['kappa']:.2f}"
+    verdict = "passed" if result["passed"] else "not passed"
+    print(f"{judge.model} ({judge.method}): agreement {result['agreement']:.2f}, kappa {kappa}: {verdict}")
+    return 0 if result["passed"] else 1
+
+
+if __name__ == "__main__":
+    sys.exit(main())

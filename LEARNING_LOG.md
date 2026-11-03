@@ -1,6 +1,6 @@
 # Learning log
 
-One entry per merged PR, written in my own words (see the AI-assisted development policy in the README).
+One entry per merged PR. AI may draft an entry, but I review and edit it, and a draft says so at the top until I have (see the AI-assisted development policy and the AI and human authorship rules in the README).
 
 ## Template
 
@@ -32,7 +32,6 @@ Fix is to make Ollama return structured JSON (its format option) instead of rely
 
 ## 2026-10-30: Stage 1, chunker, embedder and index
 
-*Drafted by Claude Code at my request, not written in my own words yet.*
 
 **What changed:**
 Added the chunker (`app/chunker.py`), embedder (`app/embedder.py`), Chroma index (`app/index.py`), shared settings (`app/settings.py`), the chunk report (`evals/chunk_report.py`) and the mutation check (`evals/mutation_check.py`). Settings changed: `CHUNK_OVERLAP` was removed, and `CHUNK_MAX`, `CHUNK_MIN`, `EMBEDDING_DIGEST` and `OLLAMA_URL` were added. The embedding model is pinned as `nomic-embed-text:v1.5`.
@@ -175,3 +174,24 @@ Found while making the fix:
 - Citations had no upper limit. Forced to give an empty list, the model counted until `num_predict` cut the JSON off. The list now stops at 10.
 - `reason` goes to the trace only, never to the customer, because it is model text with no citations behind it. Raw output was already traced for every request, and a test now pins it for abstentions.
 - Prompt v1 is deleted, not kept beside v2, because it describes a contract the code no longer accepts. `PROMPT_VERSION=v1` now fails at startup instead of pairing an old prompt with the new schema. It is still in git at `a3c0e9c`.
+
+## 2026-11-02: Stage 2, golden dataset and eval harness
+
+*Drafted by Claude Code at my request. I have not reviewed and edited it yet.*
+
+**What changed:**
+Added the golden dataset (75 cases, now v1.2) with its design, validator and blind-check file, and the eval harness: `evals/run_evals.py`, `evals/metrics.py`, `evals/systems.py`, `evals/scoring.py` and `evals/render_results.py`, with `make eval`, `make eval-smoke` and `make results`. The README now allows AI drafting with my review as the gate, and every case records `reviewed_by`. The first baseline is in the Results table.
+**How it works, in my own words:**
+The harness sends each reviewed dev case to the chatbot and scores what comes back with plain code. Retrieval is scored by finding the gold sentence inside the retrieved chunks. Behaviour is scored as pass, fail, or left for the judge when code cannot tell. Numbers must appear as whole values, so "15 years" does not count as "5 years". Every run writes a manifest with the commit, dataset version, prompt, models and settings. A full dev run also updates `reports/latest.json`, a row in `evals/history.csv`, and the README table.
+**How I checked it:**
+Three reference systems scored exactly as predicted before any run: always abstain 7 of 52, always answer 0 of 7 out-of-scope cases, and a random retriever 9.5% hit rate. Three pipeline runs gave the same retrieval and the same refusals. The mutation check breaks the scorer, validator and harness on purpose, and the tests catch every break.
+**Manual change of the day:**
+I reviewed all 75 golden cases against the knowledge base.
+**What I learned / what is still unclear:**
+- Baseline on dev: hit rate@5 0.83, MRR 0.69, refusal accuracy 0.52, numeric fidelity 0.50. The chatbot refuses 22 of the 42 dev questions it should answer.
+- The Stage 1 contract fix doubled that. The run 1 code refused 11 of the 42, and on the 31 questions the sanity runs never saw, refusals went from 8 to 16.
+- A scorer needs checking against trivial systems. Counting "the judge decides" as a pass let a system that always says "Yes." score 0.38.
+- A scorer also needs checking against real correct answers. The first pipeline run showed the number rule had broken "A4 fasteners" and "GF-2 would".
+- Retrieval is better than the answers: the right chunk was in the top 5 for 17 of the 22 wrongly refused questions.
+
+Still unclear: Ragas metrics and the judge are not set up, so faithfulness and the 8 cases left for the judge are not scored yet. The blind check needs a person. The thresholds in the Results table still need reviewing against this baseline in `reports/thresholds.md`.
