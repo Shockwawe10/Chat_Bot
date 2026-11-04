@@ -119,3 +119,17 @@ def test_off_by_default_and_unknown_method_rejected():
         MiniCheck.from_env({"ANSWER_CHECK": "minicheck"})
     on = MiniCheck.from_env({"ANSWER_CHECK": "minicheck", "ANSWER_CHECK_MODEL": MODEL, "ANSWER_CHECK_DIGEST": DIGEST})
     assert (on.model, on.digest) == (MODEL, DIGEST)
+
+
+def test_env_example_turns_the_pinned_check_on_with_the_adopted_setup():
+    from dotenv import dotenv_values
+
+    from app.generator import PromptTemplate
+    from app.retriever import MODES
+    from app.settings import ROOT
+
+    env = dotenv_values(ROOT / ".env.example")
+    check = MiniCheck.from_env(env)
+    assert (check.model, check.digest) == (MODEL, DIGEST)
+    assert env["RETRIEVAL"] in MODES and env["RETRIEVAL"] == "questions"
+    assert (int(env["TOP_K"]), PromptTemplate.load(env["PROMPT_VERSION"]).version) == (8, "v5")
