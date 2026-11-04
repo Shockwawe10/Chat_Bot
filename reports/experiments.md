@@ -259,3 +259,23 @@ Other changes against the baseline: g060 is answered instead of refused (5 years
 - **More passages fix retrieval, but v2 does not use them.** Gold reached the context in 5 more cases, and 3 of them are still refused. That is the generation problem from the error analysis, and the prompt loop worked on exactly that: v4 and v5 cut over-refusal to 12/42 and 11/42.
 - **Top-k 8 removes one of v5's two false claims.** v5 said "C1 to C5" on g066 because the category table was not retrieved. At top-k 8 it is (rank 7), and v2 reads it correctly. g031, v5's other false claim, is still missing a gold group at top-k 8.
 - **A one-case gain is not evidence.** 23 against 22 is within the churn the prompt rounds showed, so even without g033 it would not be a reason to change the default.
+
+## Experiment 5: prompt v5 with top-k 8
+
+**Written on 2026-11-04, before the run.** The owner chose this after experiment 4.
+
+**Why.** Experiments 3 and 4 fail in ways that cover each other. v5 cut over-refusal to 11/42, but at top-k 5 it made a false claim on g066 because the category table was not retrieved. Top-k 8 brought that table into the context (rank 7). With v2, though, it still refused g063, g068 and g043 with all their gold in front of the model.
+
+**Change.** Prompt v5 and `TOP_K=8` together. Both were tested alone, so this run is compared with each of them, not only with the baseline. Everything else is fixed: chunker, index, embedder, model, seed and judge. The worst-case prompt for v5 with 8 passages is covered by `test_worst_case_prompt_leaves_room_for_the_answer`.
+
+**Predictions.**
+
+1. Out-of-scope answered stays 0/7.
+2. Over-refusal is at or below 11/42.
+3. g066 gives the category of each system with no false category (v2 did this at top-k 8).
+4. At least 2 of g063, g068 and g043 are answered instead of refused.
+5. More than 25 dev cases pass (v5 alone passed 25).
+6. No answer opens with a separate yes or no sentence.
+7. **Expected to fail the rule:** g031 is still missing a gold group at top-k 8, so v5's false conclusion there ("so GF-1 can handle it") probably stays. If it does, this combination is not adopted either.
+
+**Decision rule.** The same as every round: adopted only if out-of-scope is 0/7, over-refusal is lower than 22/42, more than 22 cases pass, no changed answer makes a claim the knowledge base contradicts, and no answer is a bare yes or no. Changed answers are read against the baseline, v5 and top-k 8.
