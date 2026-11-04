@@ -704,6 +704,16 @@ But it still said 3 wrong things. It told someone it could build a solar system 
 
 It's like a student who answers many more questions but makes more careless mistakes. You don't hand in that test until someone checks the answers. So the next step is a checker that reads each answer before the customer sees it.
 
+### Stage 3, part 5: a checker before the answer goes out
+
+We built that checker. Before an answer reaches the customer, a second robot reads it one sentence at a time and asks: "Do the notebook cards really say this?" If even one sentence gets a "no", the customer gets "I can't answer that" instead. If the checker is broken, the customer gets an error, never an unchecked answer.
+
+We guessed beforehand exactly which 3 answers it would stop, and it stopped exactly those 3: "7 degrees is within 5 degrees", the made-up day of the month, and a list for the wrong step of the job. None of them was a right answer, so the score stayed at 28 of 52, and the false answers went from 3 to 1.
+
+The 1 that got through shows what the checker can't see. It checks each sentence on its own, without the question. "The company designs systems for flat roofs" is true, so it passed. But the customer asked about a project too small for the company, so it still sounds like a "yes". The checker also made answers slower: the slowest ones took about 27 seconds instead of 8, because our small graphics card has to swap the two robots in and out.
+
+We also learned that running the exact same test twice can change one answer. So when two setups differ by one question, that might just be luck.
+
 ---
 
 ## Findings

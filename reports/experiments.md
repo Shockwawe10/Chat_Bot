@@ -343,3 +343,38 @@ Prompt v5 and top-k 8 as in experiment 5. Everything else is fixed.
 6. Latency p95 rises well above experiment 5's 7.7 s. On a 4 GB GPU both models cannot stay loaded, so each answer swaps them. A live test call took 18 s in total, 9.9 s of it for the check.
 
 **Decision rule.** The same as every round: adopted only if out-of-scope is 0/7, over-refusal is lower than 22/42, more than 22 cases pass, no changed answer makes a claim the knowledge base contradicts, and no answer is a bare yes or no. Latency has no threshold in `reports/thresholds.md`, so it is reported and does not decide.
+
+**Result: the check works as designed, not adopted, on g032 as predicted.** Run `20261104T113143Z-pipeline-dev-prompt-v5-top-k-8-check`, 2026-11-04. Retrieval was identical to experiment 5 for all 52 cases. The manifest records `answer_check: minicheck`, and every one of the 52 traces has the check's verdicts.
+
+| | Baseline | Experiment 5 (v5, top-k 8) | Experiment 6 (+ answer check) |
+| --- | --- | --- | --- |
+| Cases that pass | 22/52 | 28/52 | 28/52 |
+| Over-refusal | 22/42 | 11/42 | 13/42 |
+| Out-of-scope answered | 0/7 | 0/7 | 0/7 |
+| Numeric fidelity | 11/22 | 15/22 | 13/22 |
+| Answers with a false claim (loop cases) | 1 (g033) | 3 (g032, g043, g060) | 1 (g032) |
+| Latency p95 | 7.0 s | 7.7 s | 26.6 s |
+
+The 28 passes are 19 by code and 9 by reading, the same 9 as in experiment 5. Faithfulness is 1.00 on 31 answered, by construction (see above).
+
+Predictions:
+
+1. **Held.** Out-of-scope answered stays 0/7.
+2. **Held.** The check blocked exactly g038, g043 and g060, each flagged `answer_check_failed`, each on its one sentence ("No").
+3. **Held.** 28 cases pass. None of the three blocked answers was a pass.
+4. **Failed, by one.** Over-refusal is 13/42, not 14/42. g056 was refused in experiment 5 but answered this time, with the same answer v5 gave at top-k 5: true, but incomplete. The check passed it.
+5. **Held.** g032 got "Yes" from the check and still answers that the company can design and install a system on an office roof, against the 100 kWp minimum. The rule fails on it.
+6. **Held.** Latency p95 is 26.6 s, against 7.7 s. The check took about 10 s per answered case (median 9.8 s, longest 15.5 s), mostly from swapping the two models on a 4 GB GPU.
+
+Decision rule: out-of-scope, over-refusal, the pass count and the bare yes/no condition hold. **g032** is a changed answer the knowledge base contradicts, so the setup is not adopted.
+
+**Outside the loop:** the German language case **g071** again answers "No passage mentions a product guarantee", and the check said "Yes" to it.
+
+**Not exactly repeatable.** Prompt, retrieval, seed and temperature 0 were identical to experiment 5, and still g056 flipped from refused to answered and g067 changed a few words. The only differences are the extra model swaps and the check itself, which runs after generation. So a single case can flip between two identical runs, and that is the noise floor for every comparison in this file.
+
+**What it teaches.**
+
+- **The check catches what MiniCheck can see:** a sentence the passages contradict (g043's 7° "within" 5°), an invented detail (g060's "March 2"), and a wrong-stage list (g038). It took the loop's false claims from 3 to 1 without losing a single pass.
+- **It cannot see two kinds of error.** It checks each sentence alone, without the question. So a sentence that is true but answers a different question gets through (g032: the company does design flat-roof systems, but not at 50 kWp). So does a claim that something is absent (g071, "No passage mentions…"). Both need something other than a per-sentence support check.
+- **It costs a lot of time on this hardware.** p95 went from 7.7 s to 26.6 s. On a GPU that holds both models, or with a smaller checker, most of that would go.
+- **The baseline and this setup each have one false claim, in different cases.** The rule rejects a setup when any changed answer is false, so a setup that swaps one false claim for another can never be adopted, however much better it is elsewhere. That is the rule working as written. Whether to keep it is the owner's decision, made before any further run.
