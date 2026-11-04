@@ -412,3 +412,38 @@ A setup whose retrieval loses 5 net cases cannot pass more end-to-end cases from
 - **The measurement script had a bug first.** It called `search(vector)` without the question, and hybrid then ranked every chunk by an empty query (19/42). That is why the retriever now refuses a hybrid search without its question.
 
 The code stays in, off by default, with its tests.
+
+
+## Experiment 8: example customer questions per chunk
+
+**Written on 2026-11-04.** The retrieval part below was measured before this was written. The end-to-end predictions are written before the end-to-end run.
+
+**Why.** Experiment 7 showed that our dev questions use customer words ("yearly check-up", "office roof") where the knowledge base uses the company's, so exact-word search does not help. The published fix for that mismatch is to index likely customer questions with each chunk: Doc2Query, and its embedding variants HyPE and QuOTE. The owner chose it after reviewing the options.
+
+**Change.** `app/questions.py` asks the pinned answering model (`qwen3:4b-instruct`) for 5 customer-style questions per chunk, at temperature 0 with a JSON schema. It uses `prompts/chunk_questions_v1.txt` and sees only the chunk's heading path and text, never the dataset. The prompt was written before any result and has not been changed. The result is `data/chunk_questions.json`: 455 questions for 91 chunks, each entry tied to its chunk by a hash, so a file made for other chunks is refused. `RETRIEVAL=questions` scores each chunk by its best cosine over its own text and its 5 questions; the questions are embedded as queries. The default stays `dense`. The tests catch all 10 new mutation-check breaks.
+
+**Retrieval, measured on the 42 answerable dev cases (no answers generated):**
+
+| | Dense | Hybrid (exp. 7) | Example questions |
+| --- | --- | --- | --- |
+| Every gold group in the top 8 | 36/42 | 31/42 | 37/42 |
+| Every gold group in the top 5 | 31/42 | 28/42 | 33/42 |
+| First gold group in the top 8 | 39/42 | 35/42 | 40/42 |
+
+Against dense at top 8: **gained** g032 (the 100 kWp rule) and g039; **lost** g043, whose last gold group is now 12th. g017 is 9th, one short.
+
+**End-to-end run.** Experiment 6's setup (prompt v5, top-k 8, answer check on) with `RETRIEVAL=questions`. Compared with experiment 6, so the retrieval mode is the only change.
+
+**Predictions.**
+
+1. Out-of-scope answered stays 0/7.
+2. g032 now has the 100 kWp rule in its context and answers that 50 kWp is below the minimum. Experiment 6's only false claim in the loop cases goes away.
+3. No new answer makes a claim the knowledge base contradicts. The answer check stays on.
+4. g043 does not pass. It already failed in experiment 6, where the check blocked it.
+5. At least 28 dev cases pass, experiment 6's count.
+6. Over-refusal is at or below experiment 6's 13/42.
+7. Latency p95 stays near experiment 6's 26.6 s. Embedding the 455 questions happens once, at startup.
+
+The noise floor from experiment 6 applies: one case can flip between identical runs.
+
+**Decision rule.** The same as every round: adopted only if out-of-scope is 0/7, over-refusal is lower than 22/42, more than 22 cases pass, no changed answer makes a claim the knowledge base contradicts, and no answer is a bare yes or no. If it is adopted, the whole setup (prompt v5, top-k 8, answer check, example questions) is confirmed once on holdout before it counts, as the Stage 3 exit criteria require.
