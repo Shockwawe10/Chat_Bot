@@ -672,6 +672,12 @@ We built a way to mark an old exam paper again with today's grader, without aski
 
 We also fixed the tool that breaks our code on purpose to check the tests. It used to break the real files for a moment, and once a save happened during that moment and kept a broken file. Now it breaks a copy, and the real files are never touched.
 
+### Stage 3, part 1: why the robot fails, and a first fix that did not work
+
+First we looked at every practice question the robot got wrong, 30 of the 52, and sorted them by what went wrong. Most often (14 times) the robot had the right notebook card in front of it and still said "I don't know". In 11 cases it never found the right card. In 3 it was asked in another language and didn't reply that it only speaks English.
+
+So we tried new instructions that told the robot more clearly when it does know the answer, like "if the notebook says we don't do that, the answer is no". Before trying, we wrote down what we expected and what would count as better. It helped a little: the robot said "I don't know" 19 times instead of 22. But it also started answering some questions with a bare "Yes", twice the wrong one, and it said one false thing about contacts. In the end it passed 21 questions instead of 22, so we kept the old instructions. Even the judge was fooled by the short "Yes" answers, so the next step is to make sure the robot always says the fact behind its answer.
+
 ---
 
 ## Findings
