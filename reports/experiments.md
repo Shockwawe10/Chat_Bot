@@ -378,3 +378,37 @@ Decision rule: out-of-scope, over-refusal, the pass count and the bare yes/no co
 - **It cannot see two kinds of error.** It checks each sentence alone, without the question. So a sentence that is true but answers a different question gets through (g032: the company does design flat-roof systems, but not at 50 kWp). So does a claim that something is absent (g071, "No passage mentions…"). Both need something other than a per-sentence support check.
 - **It costs a lot of time on this hardware.** p95 went from 7.7 s to 26.6 s. On a GPU that holds both models, or with a smaller checker, most of that would go.
 - **The baseline and this setup each have one false claim, in different cases.** The rule rejects a setup when any changed answer is false, so a setup that swaps one false claim for another can never be adopted, however much better it is elsewhere. That is the rule working as written. Whether to keep it is the owner's decision, made before any further run.
+
+
+## Experiment 7: hybrid retrieval (BM25 and cosine, rank-fused)
+
+**Written on 2026-11-04, after the retrieval measurement.** The predictions were given to the owner in the session before the measurement, not committed here first. This experiment stopped at the retrieval check, before any answer was generated, so no end-to-end prediction was tested.
+
+**Why.** The owner chose option A after experiment 6: find out why g032's gold is not retrieved, and fix it in a general way. The 100 kWp rule is the last bullet of the "What the company does not do" chunk, which is mostly about PV modules and electrical work. For g032's wording ("…on our office roof") that chunk ranks 9th. Asked other ways ("Is 80 kWp too small for you?", "Do you work on private homes?") it ranks 1st to 6th.
+
+Raising top-k is not a general fix. Across the 42 answerable dev cases, all gold is within the top 8 for 36 cases, the top 10 for 37 (only g032 added) and the top 15 for 38. The other misses sit at ranks 15 to 27 (g031 15, g041 16, g017 17, g039 23, g038 27).
+
+**Change.** `app/keyword.py`: Okapi BM25 (k1 1.2, b 0.75) over each chunk's heading path and text, which is what the prompt shows the model, and reciprocal rank fusion (k = 60) of the full cosine ranking with the full BM25 ranking. These are the published defaults, not tuned on the dataset. `RETRIEVAL=hybrid` turns it on; the default stays `dense`. A hybrid search without the question text is refused instead of falling back to index order. The tests catch all 20 new mutation-check breaks.
+
+**Predictions given before the measurement.** g032 and g017 get their gold into the top 8 (g017 hinges on "email", which its passage uses word for word). The deep misses may not all move.
+
+**Result: worse retrieval, not run end to end.** Measured on the 42 answerable dev cases with the real embedder, top 8:
+
+| | Dense (current) | Hybrid |
+| --- | --- | --- |
+| Every gold group in the top 8 | 36/42 | 31/42 |
+| First gold group in the top 8 | 39/42 | 35/42 |
+| Every gold group in the top 5 | 31/42 | 28/42 |
+
+- **Gained (2):** g017 and g032, as predicted.
+- **Lost (7):** g007, g010, g042, g043, g063, g067 and g068.
+
+A setup whose retrieval loses 5 net cases cannot pass more end-to-end cases from it, so the 30-minute run was not spent.
+
+**What it teaches.**
+
+- **The dev questions are written in customer words, on purpose.** g007 asks about the "yearly check-up" where the knowledge base says "inspection". g068 asks "How long until you get back to me?" where it says "reply within 2 working days". BM25 finds nothing useful for these questions. Equal-weight fusion still lets its noise push correct cosine hits out of the top 8.
+- **Keyword search helps exactly where the question repeats a knowledge-base word** ("kWp", "email"). A fusion that weights BM25 less, or uses it only when its top score is high, might keep both gains without the losses. But any such weight would be tuned on these 42 cases, with two cases to gain. That needs a fresh set of questions to confirm it, or it will not generalise.
+- **The measurement script had a bug first.** It called `search(vector)` without the question, and hybrid then ranked every chunk by an empty query (19/42). That is why the retriever now refuses a hybrid search without its question.
+
+The code stays in, off by default, with its tests.

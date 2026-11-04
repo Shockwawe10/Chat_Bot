@@ -714,6 +714,14 @@ The 1 that got through shows what the checker can't see. It checks each sentence
 
 We also learned that running the exact same test twice can change one answer. So when two setups differ by one question, that might just be luck.
 
+### Stage 3, part 6: searching by exact words too
+
+The card about the smallest project the company takes was there, but it came 9th, just past the 8 cards the robot gets. Its search finds cards by meaning. The question mentioned an "office roof", so cards about roofs looked closer.
+
+So we added a second search that looks for the exact same words, like "kWp" or "email", and mixed the two lists together. It's like looking for a book both by its topic and by a word in its title.
+
+It found the two cards we hoped for. But it lost 7 others, because our practice questions use everyday words ("yearly check-up") where the notebooks use proper ones ("inspection"). Exact-word search finds nothing useful for those, and mixing it in pushed good cards out. Overall the right cards came up for 31 questions instead of 36. We stopped there, without running the full test, because a worse search can't give better answers. The new search stays in the code, switched off.
+
 ---
 
 ## Findings
