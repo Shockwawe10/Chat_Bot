@@ -27,6 +27,7 @@ SETTINGS = ROOT / "app" / "settings.py"
 RETRIEVER = ROOT / "app" / "retriever.py"
 GENERATOR = ROOT / "app" / "generator.py"
 API = ROOT / "app" / "api.py"
+CHECKER = ROOT / "app" / "checker.py"
 SCORING = ROOT / "evals" / "scoring.py"
 VALIDATOR = ROOT / "evals" / "validate_golden.py"
 METRICS = ROOT / "evals" / "metrics.py"
@@ -429,7 +430,7 @@ BREAKS = {
         )
     ],
     # Claim-check judge
-    "judge: abbreviation ends a sentence": [(JUDGE, "        if not current.lower().endswith(ABBREVIATIONS):\n", "        if True:\n")],
+    "judge: abbreviation ends a sentence": [(CHECKER, "        if not current.lower().endswith(ABBREVIATIONS):\n", "        if True:\n")],
     "judge: no output schema for the judge": [(JUDGE, '            "format": CLAIM_SCHEMA,\n', "")],
     "judge: judge not at temperature 0": [(JUDGE, '"options": {"temperature": 0, "seed": self.seed,', '"options": {"temperature": 0.8, "seed": self.seed,')],
     "judge: question left out of the check": [(JUDGE, "passages=\"\\n\\n\".join(contexts), question=question,", "passages=\"\\n\\n\".join(contexts), question=\"\",")],
@@ -450,6 +451,23 @@ BREAKS = {
     "minicheck: whole answer in one claim": [
         (JUDGE, "        return MiniCheckJudge(model, url)\n", "        return GuardianJudge(model, url)\n")
     ],
+    # Answer check (app/checker.py)
+    "check: unsupported answer goes out": [
+        (CHECKER, '        if verdicts and all(item["supported"] for item in verdicts):\n', "        if True:\n")
+    ],
+    "check: empty answer counts as checked": [(CHECKER, "        if verdicts and all(", "        if all(")],
+    "check: unclear reply counts as supported": [(CHECKER, '== "yes" if reply else False', '!= "no" if reply else True')],
+    "check: passages without headings": [
+        (CHECKER, 'f"{hit.heading_path}\\n{hit.text}" if hit.heading_path else hit.text', "hit.text")
+    ],
+    "check: abstention keeps citations": [(CHECKER, "            citations=[],\n", "")],
+    "check: no flag on a blocked answer": [(CHECKER, '{*result.flags, "answer_check_failed"}', "{*result.flags}")],
+    "check: unknown method accepted": [(CHECKER, "        if method not in METHODS:\n", "        if False:\n")],
+    "check: pin not checked": [(API, "            if checker is not None:\n                checker.check_pinned()\n", "")],
+    "check: verdict ignored": [
+        (API, "                result, verdicts = checker.review(result, hits)\n", "                _, verdicts = checker.review(result, hits)\n")
+    ],
+    "check: down is not a 503": [(API, "    CheckUnavailable,\n)", ")")],
     # Guardian judge
     "guardian: yes read as grounded": [(JUDGE, 'return 1.0 if word == "no" else 0.0', 'return 1.0 if word == "yes" else 0.0')],
     "guardian: risk not selected": [(JUDGE, '{"role": "system", "content": "groundedness"},', '{"role": "system", "content": "harm"},')],
@@ -582,7 +600,7 @@ def main():
     parser.add_argument("--only", default="", help="run only breaks whose name contains this text")
     args = parser.parse_args()
     selected = {name: edits for name, edits in BREAKS.items() if args.only in name}
-    files = (CHUNKER, EMBEDDER, INDEX, SETTINGS, RETRIEVER, GENERATOR, API, SCORING, VALIDATOR, METRICS, SYSTEMS_FILE, RUN_EVALS, RENDER, JUDGE, CALIBRATE)
+    files = (CHUNKER, EMBEDDER, INDEX, SETTINGS, RETRIEVER, GENERATOR, API, CHECKER, SCORING, VALIDATOR, METRICS, SYSTEMS_FILE, RUN_EVALS, RENDER, JUDGE, CALIBRATE)
     originals = {path: path.read_bytes() for path in files}
     check_breaks_apply(selected, originals)
 

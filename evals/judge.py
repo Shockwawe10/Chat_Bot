@@ -15,11 +15,12 @@ Every judge sees each chunk as the answering model did: its heading, then its te
 
 import asyncio
 import json
-import re
 from string import Template
 
 import httpx
 
+# One sentence split for the judge and the runtime answer check.
+from app.checker import sentences
 from app.embedder import DEFAULT_URL
 from app.settings import ROOT
 
@@ -32,10 +33,6 @@ CLAIM_SCHEMA = {
     "required": ["reason", "supported"],
     "additionalProperties": False,
 }
-SENTENCE_END = re.compile(r"(?<=[.!?])\s+(?=[A-Z0-9\"'(])")
-ABBREVIATIONS = ("ltd.", "e.g.", "i.e.", "etc.", "approx.", "no.")
-
-
 class JudgeUnavailable(RuntimeError):
     pass
 
@@ -57,19 +54,6 @@ def metric_inputs(name, case, scored, contexts):
     if name == "answer_relevancy":
         return {"user_input": case["question"], "response": scored["answer"]}
     return {"user_input": case["question"], "reference": case["expected_answer"], "retrieved_contexts": contexts}
-
-
-def sentences(text):
-    """Split an answer into sentences with plain code, keeping "Ltd." and "e.g." inside one."""
-    parts, current = [], ""
-    for piece in SENTENCE_END.split(" ".join(text.split())):
-        current = f"{current} {piece}" if current else piece
-        if not current.lower().endswith(ABBREVIATIONS):
-            parts.append(current)
-            current = ""
-    if current:
-        parts.append(current)
-    return [part for part in parts if part.strip()]
 
 
 def check_config(env):

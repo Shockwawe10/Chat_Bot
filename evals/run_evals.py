@@ -143,6 +143,8 @@ def build_manifest(run_id, system, args, env, cases_run, drafts, dataset_version
         "chunk_max": cfg.max,
         "chunk_min": cfg.min,
         "top_k": int(env.get("TOP_K") or 5),
+        "answer_check": env.get("ANSWER_CHECK") or "off",
+        "answer_check_model": env.get("ANSWER_CHECK_MODEL") if env.get("ANSWER_CHECK") not in (None, "", "off") else None,
         "index_fingerprint": served.get("index_fingerprint") or (store.fingerprint if store else None),
         "judge_passes": args.judge_passes if args.judge else 0,
         "judge_method": metrics.pop("judge_method", None),

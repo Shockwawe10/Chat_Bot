@@ -9,6 +9,7 @@ from fastapi.testclient import TestClient
 
 from app import api
 from app.api import AskResponse, TraceLog, create_app, create_default_app
+from app.checker import CheckUnavailable, MiniCheck
 from app.chunker import ChunkConfig
 from app.generator import ABSTAIN_SENTENCE, LlmUnavailable, PromptTemplate
 from app.index import KB_DIR, build, read_manifest
@@ -29,9 +30,9 @@ def index_dir(tmp_path_factory):
 def make_client(index_dir, tmp_path):
     clients = []
 
-    def make(llm=None, backend=None, top_k=5):
+    def make(llm=None, backend=None, top_k=5, checker=None):
         make_retriever = lambda: Retriever(index_dir, backend or TopicalBackend(), top_k)
-        app = create_app(make_retriever, llm or FakeLlm(), PROMPT, tmp_path / "traces")
+        app = create_app(make_retriever, llm or FakeLlm(), PROMPT, tmp_path / "traces", checker)
         client = TestClient(app)
         client.__enter__()
         clients.append(client)
@@ -290,6 +291,55 @@ def test_unavailable_service_is_traced(make_client, tmp_path):
     make_client(FakeLlm(error=LlmUnavailable("down"))).post("/ask", json={"question": QUESTION})
     record = traces(tmp_path)[0]
     assert (record["status"], record["error"]) == (503, "down")
+
+
+class FakeChecker(MiniCheck):
+    """The real review, with the sentences in `unsupported` judged unsupported instead of asking Ollama."""
+
+    def __init__(self, unsupported=(), error=None):
+        super().__init__("fake-check:1", "fake-check-digest", client=object())
+        self.unsupported = set(unsupported)
+        self.error = error
+        self.pinned = 0
+
+    def check_pinned(self):
+        self.pinned += 1
+
+    def verdict(self, sentence, passages):
+        if self.error:
+            raise self.error
+        supported = sentence not in self.unsupported
+        return {"sentence": sentence, "supported": supported, "reply": "Yes" if supported else "No"}
+
+
+def test_answer_the_check_rejects_goes_out_as_the_abstention(make_client, tmp_path):
+    llm = FakeLlm(outputs=[output("The warranty is 15 years. It ends on March 2, 2031.")])
+    checker = FakeChecker(unsupported=["It ends on March 2, 2031."])
+    body = make_client(llm, checker=checker).post("/ask", json={"question": QUESTION}).json()
+    assert (body["answer"], body["abstained"], body["citations"]) == (ABSTAIN_SENTENCE, True, [])
+    assert "answer_check_failed" in body["flags"]
+    assert not any(item["cited"] for item in body["retrieved"])
+    record = traces(tmp_path)[0]
+    assert "March 2, 2031" in record["raw_outputs"][0]
+    assert [item["supported"] for item in record["answer_check"]["verdicts"]] == [True, False]
+    assert record["answer_check"]["model"] == "fake-check:1" and record["answer_check"]["ms"] >= 0
+
+
+def test_answer_the_check_supports_goes_out_unchanged(make_client):
+    checker = FakeChecker()
+    body = make_client(checker=checker).post("/ask", json={"question": QUESTION}).json()
+    assert (body["answer"], body["abstained"]) == ("The answer.", False)
+    assert checker.pinned == 1
+
+
+def test_no_check_means_no_check_in_the_trace(make_client, tmp_path):
+    make_client().post("/ask", json={"question": QUESTION})
+    assert "answer_check" not in traces(tmp_path)[0]
+
+
+def test_check_down_is_a_503_not_an_unchecked_answer(make_client):
+    client = make_client(checker=FakeChecker(error=CheckUnavailable("minicheck down")))
+    assert client.post("/ask", json={"question": QUESTION}).status_code == 503
 
 
 def test_trace_keeps_non_ascii_text_readable(tmp_path):
