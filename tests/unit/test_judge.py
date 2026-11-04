@@ -420,7 +420,7 @@ TABLE = f"""{START}
 | Metric | Baseline | Current | Threshold | Gate |
 | --- | --- | --- | --- | --- |
 | Faithfulness | — | — | ≥ 0.90 | PR |
-| Judge agreement / Cohen's κ (vs my labels) | — | — | ≥ 0.85 / ≥ 0.60 | end of stage |
+| Judge agreement / Cohen's κ (vs reference labels) | — | — | ≥ 0.85 / ≥ 0.60 | end of stage |
 
 {END}
 """
@@ -452,12 +452,17 @@ def test_judged_scores_show_after_calibration_passes():
     calibration = {"passed": True, "judge_model": "j:1", "agreement": 0.9, "kappa": 0.72}
     new = render(TABLE, None, judged_report(metrics={"faithfulness": 0.8, "faithfulness_spread": 0.05}), calibration)
     assert "| Faithfulness | — | 0.80 (spread 0.05) |" in new
-    assert "| Judge agreement / Cohen's κ (vs my labels) | — | 0.90 / 0.72 |" in new
+    assert "| Judge agreement / Cohen's κ (vs reference labels) | — | 0.90 / 0.72 |" in new
 
 
 def test_a_failed_calibration_is_still_reported():
     calibration = {"passed": False, "judge_model": "j:1", "agreement": 0.5, "kappa": None}
     assert "| — | 0.50 / undefined |" in render(TABLE, None, judged_report(), calibration)
+
+
+def test_the_agreement_cell_names_who_wrote_the_labels():
+    calibration = {"passed": True, "judge_model": "j:1", "agreement": 0.97, "kappa": 0.78, "labelled_by": "Claude"}
+    assert "| — | 0.97 / 0.78 (labels by Claude) |" in render(TABLE, None, judged_report(), calibration)
 
 
 @pytest.mark.parametrize(

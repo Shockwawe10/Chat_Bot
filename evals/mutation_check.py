@@ -410,6 +410,11 @@ BREAKS = {
     "harness: always-abstain answers": [(SYSTEMS_FILE, '"answer": ABSTAIN_SENTENCE, "abstained": True,', '"answer": ABSTAIN_SENTENCE, "abstained": False,')],
     "harness: drafts are run": [(RUN_EVALS, 'reviewed = [c for c in chosen if c["reviewed_by"] is not None]', "reviewed = chosen")],
     "harness: smoke run updates latest": [(RUN_EVALS, 'full_dev = report["system"] == "pipeline" and report["split"] == "dev" and not report["smoke"]', 'full_dev = report["system"] == "pipeline" and report["split"] == "dev"')],
+    "harness: history appended under an old header": [(RUN_EVALS, "    if header == HISTORY_FIELDS:\n", "    if header is not None:\n")],
+    "harness: missing run file guessed": [
+        (RUN_EVALS, "        if not run_file.exists():\n            raise SystemExit", "        if False:\n            raise SystemExit")
+    ],
+    "render: labeller hidden": [(RENDER, "{'undefined' if kappa is None else f'{kappa:.2f}'}{who}", "{'undefined' if kappa is None else f'{kappa:.2f}'}")],
     "harness: any run can be the baseline": [(RUN_EVALS, "        if not full_dev:\n            raise SystemExit", "        if False:\n            raise SystemExit")],
     "harness: holdout without a flag": [(RUN_EVALS, 'if args.split == "holdout" and not args.allow_holdout:', "if False:")],
     "render: baseline shown as current": [

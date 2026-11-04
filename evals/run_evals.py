@@ -151,6 +151,38 @@ def build_manifest(run_id, system, args, env, cases_run, drafts, dataset_version
     }
 
 
+def history_row(report):
+    row = {**report, **report["metrics"]}
+    return {field: row.get(field) for field in HISTORY_FIELDS}
+
+
+def append_history(report, history_path, runs_dir):
+    """Add one row. If the columns changed since the file was started, rebuild the earlier
+    rows from their run files first: appending under an old header puts values in the
+    wrong columns, which is how the judge fields once landed past the end of the header.
+    """
+    header, run_ids = None, []
+    if history_path.exists():
+        with open(history_path, encoding="utf-8", newline="") as handle:
+            reader = csv.reader(handle)
+            header = next(reader, None)
+            run_ids = [row[0] for row in reader if row]
+    if header == HISTORY_FIELDS:
+        with open(history_path, "a", encoding="utf-8", newline="") as handle:
+            csv.DictWriter(handle, HISTORY_FIELDS).writerow(history_row(report))
+        return
+    earlier = []
+    for run_id in run_ids:
+        run_file = runs_dir / f"{run_id}.json"
+        if not run_file.exists():
+            raise SystemExit(f"{history_path.name} has columns from an older version and no run file for {run_id}")
+        earlier.append(history_row(json.loads(run_file.read_text(encoding="utf-8"))))
+    with open(history_path, "w", encoding="utf-8", newline="") as handle:
+        writer = csv.DictWriter(handle, HISTORY_FIELDS)
+        writer.writeheader()
+        writer.writerows([*earlier, history_row(report)])
+
+
 def write_outputs(report, scored, reports_dir, history_path, record_baseline=False):
     """Write the run file, and for a full dev pipeline run also latest.json and the history row."""
     folder = reports_dir / ("holdout" if report["split"] == "holdout" else "runs")
@@ -160,13 +192,7 @@ def write_outputs(report, scored, reports_dir, history_path, record_baseline=Fal
     full_dev = report["system"] == "pipeline" and report["split"] == "dev" and not report["smoke"]
     if full_dev:
         shutil.copyfile(path, reports_dir / "latest.json")
-        new = not history_path.exists()
-        with open(history_path, "a", encoding="utf-8", newline="") as handle:
-            writer = csv.DictWriter(handle, HISTORY_FIELDS)
-            if new:
-                writer.writeheader()
-            row = {**report, **report["metrics"]}
-            writer.writerow({field: row.get(field) for field in HISTORY_FIELDS})
+        append_history(report, history_path, folder)
     if record_baseline:
         if not full_dev:
             raise SystemExit("only a full dev run of the pipeline can be the recorded baseline")

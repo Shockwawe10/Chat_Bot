@@ -215,6 +215,40 @@ def test_full_dev_pipeline_run_writes_the_run_latest_and_one_history_row(tmp_pat
     assert len(rows) == 2 and rows[0]["hit_rate"] == "0.5"
 
 
+def old_history(tmp_path, run):
+    """A history file started before some columns existed, with one row from a saved run."""
+    write_outputs(run, [], tmp_path, tmp_path / "unused.csv")
+    old_fields = [f for f in run_evals.HISTORY_FIELDS if f not in ("judge_model", "judge_method", "faithfulness")]
+    history = tmp_path / "history.csv"
+    with history.open("w", encoding="utf-8", newline="") as handle:
+        writer = csv.DictWriter(handle, old_fields, extrasaction="ignore")
+        writer.writeheader()
+        writer.writerow(run_evals.history_row(run))
+    return history
+
+
+def test_new_columns_rebuild_the_history_so_every_value_stays_under_its_name(tmp_path):
+    first = {**report(hit_rate=0.5, faithfulness=0.9), "run_id": "first", "judge_model": "j:1"}
+    history = old_history(tmp_path, first)
+    later = {**report(hit_rate=0.7, faithfulness=0.95), "run_id": "later", "judge_model": "j:1"}
+    write_outputs(later, [], tmp_path, history)
+    lines = history.read_text(encoding="utf-8").splitlines()
+    assert lines[0].split(",") == run_evals.HISTORY_FIELDS
+    assert all(len(next(csv.reader([line]))) == len(run_evals.HISTORY_FIELDS) for line in lines)
+    rows = list(csv.DictReader(history.open(encoding="utf-8")))
+    assert [(r["run_id"], r["hit_rate"], r["faithfulness"], r["judge_model"]) for r in rows] == [
+        ("first", "0.5", "0.9", "j:1"),
+        ("later", "0.7", "0.95", "j:1"),
+    ]
+
+
+def test_an_old_history_without_its_run_file_stops_instead_of_guessing(tmp_path):
+    history = old_history(tmp_path, {**report(), "run_id": "gone"})
+    (tmp_path / "runs" / "gone.json").unlink()
+    with pytest.raises(SystemExit, match="no run file for gone"):
+        write_outputs({**report(), "run_id": "next"}, [], tmp_path, history)
+
+
 @pytest.mark.parametrize(
     ("kind", "folder"),
     [({"smoke": True}, "runs"), ({"system": "always-abstain"}, "runs"), ({"split": "holdout"}, "holdout")],

@@ -59,7 +59,8 @@ def agreement(report, calibration):
     if not calibration or calibration.get("judge_model") != report.get("judge_model"):
         return DASH
     kappa = calibration["kappa"]
-    return f"{calibration['agreement']:.2f} / {'undefined' if kappa is None else f'{kappa:.2f}'}"
+    who = f" (labels by {calibration['labelled_by']})" if calibration.get("labelled_by") else ""
+    return f"{calibration['agreement']:.2f} / {'undefined' if kappa is None else f'{kappa:.2f}'}{who}"
 
 
 ROWS = {  # first cell of a README row: how to fill its value cells
@@ -71,7 +72,7 @@ ROWS = {  # first cell of a README row: how to fill its value cells
     "Context recall": ratio("context_recall", judged=True),
     "Refusal accuracy": ratio("refusal_accuracy"),
     "Numeric fidelity": ratio("numeric_fidelity"),
-    "Judge agreement / Cohen's κ (vs my labels)": agreement,
+    "Judge agreement / Cohen's κ (vs reference labels)": agreement,
     "Latency p95, cost per query": latency,
 }
 
