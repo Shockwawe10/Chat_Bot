@@ -83,6 +83,16 @@ Caveat on the reference run, from its manifest only (its scores were not read): 
 
 Rescored on 2026-11-03 with `python -m evals.run_evals --rescore reports/holdout/20261102T111832Z-pipeline-holdout.json --allow-holdout`: every plain-code metric matches the saved run (only that result was read, not the metrics). So the scoring was not broken. The rescore reuses the saved answers and retrieved chunks, so it cannot show whether `app/` was broken when they were produced. The mutation check broke `app/` files early in its run and `evals/` files near the end, which makes a broken `app/` at 11:18 unlikely, but only a new pipeline run on the holdout, at the end of a stage, can settle it.
 
+### 2026-11-04: seven more cases shown, kept as unexposed by the owner
+
+After the holdout confirmation run `20261104T133947Z-pipeline-holdout-questions-v5-top-k-8-check`, the owner read the answered holdout cases g002, g005, g011, g023, g027, g030 and g040. The owner pasted their questions, answers, expected answers and `must_not` lines into a session that works on the pipeline, to have the three cases that code could not decide read. The project rule is to add such ids to `EXPOSED_HOLDOUT`. **The owner decided to keep them as unexposed instead**, so `evals/exposure.py` is unchanged.
+
+What that means for later holdout results:
+
+- The confirmation run and its counts came before the paste, so they are clean.
+- From now on, "unexposed" still counts these 7 cases, but the session that did Stage 3 has seen their text. A later result that rests on these 7 should be read with that in mind.
+- No pipeline change may be justified by results on these 7 cases, the same rule as for the 8 exposed ones.
+
 ## Blind check: how to run it
 
 1. Give the annotator the `data/kb` folder and `evals/annotation/blind_20.csv`, and nothing else. They must not open `golden_dataset.jsonl`.
