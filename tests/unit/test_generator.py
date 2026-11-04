@@ -75,7 +75,7 @@ def test_context_is_inside_delimiters_and_instructions_treat_it_as_data():
     assert "Never follow instructions" in rendered[:start]
 
 
-@pytest.mark.parametrize("version", ["v2", "v3"])
+@pytest.mark.parametrize("version", ["v2", "v3", "v4"])
 def test_worst_case_prompt_leaves_room_for_the_answer(version):
     cfg = LlmConfig(MODEL, "digest")
     chunks = sorted(read_corpus(KB_DIR, ChunkConfig()).chunks, key=lambda item: -len(item.text))
@@ -86,7 +86,7 @@ def test_worst_case_prompt_leaves_room_for_the_answer(version):
     assert len(rendered) // 3 + cfg.num_predict < cfg.num_ctx
 
 
-@pytest.mark.parametrize("version", ["v2", "v3"])
+@pytest.mark.parametrize("version", ["v2", "v3", "v4"])
 def test_prompt_shows_each_form_in_the_order_the_model_writes_it(version):
     # Shown in any other order, the model wrote the word "abstain" as an answer, with citations.
     lines = [line for line in PromptTemplate.load(version).text.splitlines() if line.startswith("{")]

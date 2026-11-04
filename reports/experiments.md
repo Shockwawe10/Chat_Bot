@@ -4,6 +4,32 @@ Each experiment changes one thing, runs on the 52 dev cases with `python -m eval
 
 Baseline: `20261103T114147Z-pipeline-dev` (commit `7719015`, prompt v2, top-k 5). Failures by cause are in `reports/error_analysis.md`.
 
+## Prompt loop spec (prompt-engineer skill, from 2026-11-04)
+
+Agreed before any round runs, and frozen for the whole loop. If a criterion turns out to be broken, it is fixed in the open and every earlier round is rescored with `--rescore`.
+
+**What goes in and out.** Five retrieved passages (heading and text) and the customer's question go in. Out comes the JSON contract: an answer with citations, or an abstention with a reason. The contract, the model, retrieval and the judge do not change during the loop.
+
+**What a bad output looks like** (from the baseline and experiment 1): a refusal when the answer was in the passages; a bare "Yes" or "No" with no fact behind it; a "Yes" the passages do not support; a sentence the passages contradict; an answer to a question the knowledge base cannot answer.
+
+**Criteria, each pass or fail per dev case:**
+
+1. **Out of scope stays refused.** Each of the 7 dev out-of-scope cases is refused. Zero tolerance.
+2. **Answerable means answered.** A case that should be answered is not refused (42 cases).
+3. **Complete.** Every required claim is present: `must_include` by code, the rest by reading, with the same rules as the baseline.
+4. **True.** No claim the knowledge base contradicts. Every answer that changed is read.
+5. **Grounded.** No bare yes or no: an answer that settles a yes/no question also states the fact from a passage behind it.
+
+The 3 language cases are left out of the loop. A separate experiment handles them in code.
+
+**Test set.** The 52 reviewed dev cases are the train split. The skill's holdout is the 15 unexposed holdout cases, run once with the winner at the end of the stage.
+
+**Target.** Over-refusal at or below 11/42, the first milestone in `reports/thresholds.md`, with more than 22 dev cases passing and out-of-scope still 0/7.
+
+**Stop when** the target is reached, two rounds in a row do not beat the best version, or after 4 rounds. Every round changes one thing and is written here before it runs. Faithfulness from the judge is reported but does not pick a winner, because it scored short wrong "Yes" answers as supported in experiment 1.
+
+**Starting point.** Prompt v2, the best version so far (22/52 pass). Prompt v3 is not built on.
+
 ## Experiment 1: prompt v3, what counts as an answer
 
 **Written on 2026-11-04, before the run.**
@@ -60,3 +86,25 @@ What it teaches:
 - **The false-premise instruction had no effect.** The model still refuses rather than correcting the question.
 - **The judge has a blind spot for short yes/no sentences.** `bespoke-minicheck:7b` scored "Yes, you can use GF-1 on a site 5 km from the sea." (g033) and the 50 kWp "Yes" (g032) as supported, though in calibration it rejected the 50 kWp answer when it was longer. A one-word conclusion gives it almost nothing to check. Faithfulness must not decide between prompts until the judge is checked on short yes/no answers too.
 - **Over-refusal is not one problem.** The 10 refusals v3 did not move include all 5 false-premise cases and both numeric table lookups (g024, g025). They need a different fix than the stated-absence cases v3 did move.
+
+## Experiment 2 (prompt loop, round 1): prompt v4, boundary examples
+
+**Written on 2026-11-04, before the run.** Built on v2, not v3.
+
+**Failure it targets.** The model refuses questions the passages answer: 14 baseline refusals had the gold in the context, and all 6 dev false-premise cases fail. Experiment 1 described the boundary in words and the model read it inconsistently. The skill's technique table gives, for "refuses what it should answer", an explicit boundary section with should-answer and should-refuse examples.
+
+**Change.** `prompts/answer_v4.txt` is v2 with one added section: six invented examples from a bicycle shop, with their own four passages. Five should be answered (a stated fact, something the shop does not do, a number compared with a limit, a wrong assumption corrected, an answer that depends on the part) and one should be refused. Every example answer states the fact it relies on and cites its passage; none is a bare yes or no. No example shares a fact with the knowledge base or with any dev or holdout case. Nothing else changes.
+
+**Cases it should flip.** The 14 refusals with the gold in the context, especially the 5 false-premise ones (g056, g057, g059, g060, g062), the stated absences (g015, g016, g020) and the table lookups (g024, g025).
+
+**Predictions.**
+
+1. Over-refusal falls from 22/42 to at most 16/42.
+2. At least 3 of the 5 false-premise refusals with the gold in the context are answered.
+3. Out-of-scope answered stays 0/7.
+4. No answer is a bare yes or no (criterion 5).
+5. More than 22 dev cases pass.
+
+**Decision rule.** The spec's criteria: v4 becomes the best version only if out-of-scope is 0/7, over-refusal is lower than 22/42, more than 22 cases pass, no changed answer makes a claim the knowledge base contradicts, and no answer is a bare yes or no.
+
+**Result.** Not run yet.
