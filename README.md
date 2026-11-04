@@ -722,6 +722,14 @@ So we added a second search that looks for the exact same words, like "kWp" or "
 
 It found the two cards we hoped for. But it lost 7 others, because our practice questions use everyday words ("yearly check-up") where the notebooks use proper ones ("inspection"). Exact-word search finds nothing useful for those, and mixing it in pushed good cards out. Overall the right cards came up for 31 questions instead of 36. We stopped there, without running the full test, because a worse search can't give better answers. The new search stays in the code, switched off.
 
+### Stage 3, part 7: teaching every card how customers ask
+
+Customers and the notebooks use different words, so we let the robot write 5 questions a customer might ask for every card, 455 questions for 91 cards. It only saw the card itself, never our test questions. Now when someone asks "Can you build a 50 kWp system on our office roof?", it's matched against questions like "Can I get a solar system that's under 100 kWp?", and the right card comes first. It's like putting sticky notes on each page of a manual saying what people usually ask about it.
+
+This setup passed 28 of 52 practice questions, against 22 at the start. It wrongly said "I don't know" 13 times instead of 22, and not one answer said anything false. The old setup said one false thing. It's the first setup that beat the old one under all our rules.
+
+There's one more step before it counts: one try on the locked drawer of questions we've never practised on. Practice scores can fool you, and only fresh questions show whether the robot really learned.
+
 ---
 
 ## Findings

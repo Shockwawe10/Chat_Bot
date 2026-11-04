@@ -447,3 +447,45 @@ Against dense at top 8: **gained** g032 (the 100 kWp rule) and g039; **lost** g0
 The noise floor from experiment 6 applies: one case can flip between identical runs.
 
 **Decision rule.** The same as every round: adopted only if out-of-scope is 0/7, over-refusal is lower than 22/42, more than 22 cases pass, no changed answer makes a claim the knowledge base contradicts, and no answer is a bare yes or no. If it is adopted, the whole setup (prompt v5, top-k 8, answer check, example questions) is confirmed once on holdout before it counts, as the Stage 3 exit criteria require.
+
+**Result: adopted on dev; confirmation on holdout still to come.** Run `20261104T131424Z-pipeline-dev-questions-v5-top-k-8-check`, 2026-11-04. The first attempt stopped on g067 when Ollama timed out loading a model ("timed out waiting for llama-server to start"). It wrote no run file, and the identical command was run again. The 14 cases that code cannot decide were read with the baseline rules.
+
+| | Baseline | Experiment 6 | Experiment 8 |
+| --- | --- | --- | --- |
+| Cases that pass | 22/52 | 28/52 | 28/52 |
+| Over-refusal | 22/42 | 13/42 | 13/42 |
+| Out-of-scope answered | 0/7 | 0/7 | 0/7 |
+| Numeric fidelity | 11/22 | 13/22 | 15/22 |
+| Answers with a false claim (loop cases) | 1 (g033) | 1 (g032) | 0 |
+| Every gold group in the context | 31/42 | 36/42 | 37/42 |
+| Latency p95 | 7.0 s | 26.6 s | 25.0 s |
+
+The 28 passes are 21 by code and 7 by reading (g006, g007, g010, g014, g020, g064, g065). Faithfulness is 1.00 on 30 answered, by construction, because the check uses the judge's model.
+
+Predictions:
+
+1. **Held.** Out-of-scope answered stays 0/7.
+2. **Held.** g032: "The company does not work on private homes, and the smallest project it accepts is 100 kWp, so a 50 kWp system is not accepted." The 100 kWp rule is now rank 1.
+3. **Held.** No changed answer makes a claim the knowledge base contradicts. g038 is answered again with what a quote request needs, the wrong-stage list from experiment 5. It fails by code and is not counted as a contradiction, the same reading as in experiments 4 and 5.
+4. **Held.** g043 is refused: the check blocked it again.
+5. **Held.** 28 cases pass.
+6. **Held.** Over-refusal is 13/42.
+7. **Held.** Latency p95 is 25.0 s.
+
+Changes against experiment 6:
+
+- **Gained:** g032, correct now; g009, the waterproofing answer with its 10-year rule, refused in experiment 6.
+- **Lost:** g066 and g067, both "it depends" questions.
+  - g066's gold fell from rank 7 to rank 8. The model listed only 2 of the 6 systems, and the check blocked that answer.
+  - g067's gold fell from rank 1 to rank 6. The model abstained, though its own reason lists every thickness: it read "the coating" as asking for one value. v5's "if no passage decides it, abstain" may push the model this way on "it depends" questions.
+- **Language case g071** is now refused instead of answered with a false "No passage mentions a product guarantee". It still fails, because the reply is not that only English is supported, but it no longer says something false.
+
+Decision rule: all five conditions hold, so this setup becomes the best version: prompt v5, top-k 8, the answer check and example-question retrieval. It does not reach the loop's target of over-refusal at or below 11/42.
+
+**Before it counts,** the Stage 3 exit criteria require one confirmation on holdout. The 15 unexposed holdout cases are reported as counts only, and the 8 exposed cases cannot justify anything. That run is the owner's decision, because holdout is used once.
+
+**What it teaches.**
+
+- **The wording gap was the retrieval problem.** Example questions closed it for g032 and g039 with no time cost per question. Exact-word search (experiment 7) made it worse.
+- **Each layer removed one kind of error.** The prompt cut refusals (experiments 2, 3, 5). More passages and better retrieval brought the missing facts (4, 8). The check blocked the reasoning slips that remained (6). None of them was enough alone.
+- **"It depends" questions are now the weak spot.** g064 passes, but g066 and g067 were lost here, and g065 passes only by reading. That is a prompt question for a later round, not a reason to reject this setup.
