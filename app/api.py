@@ -151,7 +151,7 @@ def create_app(make_retriever, llm, prompt, trace_dir=TRACE_DIR, checker=None):
             retriever = connect()
             vector = retriever.embed_question(question)
             embedded = time.perf_counter()
-            hits = retriever.search(vector)
+            hits = retriever.search(vector, question)
             retrieved = time.perf_counter()
             record["hits"] = [asdict(hit) for hit in hits]
             result = generate(llm, prompt.render(hits, question), len(hits))
@@ -222,8 +222,9 @@ def create_default_app():
     env = read_env()
     backend = OllamaBackend.from_env(env)
     top_k = int(env.get("TOP_K") or DEFAULT_TOP_K)
+    mode = env.get("RETRIEVAL") or "dense"
     return create_app(
-        lambda: Retriever(INDEX_DIR, backend, top_k),
+        lambda: Retriever(INDEX_DIR, backend, top_k, mode),
         OllamaLlm.from_env(env),
         PromptTemplate.load(env.get("PROMPT_VERSION") or "v2"),
         checker=MiniCheck.from_env(env),

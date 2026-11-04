@@ -30,8 +30,8 @@ def index_dir(tmp_path_factory):
 def make_client(index_dir, tmp_path):
     clients = []
 
-    def make(llm=None, backend=None, top_k=5, checker=None):
-        make_retriever = lambda: Retriever(index_dir, backend or TopicalBackend(), top_k)
+    def make(llm=None, backend=None, top_k=5, checker=None, mode="dense"):
+        make_retriever = lambda: Retriever(index_dir, backend or TopicalBackend(), top_k, mode)
         app = create_app(make_retriever, llm or FakeLlm(), PROMPT, tmp_path / "traces", checker)
         client = TestClient(app)
         client.__enter__()
@@ -74,6 +74,12 @@ def test_response_has_exactly_the_agreed_fields(make_client):
     assert set(body["retrieved"][0]) == {"chunk_id", "doc_id", "heading_path", "rank", "score", "cited"}
     assert set(body["timings_ms"]) == {"embed", "retrieve", "generate", "total"}
     assert set(body["versions"]) == {"index_fingerprint", "prompt", "llm_digest"}
+
+
+def test_hybrid_retrieval_gets_the_question_text(make_client, index_dir):
+    body = make_client(mode="hybrid").post("/ask", json={"question": QUESTION}).json()
+    expected = Retriever(index_dir, TopicalBackend(), 5, "hybrid").retrieve(QUESTION)
+    assert [item["chunk_id"] for item in body["retrieved"]] == [hit.chunk_id for hit in expected]
 
 
 def test_citation_number_maps_to_the_chunk_at_that_rank(make_client):
@@ -348,12 +354,12 @@ def test_trace_keeps_non_ascii_text_readable(tmp_path):
     assert "kN/m²" in text
 
 
-def test_default_app_reads_top_k_and_prompt_version(monkeypatch, tmp_path):
+def test_default_app_reads_top_k_retrieval_and_prompt_version(monkeypatch, tmp_path):
     seen = {}
 
     class FakeRetriever:
-        def __init__(self, index_dir, backend, top_k):
-            seen["top_k"] = top_k
+        def __init__(self, index_dir, backend, top_k, mode):
+            seen["top_k"], seen["mode"] = top_k, mode
             raise IndexUnavailable("not needed here")
 
     def fake_prompt(version):
@@ -363,6 +369,7 @@ def test_default_app_reads_top_k_and_prompt_version(monkeypatch, tmp_path):
     monkeypatch.setattr(api, "Retriever", FakeRetriever)
     monkeypatch.setattr(PromptTemplate, "load", staticmethod(fake_prompt))
     monkeypatch.setenv("TOP_K", "3")
+    monkeypatch.setenv("RETRIEVAL", "hybrid")
     monkeypatch.setenv("PROMPT_VERSION", "v9")
     # CI has no .env file, so the pinned models have to come from here.
     monkeypatch.setenv("EMBEDDING_MODEL", "fake:1")
@@ -371,4 +378,4 @@ def test_default_app_reads_top_k_and_prompt_version(monkeypatch, tmp_path):
     monkeypatch.setenv("LLM_DIGEST", "fake-llm-digest")
     with TestClient(create_default_app()):
         pass
-    assert seen == {"top_k": 3, "prompt": "v9"}
+    assert seen == {"top_k": 3, "mode": "hybrid", "prompt": "v9"}

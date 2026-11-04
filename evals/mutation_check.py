@@ -28,6 +28,7 @@ RETRIEVER = ROOT / "app" / "retriever.py"
 GENERATOR = ROOT / "app" / "generator.py"
 API = ROOT / "app" / "api.py"
 CHECKER = ROOT / "app" / "checker.py"
+KEYWORD = ROOT / "app" / "keyword.py"
 SCORING = ROOT / "evals" / "scoring.py"
 VALIDATOR = ROOT / "evals" / "validate_golden.py"
 METRICS = ROOT / "evals" / "metrics.py"
@@ -451,6 +452,22 @@ BREAKS = {
     "minicheck: whole answer in one claim": [
         (JUDGE, "        return MiniCheckJudge(model, url)\n", "        return GuardianJudge(model, url)\n")
     ],
+    # Keyword search and hybrid retrieval (app/keyword.py, RETRIEVAL=hybrid)
+    "hybrid: dense only": [(RETRIEVER, "            return self._hybrid(vector, question)\n", "            pass\n")],
+    "hybrid: keyword ranking ignored": [(RETRIEVER, "fuse(found[\"ids\"][0], self.keyword.ranking(question))", "fuse(found[\"ids\"][0])")],
+    "hybrid: heading not indexed": [(RETRIEVER, "texts = [f\"{meta['heading_path']}\\n{text}\" for", "texts = [text for")],
+    "hybrid: dense pool cut to k": [(RETRIEVER, "            n_results=self.collection.count(),\n", "            n_results=self.top_k,\n")],
+    "hybrid: empty question accepted": [(RETRIEVER, "        if not question.strip():\n", "        if False:\n")],
+    "hybrid: mode not checked": [(RETRIEVER, "        if mode not in MODES:\n", "        if False:\n")],
+    "hybrid: question not passed": [(API, "retriever.search(vector, question)", "retriever.search(vector)")],
+    "hybrid: mode not read": [(API, "Retriever(INDEX_DIR, backend, top_k, mode)", "Retriever(INDEX_DIR, backend, top_k)")],
+    "bm25: idf ignored": [(KEYWORD, "score += self.idf[word] * tf", "score += tf")],
+    "bm25: no length normalisation": [(KEYWORD, "B = 0.75\n", "B = 0.0\n")],
+    "bm25: stopwords kept": [(KEYWORD, "if word not in STOPWORDS]", "if word]")],
+    "bm25: numbers split at the point": [(KEYWORD, 'TOKEN = re.compile(r"[a-z0-9]+(?:[.,][0-9]+)*")', 'TOKEN = re.compile(r"[a-z0-9]+")')],
+    "bm25: worst first": [(KEYWORD, "key=lambda i: -scores[i]", "key=lambda i: scores[i]")],
+    "rrf: ranks from zero": [(KEYWORD, "enumerate(ranking, start=1)", "enumerate(ranking, start=0)")],
+    "rrf: worst first": [(KEYWORD, "key=lambda item: -item[1]", "key=lambda item: item[1]")],
     # Answer check (app/checker.py)
     "check: unsupported answer goes out": [
         (CHECKER, '        if verdicts and all(item["supported"] for item in verdicts):\n', "        if True:\n")
@@ -600,7 +617,7 @@ def main():
     parser.add_argument("--only", default="", help="run only breaks whose name contains this text")
     args = parser.parse_args()
     selected = {name: edits for name, edits in BREAKS.items() if args.only in name}
-    files = (CHUNKER, EMBEDDER, INDEX, SETTINGS, RETRIEVER, GENERATOR, API, CHECKER, SCORING, VALIDATOR, METRICS, SYSTEMS_FILE, RUN_EVALS, RENDER, JUDGE, CALIBRATE)
+    files = (CHUNKER, EMBEDDER, INDEX, SETTINGS, RETRIEVER, GENERATOR, API, CHECKER, KEYWORD, SCORING, VALIDATOR, METRICS, SYSTEMS_FILE, RUN_EVALS, RENDER, JUDGE, CALIBRATE)
     originals = {path: path.read_bytes() for path in files}
     check_breaks_apply(selected, originals)
 
