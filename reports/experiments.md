@@ -107,4 +107,37 @@ What it teaches:
 
 **Decision rule.** The spec's criteria: v4 becomes the best version only if out-of-scope is 0/7, over-refusal is lower than 22/42, more than 22 cases pass, no changed answer makes a claim the knowledge base contradicts, and no answer is a bare yes or no.
 
-**Result.** Not run yet.
+**Result: not adopted, by one condition.** Run `20261104T101804Z-pipeline-dev-prompt-v4`, 2026-11-04. Retrieval was identical to the baseline for all 52 cases. The 15 cases that code cannot decide were read with the baseline rules.
+
+| | Baseline (v2) | v4 |
+| --- | --- | --- |
+| Cases that pass | 22/52 | 27/52 |
+| Over-refusal | 22/42 | 12/42 |
+| Out-of-scope answered | 0/7 | 0/7 |
+| Numeric fidelity | 11/22 | 14/22 |
+| Faithfulness (judge) | 0.95 on 20 answered | 0.78 on 30 answered |
+
+Predictions:
+
+1. **Held.** Over-refusal fell to 12/42, below the predicted 16/42.
+2. **Failed.** 2 of the 5 false-premise refusals with the gold in the context are answered (g060, g062), not 3. Both leave out a required claim; g056, g057 and g059 are still refused.
+3. **Held.** Out-of-scope answered stays 0/7.
+4. **Held.** No answer is a bare yes or no. Every yes or no is followed by a fact, though in g017 and g032 the fact does not support it.
+5. **Held.** 27 cases pass, against 22.
+
+Decision rule: four conditions hold, but changed answers make claims the knowledge base contradicts, so v4 does not become the best version:
+
+- **g017** "Can you just email me a ballpark figure?" is answered "Yes", where the knowledge base says prices are not given by email before an offer.
+- **g032** answers "Yes" to a 50 kWp project. The 100 kWp minimum was not retrieved, so the "Yes" is invented.
+- **g066** says the systems are rated "for maximum categories from C1 to C5". No system is rated C1 or C2, and it does not give the category per system.
+- **g033** still says "Yes" to GF-1 near the sea, as it did in the baseline.
+
+What changed, case by case:
+
+- **Newly passing (7):** g020, g024 and g031 by code; g064 and g067 now give the value per product; g013, g060 and g062 are answered but each leaves out one required claim, so they do not pass. (The count of 27 is 19 code passes and 8 read passes.)
+- **Still refused with the gold in the context:** the false premises g056, g057 and g059, and the table lookup g025.
+- **Lost:** nothing that passed in the baseline fails now, apart from g033, which was already counted as a failure.
+
+**Faithfulness here is mostly a measurement artifact.** v4 answers open with a separate "Yes." or "No." sentence, and the judge checks each sentence alone. A lone "Yes." has nothing to check, so correct answers scored 0.5 (g010, g014, g028, g039). The judge also scored g060 0.0, which needs "March 2026 plus 5 years". It did catch the wrong answers g032 and g033 at 0.0. The judge stays out of the decision, as the spec says.
+
+**What it teaches.** The examples work: refusals halved and nothing that passed broke. But every example answer opens with "No." or "Yes", and the model copies the opening before it has a fact for it: g017 and g032 start with "Yes." and then add an unrelated sentence. The next round should make the fact come first and the yes or no follow from it.
