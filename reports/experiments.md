@@ -279,3 +279,42 @@ Other changes against the baseline: g060 is answered instead of refused (5 years
 7. **Expected to fail the rule:** g031 is still missing a gold group at top-k 8, so v5's false conclusion there ("so GF-1 can handle it") probably stays. If it does, this combination is not adopted either.
 
 **Decision rule.** The same as every round: adopted only if out-of-scope is 0/7, over-refusal is lower than 22/42, more than 22 cases pass, no changed answer makes a claim the knowledge base contradicts, and no answer is a bare yes or no. Changed answers are read against the baseline, v5 and top-k 8.
+
+**Result: the best numbers so far, not adopted.** Run `20261104T110342Z-pipeline-dev-prompt-v5-top-k-8`, 2026-11-04. Retrieval was identical to experiment 4 for all 52 cases, so every difference from it comes from the prompt. The 16 cases that code cannot decide were read with the baseline rules, and so was g043, which code passes. During the run `ollama ps` showed `qwen3:4b-instruct` at 34%/66% CPU/GPU, 4096 context.
+
+| | Baseline | v5, top-k 5 | v2, top-k 8 | v5, top-k 8 |
+| --- | --- | --- | --- | --- |
+| Cases that pass | 22/52 | 25/52 | 23/52 | 28/52 |
+| Over-refusal | 22/42 | 11/42 | 21/42 | 11/42 |
+| Out-of-scope answered | 0/7 | 0/7 | 0/7 | 0/7 |
+| Numeric fidelity | 11/22 | 12/22 | 11/22 | 15/22 |
+| Faithfulness (judge) | 0.95 on 20 answered | 0.94 on 31 | 0.90 on 22 | 0.90 on 33 |
+| Latency p95 | 7.0 s | 6.0 s | 6.1 s | 7.7 s |
+
+The 28 passes are 19 by code and 9 by reading (g006, g007, g010, g014, g020, g064, g065, g066, g067). Code also passes g043, but the reading fails it (below). The 7 read failures are incomplete answers: g013, g016, g039, g042, g060, g062 and g068.
+
+Predictions:
+
+1. **Held.** Out-of-scope answered stays 0/7.
+2. **Held.** Over-refusal is 11/42.
+3. **Held.** g066 gives the category of all six systems.
+4. **Held.** g043 and g068 are answered; g063 is still refused.
+5. **Held.** 28 cases pass.
+6. **Held.** No answer opens with a separate yes or no sentence. g010 starts "Yes, maintenance is offered…", one sentence with the fact in it.
+7. **Wrong, in a good way.** g031 is now right: "GF-1 has a maximum snow load of 2.4 kN/m², and 3.0 kN/m² exceeds this, so GF-1 cannot handle it." One of its gold groups is still not retrieved, but the passage the model needed now is.
+
+Decision rule: out-of-scope, over-refusal, the pass count and the bare yes/no condition hold. The "true" condition fails on three changed answers:
+
+- **g032** "…so it can design and install a system on an office roof", given to "Can you build a 50 kWp system?". The 100 kWp minimum is not retrieved, so the answer amounts to a yes the knowledge base contradicts. v5 at top-k 5 gave a softer version ("can design a system for a flat roof"), which experiment 3 did not count as a false claim. Read strictly, it was one too. That does not change experiment 3's outcome.
+- **g043** says "The roof slope of 7 degrees is within the maximum roof slope of 5°", then correctly concludes that neither RF-1 nor RF-2 fits. The conclusion is right, but the sentence states something false, so the case fails.
+- **g060** says the warranty ends "March 2, 2031". The question gives only "March 2026", so the day is invented. The prompt rule against invented deadlines did not stop it.
+
+Outside the loop's criteria, the language case **g071** (German) is now answered "No passage mentions a product guarantee", which is false: the product warranty is 15 years. The language cases are handled by a separate experiment in code. This answer is reported because a customer would see it.
+
+**False claims, counted the same way across runs.** Answered cases with a claim the knowledge base contradicts or an invented detail: baseline 1 (g033), v5 at top-k 5 3 (g031, g032, g066), v2 at top-k 8 1 (g033), v5 at top-k 8 3 (g032, g043, g060), plus g071 outside the loop.
+
+**What it teaches.**
+
+- **The two changes add up.** Over-refusal stays at v5's 11/42. Passes rise to 28, and numeric fidelity to 15/22, the best of any run. The extra passages fixed v5's two false claims that came from missing context (g031, g066).
+- **What is left is reasoning, not retrieval or refusal.** g043 compares 7 with 5 the wrong way round and g060 invents a day. A 4B model makes slips like these, and prompt wording has not removed them. g032 needs a passage the retriever does not find even at 8.
+- **The "no false claim" rule is doing its job.** By count, v5 with top-k 8 is clearly ahead. But it shows customers 3 wrong answers where the baseline shows 1, and the rule written before the runs says that is not acceptable. Getting the numbers without the false claims needs a check on the answer itself, not another prompt.

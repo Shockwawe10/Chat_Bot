@@ -696,6 +696,14 @@ The search really did get better. The robot now had every card it needed for 36 
 
 The useful part is what the two experiments show together. The new instructions from part 2 cured the shyness. More cards cured one of their false answers, because the missing card was now found. The next test is to try both at once.
 
+### Stage 3, part 4: both fixes together
+
+So we gave the robot the new instructions and 8 cards at the same time. This was the best score so far: 28 questions passed instead of 22, and it said "I don't know" wrongly only 11 times instead of 22. It even fixed the snow question it got wrong before, because now it had the right card.
+
+But it still said 3 wrong things. It told someone it could build a solar system that's too small for the company to take on, because the card with the size rule was never found. It said 7 degrees is "within" a limit of 5 degrees, even though its conclusion was right. And it made up a day of the month for a date nobody gave it. The old setup says only 1 wrong thing. Our rule says a change can't add false answers, so we kept the old setup for now.
+
+It's like a student who answers many more questions but makes more careless mistakes. You don't hand in that test until someone checks the answers. So the next step is a checker that reads each answer before the customer sees it.
+
 ---
 
 ## Findings
