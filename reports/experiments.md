@@ -318,3 +318,28 @@ Outside the loop's criteria, the language case **g071** (German) is now answered
 - **The two changes add up.** Over-refusal stays at v5's 11/42. Passes rise to 28, and numeric fidelity to 15/22, the best of any run. The extra passages fixed v5's two false claims that came from missing context (g031, g066).
 - **What is left is reasoning, not retrieval or refusal.** g043 compares 7 with 5 the wrong way round and g060 invents a day. A 4B model makes slips like these, and prompt wording has not removed them. g032 needs a passage the retriever does not find even at 8.
 - **The "no false claim" rule is doing its job.** By count, v5 with top-k 8 is clearly ahead. But it shows customers 3 wrong answers where the baseline shows 1, and the rule written before the runs says that is not acceptable. Getting the numbers without the false claims needs a check on the answer itself, not another prompt.
+
+## Experiment 6: prompt v5, top-k 8 and an answer check
+
+**Written on 2026-11-04, before the run.** The owner asked for this after experiment 5.
+
+**Why.** Experiment 5 had the best numbers but 3 false claims. Two of them (g043, g060) were scored 0.0 by `bespoke-minicheck:7b` as the judge, so a check with the same model before the reply goes out should stop them.
+
+**Change.** `app/checker.py`, a new step after generation, off by default (`ANSWER_CHECK=off`). With `ANSWER_CHECK=minicheck`, the pinned `bespoke-minicheck:7b` reads each sentence of the answer against all retrieved passages (heading and text), with the model card's prompt. If any sentence gets anything but a clear "Yes", the reply becomes the fixed abstention with the flag `answer_check_failed`. The model's own answer and each sentence's verdict go to the trace. The check can only take answers away. If it cannot run, the reply is a 503, never an unchecked answer. The judge uses the same sentence split, now imported from `app/checker.py`. 13 new mutation-check breaks are all caught by the tests.
+
+Prompt v5 and top-k 8 as in experiment 5. Everything else is fixed.
+
+**This run is almost predictable.** The check uses the same model, prompt, passages and sentence split as the judge did in experiment 5, at temperature 0. If generation repeats experiment 5's answers, the check blocks exactly the answers the judge scored below 1.0: g038, g043 and g060. Code fails g038 and the reading fails g043 and g060, so no pass is lost. The run tests whether the check works in the pipeline, and what it costs in time.
+
+**The judge cannot count here.** The judge and the check are the same model, so faithfulness on the answers that get through is close to 1.0 by construction. It is reported and ignored.
+
+**Predictions.**
+
+1. Out-of-scope answered stays 0/7.
+2. g043 and g060 become abstentions flagged `answer_check_failed`, and so does g038.
+3. Passes stay at 28/52.
+4. Over-refusal rises from 11/42 to 14/42, the three blocked answers.
+5. **Expected to fail the rule:** g032 ("…so it can design and install a system on an office roof") got 1.0 from the judge, so the check lets it through, and it still contradicts the 100 kWp minimum.
+6. Latency p95 rises well above experiment 5's 7.7 s. On a 4 GB GPU both models cannot stay loaded, so each answer swaps them. A live test call took 18 s in total, 9.9 s of it for the check.
+
+**Decision rule.** The same as every round: adopted only if out-of-scope is 0/7, over-refusal is lower than 22/42, more than 22 cases pass, no changed answer makes a claim the knowledge base contradicts, and no answer is a bare yes or no. Latency has no threshold in `reports/thresholds.md`, so it is reported and does not decide.
