@@ -29,6 +29,7 @@ GENERATOR = ROOT / "app" / "generator.py"
 API = ROOT / "app" / "api.py"
 CHECKER = ROOT / "app" / "checker.py"
 KEYWORD = ROOT / "app" / "keyword.py"
+QUESTIONS = ROOT / "app" / "questions.py"
 SCORING = ROOT / "evals" / "scoring.py"
 VALIDATOR = ROOT / "evals" / "validate_golden.py"
 METRICS = ROOT / "evals" / "metrics.py"
@@ -468,6 +469,17 @@ BREAKS = {
     "bm25: worst first": [(KEYWORD, "key=lambda i: -scores[i]", "key=lambda i: scores[i]")],
     "rrf: ranks from zero": [(KEYWORD, "enumerate(ranking, start=1)", "enumerate(ranking, start=0)")],
     "rrf: worst first": [(KEYWORD, "key=lambda item: -item[1]", "key=lambda item: item[1]")],
+    # Example questions per chunk (app/questions.py, RETRIEVAL=questions)
+    "questions: mode never used": [(RETRIEVER, "        if self.question_owners is not None:\n            return self._with_questions(vector)\n", "")],
+    "questions: question score ignored": [(RETRIEVER, "            best[owner] = max(best[owner], float(similarity))\n", "            pass\n")],
+    "questions: worst of chunk and question": [(RETRIEVER, "best[owner] = max(best[owner], float(similarity))", "best[owner] = min(best[owner], float(similarity))")],
+    "questions: embedded as documents": [(RETRIEVER, "self.embedder.embed_queries([q for", "self.embedder.embed_documents([q for")],
+    "questions: vectors not normalised": [(RETRIEVER, "self.question_vectors = vectors / np.linalg.norm(vectors, axis=1, keepdims=True)", "self.question_vectors = vectors * 2")],
+    "questions: worst first": [(RETRIEVER, "key=lambda chunk_id: -best[chunk_id]", "key=lambda chunk_id: best[chunk_id]")],
+    "questions: stale file accepted": [(QUESTIONS, 'if entry is None or entry["chunk_sha256"] != chunk_hash(meta["heading_path"], text):', "if entry is None:")],
+    "questions: heading left out of the prompt": [(QUESTIONS, 'substitute(passage=f"{heading_path}\\n{_clean(text)}")', "substitute(passage=_clean(text))")],
+    "questions: duplicates kept": [(QUESTIONS, "return list(dict.fromkeys(question.strip()", "return list((question.strip()")],
+    "questions: sampled, not temperature 0": [(QUESTIONS, '"options": {"temperature": 0, "seed"', '"options": {"temperature": 0.8, "seed"')],
     # Answer check (app/checker.py)
     "check: unsupported answer goes out": [
         (CHECKER, '        if verdicts and all(item["supported"] for item in verdicts):\n', "        if True:\n")
@@ -617,7 +629,7 @@ def main():
     parser.add_argument("--only", default="", help="run only breaks whose name contains this text")
     args = parser.parse_args()
     selected = {name: edits for name, edits in BREAKS.items() if args.only in name}
-    files = (CHUNKER, EMBEDDER, INDEX, SETTINGS, RETRIEVER, GENERATOR, API, CHECKER, KEYWORD, SCORING, VALIDATOR, METRICS, SYSTEMS_FILE, RUN_EVALS, RENDER, JUDGE, CALIBRATE)
+    files = (CHUNKER, EMBEDDER, INDEX, SETTINGS, RETRIEVER, GENERATOR, API, CHECKER, KEYWORD, QUESTIONS, SCORING, VALIDATOR, METRICS, SYSTEMS_FILE, RUN_EVALS, RENDER, JUDGE, CALIBRATE)
     originals = {path: path.read_bytes() for path in files}
     check_breaks_apply(selected, originals)
 
