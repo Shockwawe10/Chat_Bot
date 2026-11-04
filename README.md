@@ -730,6 +730,14 @@ This setup passed 28 of 52 practice questions, against 22 at the start. It wrong
 
 There's one more step before it counts: one try on the locked drawer of questions we've never practised on. Practice scores can fool you, and only fresh questions show whether the robot really learned.
 
+### Stage 3, part 8: the test with the locked drawer
+
+We opened the locked drawer once and let the new setup answer 23 questions it had never practised on. Before opening it, we wrote down what had to happen. We could only look at the scores, never the questions themselves, so the drawer stays useful for later.
+
+It passed. On the 15 drawer questions nobody had ever seen, it wrongly said "I don't know" 5 times out of 12 instead of 8. It still never answered a question it shouldn't, and it got one more right by our automatic checks. So the biggest win, the robot no longer being so shy, also shows up on brand-new questions.
+
+There are two catches. Some wins are only one question, which could be luck. And 3 of its new answers need a person to read them before we know they're right, because our automatic checks can't decide them and we aren't allowed to peek.
+
 ---
 
 ## Findings

@@ -516,3 +516,31 @@ Decision rule: all five conditions hold, so this setup becomes the best version:
 5. More cases pass by code than the baseline's 7 (all) and 5 (unexposed).
 
 **Confirmation rule.** The setup is confirmed if, on the 15 unexposed cases, out-of-scope answered is 0, over-refusal is lower than 8/12, and code passes are not lower than 5. With 15 cases, a difference of one or two is within noise. If the unexposed gain is much smaller than on dev, that is reported as a sign of tuning to the dev set, not explained away.
+
+**Result: confirmed.** Run `20261104T133947Z-pipeline-holdout-questions-v5-top-k-8-check`, 2026-11-04, run once. Only the counts below were read; no holdout question or answer reached the session.
+
+| | Baseline, all 23 | Exp. 8, all 23 | Baseline, unexposed 15 | Exp. 8, unexposed 15 |
+| --- | --- | --- | --- | --- |
+| Every gold group retrieved | 12/18 | 13/18 | 7/12 | 8/12 |
+| Over-refused | 12/18 | 8/18 | 8/12 | 5/12 |
+| Out-of-scope answered | 0/3 | 0/3 | 0/2 | 0/2 |
+| Required facts present | 4/10 | 5/10 | 3/7 | 4/7 |
+| Behaviour passed by code | 7 | 8 | 5 | 6 |
+| Left for reading (not read) | 2 | 5 | 1 | 3 |
+
+Predictions:
+
+1. **Held.** Out-of-scope answered is 0/3 and 0/2.
+2. **Held.** Over-refusal is 8/18 (at most 8 predicted) and 5/12 on the unexposed cases (below 8).
+3. **Held.** Every gold group is retrieved in 13/18 and 8/12.
+4. **Held.** Required facts are present in 5/10 and 4/7.
+5. **Held.** 8 cases pass by code (7 before), 6 of the unexposed (5 before).
+
+Confirmation rule: on the 15 unexposed cases, out-of-scope is 0, over-refusal is lower (5/12 against 8/12), and code passes are not lower (6 against 5). **Experiment 8's setup is confirmed** and becomes the Stage 3 result.
+
+**How strong the evidence is.**
+
+- **The clear gain is in refusals.** 3 fewer wrong refusals among the 12 answerable unexposed cases, 4 fewer among all 18. The dev set showed the same thing, 22/42 down to 13/42.
+- **The other gains are one case each.** Retrieval, required facts and code passes each rose by one, which is within noise at this size. They point the same way as on dev, but they do not prove it.
+- **More answers wait for reading.** 5 instead of 2 on all cases, 3 instead of 1 on the unexposed. Answering more questions means more answers that code cannot decide. Whether they are right, and whether any says something false, is unknown until someone reads them. That needs the owner, because the session may not read holdout cases.
+- **The cost is time.** p95 is 24.3 s, against 5.9 s for the baseline holdout run, mostly from the answer check swapping models on a 4 GB GPU.
