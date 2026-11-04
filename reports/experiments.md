@@ -141,3 +141,21 @@ What changed, case by case:
 **Faithfulness here is mostly a measurement artifact.** v4 answers open with a separate "Yes." or "No." sentence, and the judge checks each sentence alone. A lone "Yes." has nothing to check, so correct answers scored 0.5 (g010, g014, g028, g039). The judge also scored g060 0.0, which needs "March 2026 plus 5 years". It did catch the wrong answers g032 and g033 at 0.0. The judge stays out of the decision, as the spec says.
 
 **What it teaches.** The examples work: refusals halved and nothing that passed broke. But every example answer opens with "No." or "Yes", and the model copies the opening before it has a fact for it: g017 and g032 start with "Yes." and then add an unrelated sentence. The next round should make the fact come first and the yes or no follow from it.
+
+## Experiment 3 (prompt loop, round 2): prompt v5, fact first
+
+**Written on 2026-11-04, before the run.** Built on v4. The best version is still v2 (22/52), because v4 was not adopted.
+
+**Failure it targets.** Yes or no answers with no passage behind them. In v4 the model copied the examples' "Yes." and "No." openings before it had a fact: g017 says "Yes" to a ballpark price by email, g032 says "Yes" to a 50 kWp project, and g033 says "Yes" to GF-1 near the sea. g066 makes a false claim too ("C1 to C5"), but it is not a yes/no question, so this round may not reach it.
+
+**Change.** One technique, grounding. `prompts/answer_v5.txt` is v4 with the four example answers that opened with "No." or "Not always." rewritten so the fact comes first and the conclusion follows from it, and one added rule: "State the fact from the passage first. Give a yes or no only when a passage decides it; if no passage decides it, abstain." The passages, questions, citations and the abstain example are unchanged, and so is everything else.
+
+**Predictions.**
+
+1. Out-of-scope answered stays 0/7.
+2. At least 2 of g017, g032 and g033 no longer give a yes or no the passages do not support (they state the right fact or abstain).
+3. No answer opens with a separate "Yes." or "No." sentence.
+4. Over-refusal stays at or below 12/42. The new "abstain" clause could push it up; if it does, that is reported as it is.
+5. At least 27 dev cases pass, and none of v4's newly passing cases (g020, g024, g031, g064, g067) is lost.
+
+**Decision rule.** The same as round 1: v5 becomes the best version only if out-of-scope is 0/7, over-refusal is lower than 22/42, more than 22 cases pass, no changed answer makes a claim the knowledge base contradicts, and no answer is a bare yes or no. Changed answers are read against both the baseline and v4.
