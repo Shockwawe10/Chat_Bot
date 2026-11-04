@@ -544,3 +544,17 @@ Confirmation rule: on the 15 unexposed cases, out-of-scope is 0, over-refusal is
 - **The other gains are one case each.** Retrieval, required facts and code passes each rose by one, which is within noise at this size. They point the same way as on dev, but they do not prove it.
 - **More answers wait for reading.** 5 instead of 2 on all cases, 3 instead of 1 on the unexposed. Answering more questions means more answers that code cannot decide. Whether they are right, and whether any says something false, is unknown until someone reads them. That needs the owner, because the session may not read holdout cases.
 - **The cost is time.** p95 is 24.3 s, against 5.9 s for the baseline holdout run, mostly from the answer check swapping models on a 4 GB GPU.
+
+**Owner's reading (2026-11-04).** The owner read the answered holdout cases g002, g005, g011, g023, g027, g030 and g040 from the run file, and gave these verdicts:
+
+- **No false claims** in any of the 7.
+- **g005: pass. g011: pass. g040: fail** (incomplete).
+
+These were the 3 unexposed cases the code left for reading, so every unexposed case is now decided:
+
+| Unexposed 15 | Baseline | Experiment 8 |
+| --- | --- | --- |
+| Pass | 5 by code, 1 not read | 8 (6 by code, 2 by reading) |
+| Answers with a false claim | not read | 0 among the 7 answered |
+
+On all 23 cases, 10 pass (8 by code, 2 by reading), and 2 exposed cases are still unread. The "no false claim" condition, which could not be checked in the session, holds on the unexposed answered cases.
