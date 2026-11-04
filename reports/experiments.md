@@ -223,3 +223,39 @@ What changed against v4:
 6. Latency p95 rises, reported against the baseline's 7.0 s.
 
 **Decision rule.** Top-k 8 becomes the default only if out-of-scope is 0/7, more than 22 cases pass, over-refusal is not higher than 22/42, no changed answer makes a claim the knowledge base contradicts, and no answer is a bare yes or no. The retrieval metrics alone cannot adopt it. Combining top-k 8 with the v4 or v5 prompt would be a separate experiment, written down before it runs.
+
+**Result: not adopted, by the letter of the rule; in substance the gain is one case.** Run `20261104T105211Z-pipeline-dev-top-k-8`, 2026-11-04. The 9 cases that code cannot decide were read with the baseline rules. Five of them gave the same answers as the baseline, so they keep its reading.
+
+| | Baseline (top-k 5) | Top-k 8 |
+| --- | --- | --- |
+| First gold group in the context | 35/42 | 39/42 |
+| Every gold group in the context | 31/42 | 36/42 |
+| Cases that pass | 22/52 | 23/52 |
+| Over-refusal | 22/42 | 21/42 |
+| Out-of-scope answered | 0/7 | 0/7 |
+| Numeric fidelity | 11/22 | 11/22 |
+| Faithfulness (judge) | 0.95 on 20 answered | 0.90 on 22 answered |
+| Latency p95 | 7.0 s | 6.1 s |
+
+The 23 passes are 17 by code and 6 by reading (g006, g007, g010, g014, g065, g066).
+
+Predictions:
+
+1. **Held.** Every gold group is in the context for 36/42 cases and the first group for 39/42.
+2. **Held.** 5 of the 11 retrieval failures now have all their gold in the context: g063, g066 and g068 (first gold at rank 6 or 7), g042 (rank 8) and g043. g017, g032, g031, g041, g038 and g039 are still missing gold.
+3. **Failed.** 1 of the 11 passes: g066 now gives the category of all six systems. g063, g068 and g043 are refused with every gold group in front of the model, and g042 is still incomplete.
+4. **Held.** Out-of-scope answered stays 0/7.
+5. **Held.** Over-refusal is 21/42.
+6. **Failed.** Latency p95 fell to 6.1 s instead of rising. A single run cannot show why, so this is reported, not explained.
+
+Decision rule: out-of-scope, over-refusal and the pass count hold (23 against 22). The rule fails on one changed answer that the knowledge base contradicts:
+
+- **g033** is reworded but still says "Yes, you can use GF-1 on a site 5 km from the sea". It now also drops "C5", so code fails it too. The baseline gave the same false "Yes", so top-k 8 did not create this claim. But the rule was written about changed answers, and it is applied as written.
+
+Other changes against the baseline: g060 is answered instead of refused (5 years, March 2031) but does not correct the 15-year premise, so it is incomplete. g064 lists four products instead of five, still incomplete. g039 is now refused; it was incomplete before. g038 now lists what a quote request needs instead of what has to be ready before the build, a wrong-stage answer like the baseline's. Both fail.
+
+**What it teaches.**
+
+- **More passages fix retrieval, but v2 does not use them.** Gold reached the context in 5 more cases, and 3 of them are still refused. That is the generation problem from the error analysis, and the prompt loop worked on exactly that: v4 and v5 cut over-refusal to 12/42 and 11/42.
+- **Top-k 8 removes one of v5's two false claims.** v5 said "C1 to C5" on g066 because the category table was not retrieved. At top-k 8 it is (rank 7), and v2 reads it correctly. g031, v5's other false claim, is still missing a gold group at top-k 8.
+- **A one-case gain is not evidence.** 23 against 22 is within the churn the prompt rounds showed, so even without g033 it would not be a reason to change the default.

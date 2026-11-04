@@ -688,6 +688,14 @@ Try 2 rewrote the examples so the fact comes first and the "yes" or "no" comes a
 
 A version that says false things can't win, however many questions it passes, so neither try replaced the old instructions, and the stop rule ended the tries. We learned that sounding sure isn't the same as being right. Two of the three questions still answered wrongly fail because the robot never found the right card, so the next fix is in how it searches, not in what it's told.
 
+### Stage 3, part 3: giving the robot more cards
+
+Before answering, the robot picks the 5 notebook cards that look closest to the question. This time we let it pick 8, with the old instructions, so only one thing changed. It's like letting a student take 8 pages of notes into a test instead of 5.
+
+The search really did get better. The robot now had every card it needed for 36 of the 42 answerable questions instead of 31. But it passed only 23 questions instead of 22. For 3 questions it had all the right cards and still said "I don't know", because the old instructions make it shy. One wrong answer it already gave before, a "Yes" about using a frame near the sea, was still there in new words. Our rule says a changed answer can't be false, so 8 cards didn't become the new default.
+
+The useful part is what the two experiments show together. The new instructions from part 2 cured the shyness. More cards cured one of their false answers, because the missing card was now found. The next test is to try both at once.
+
 ---
 
 ## Findings
