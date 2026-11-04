@@ -8,7 +8,9 @@ Compute every count or chunk claim in LEARNING_LOG.md, the README or a report fr
 
 Before trusting an eval scorer or CI gate, run it on the fixed refusal sentence, a near-value wrong answer (such as 15 years for 5 years), known-correct answers from a saved pipeline run, and the always-abstain and always-answer reference systems.
 
-Put any Python longer than about 15 lines, or with nested quotes, in a scratchpad .py file written with the Write tool. Never run it through a bash heredoc.
+Put any Python longer than about 15 lines, or with nested quotes, in a scratchpad .py file written with the Write tool. Never run it through a bash heredoc. The hook .claude/hooks/block_inline_python.py blocks heredoc Python and any python -c longer than 300 characters or spanning lines.
+
+For a retrieval change, measure gold ranks on dev first, without generating answers, and commit its predictions to reports/experiments.md before that measurement too. A measuring script calls retriever.retrieve(question), never search(vector).
 
 python -m evals.mutation_check breaks a temporary copy of the project, never the real files. Keep it that way: when it edited the real files, a commit made during a run captured a broken app/embedder.py.
 
