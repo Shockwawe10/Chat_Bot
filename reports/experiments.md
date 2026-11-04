@@ -489,3 +489,30 @@ Decision rule: all five conditions hold, so this setup becomes the best version:
 - **The wording gap was the retrieval problem.** Example questions closed it for g032 and g039 with no time cost per question. Exact-word search (experiment 7) made it worse.
 - **Each layer removed one kind of error.** The prompt cut refusals (experiments 2, 3, 5). More passages and better retrieval brought the missing facts (4, 8). The check blocked the reasoning slips that remained (6). None of them was enough alone.
 - **"It depends" questions are now the weak spot.** g064 passes, but g066 and g067 were lost here, and g065 passes only by reading. That is a prompt question for a later round, not a reason to reject this setup.
+
+
+## Holdout confirmation of experiment 8
+
+**Written on 2026-11-04, before the run.** The owner approved one holdout run of the adopted setup: prompt v5, top-k 8, answer check, `RETRIEVAL=questions`. It runs once. Its result is reported whether it confirms the setup or not, and nothing is tuned on it afterwards.
+
+**What can be measured.** Holdout answers are not read in the session (CLAUDE.md). So only code-decided counts are used, on all 23 cases and on the 15 unexposed ones. The 8 exposed cases (`evals/exposure.py`) count in "all" but cannot justify anything. The judge is not run: the answer check uses the judge's model, so its faithfulness would be 1.00 by construction. **The "no false claim" condition therefore cannot be confirmed here.** Only someone reading the answered holdout cases can confirm it, and that is left to the owner.
+
+**Reference.** The baseline holdout run `20261102T111832Z-pipeline-holdout` (prompt v2, top-k 5, dense, no check), rescored today with the current scorer. Every plain-code metric matches the saved run.
+
+| | All 23 | Unexposed 15 |
+| --- | --- | --- |
+| Every gold group retrieved | 12/18 | 7/12 |
+| Over-refused | 12/18 | 8/12 |
+| Out-of-scope answered | 0/3 | 0/2 |
+| Required facts present | 4/10 | 3/7 |
+| Behaviour passed by code | 7 | 5 |
+
+**Predictions.**
+
+1. Out-of-scope answered stays 0/3 (all) and 0/2 (unexposed).
+2. Over-refusal falls: at most 8/18 on all, and below 8/12 on the unexposed cases.
+3. Every gold group is retrieved in more than 12/18 (all) and more than 7/12 (unexposed).
+4. Required facts are present in more than 4/10 (all) and more than 3/7 (unexposed).
+5. More cases pass by code than the baseline's 7 (all) and 5 (unexposed).
+
+**Confirmation rule.** The setup is confirmed if, on the 15 unexposed cases, out-of-scope answered is 0, over-refusal is lower than 8/12, and code passes are not lower than 5. With 15 cases, a difference of one or two is within noise. If the unexposed gain is much smaller than on dev, that is reported as a sign of tuning to the dev set, not explained away.
