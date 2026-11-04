@@ -159,3 +159,46 @@ What changed, case by case:
 5. At least 27 dev cases pass, and none of v4's newly passing cases (g020, g024, g031, g064, g067) is lost.
 
 **Decision rule.** The same as round 1: v5 becomes the best version only if out-of-scope is 0/7, over-refusal is lower than 22/42, more than 22 cases pass, no changed answer makes a claim the knowledge base contradicts, and no answer is a bare yes or no. Changed answers are read against both the baseline and v4.
+
+**Result: not adopted, by the same condition as v4.** Run `20261104T102633Z-pipeline-dev-prompt-v5`, 2026-11-04. Retrieval was identical to the baseline for all 52 cases. The 17 cases that code cannot decide were read with the baseline rules. An answer identical to v4's keeps v4's reading, and g016's answer is word for word the one experiment 1 read as incomplete.
+
+| | Baseline (v2) | v4 | v5 |
+| --- | --- | --- | --- |
+| Cases that pass | 22/52 | 27/52 | 25/52 |
+| Over-refusal | 22/42 | 12/42 | 11/42 |
+| Out-of-scope answered | 0/7 | 0/7 | 0/7 |
+| Numeric fidelity | 11/22 | 14/22 | 12/22 |
+| Answers opening with a separate yes or no | 0 | 11 | 0 |
+| Faithfulness (judge) | 0.95 on 20 answered | 0.78 on 30 answered | 0.94 on 31 answered |
+
+The 25 passes are 17 by code and 8 by reading (g006, g007, g010, g014, g020, g064, g065, g067). g062 is the closest call. It now says the price cannot be held for two months but still leaves out that the offer is recalculated after 30 days, so it stays incomplete as in v4. Counting it would give 26.
+
+Predictions:
+
+1. **Held.** Out-of-scope answered stays 0/7.
+2. **Held, narrowly.** g033 now gives the right fact and the right conclusion: GF-1 is not used in C5, within 10 km of the sea. g017 drops the "Yes" but still does not say that prices are not given by email. g032 drops the "Yes" but still suggests a flat-roof system can be designed, without the 100 kWp minimum, which was not retrieved.
+3. **Held.** No answer opens with a separate yes or no sentence (11 did in v4).
+4. **Held.** Over-refusal is 11/42.
+5. **Failed.** 25 cases pass, not 27, and two of v4's newly passing cases are lost: g024 is refused again, and g031 now reaches the wrong conclusion.
+
+Decision rule: out-of-scope, over-refusal, the pass count and the bare yes/no condition hold. The "true" condition fails:
+
+- **g031** (snow load 3.0 kN/m² on GF-1) now ends "so GF-1 can handle it". The answer itself quotes the 2.4 kN/m² maximum, which 3.0 exceeds. The fact-first wording led the model to quote the wrong passage (GF-2's 3.5 kN/m²) and reason from it.
+- **g066** still says the systems are rated "from C1 to C5", unchanged from v4.
+
+What changed against v4:
+
+- **Fixed:** g033.
+- **Lost:** g003 dropped "3 to 6 weeks" and describes what the design contains instead; g024 is refused; g031 is wrong.
+- **Answered instead of refused, but incomplete:** g016 (no standard price per kWp, but not how the price is set) and g056 (thickness alone does not decide, but not the C4/C5 ratings). Both are true.
+- **Still refused with the gold in the context:** g025, g057 and g059.
+
+**Faithfulness.** The lone "Yes." artifact is gone: g010, g014, g028 and g039 now score 1.0. The judge caught g031 (0.0) but scored g032's suggestion 1.0. It is reported, not used to decide.
+
+**The loop stops here.** Neither round beat the best version, v2, so the stop rule written before round 1 ends the loop after two rounds. On the numbers, v5 reaches the target: over-refusal 11/42, more than 22 passing and out-of-scope 0/7. But two answers make a claim the knowledge base contradicts, and the spec does not let a version with false claims become the best one.
+
+**What it teaches.**
+
+- **Grounding fixed the form, not the reasoning.** Bare and leading yes/no answers disappeared, and the judge artifact went with them. But when the right passage is not the one the model quotes (g031), or is not retrieved at all (g032, g066), a fact-first answer still reaches a wrong conclusion. It now sounds better supported.
+- **Two of the three cases still answered wrongly (g031, g032, g066) are retrieval failures.** g032 and g066 lack the gold chunk, so no prompt can make them true. Only refusing can make them safe. That points at the top-k experiment, not a third prompt round.
+- **Prompt wording trades cases.** Each round moves 5 to 10 cases in both directions (g003, g024 and g031 flipped between v4 and v5 with retrieval unchanged). With 52 cases, a 2-case difference between v4 and v5 is within that churn.

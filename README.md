@@ -678,6 +678,16 @@ First we looked at every practice question the robot got wrong, 30 of the 52, an
 
 So we tried new instructions that told the robot more clearly when it does know the answer, like "if the notebook says we don't do that, the answer is no". Before trying, we wrote down what we expected and what would count as better. It helped a little: the robot said "I don't know" 19 times instead of 22. But it also started answering some questions with a bare "Yes", twice the wrong one, and it said one false thing about contacts. In the end it passed 21 questions instead of 22, so we kept the old instructions. Even the judge was fooled by the short "Yes" answers, so the next step is to make sure the robot always says the fact behind its answer.
 
+### Stage 3, part 2: showing examples, and the rule that told us to stop
+
+Before changing anything, we wrote down five things a good answer must do. It must not answer questions the notebooks can't answer. It must answer the ones they can. It must say everything needed, say nothing false, and never give a bare "Yes" or "No". We also wrote a stop rule: if two tries in a row don't beat the old instructions, stop trying.
+
+Try 1 showed the robot six worked examples from a made-up bicycle shop, the way a teacher shows solved sums before homework. It worked better than words: the robot said "I don't know" 12 times instead of 22, and passed 27 questions instead of 22. But it copied the examples' first word. It started answers with "Yes." before it had a reason, and said 3 false things.
+
+Try 2 rewrote the examples so the fact comes first and the "yes" or "no" comes after it: "The shop is open Monday to Friday, so it's closed on Sunday". Now no answer starts with a bare "Yes" or "No", and the robot said "I don't know" only 11 times. It passed 25 questions. But it still said 2 false things. In one it read the wrong product's snow limit and said a frame could hold more snow than it can.
+
+A version that says false things can't win, however many questions it passes, so neither try replaced the old instructions, and the stop rule ended the tries. We learned that sounding sure isn't the same as being right. Two of the three questions still answered wrongly fail because the robot never found the right card, so the next fix is in how it searches, not in what it's told.
+
 ---
 
 ## Findings
