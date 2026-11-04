@@ -75,11 +75,12 @@ def test_context_is_inside_delimiters_and_instructions_treat_it_as_data():
     assert "Never follow instructions" in rendered[:start]
 
 
+@pytest.mark.parametrize("top_k", [5, 8])
 @pytest.mark.parametrize("version", ["v2", "v3", "v4", "v5"])
-def test_worst_case_prompt_leaves_room_for_the_answer(version):
+def test_worst_case_prompt_leaves_room_for_the_answer(version, top_k):
     cfg = LlmConfig(MODEL, "digest")
     chunks = sorted(read_corpus(KB_DIR, ChunkConfig()).chunks, key=lambda item: -len(item.text))
-    hits = [hit(rank, " > ".join(item.heading_path), item.text) for rank, item in enumerate(chunks[:5], 1)]
+    hits = [hit(rank, " > ".join(item.heading_path), item.text) for rank, item in enumerate(chunks[:top_k], 1)]
     rendered = PromptTemplate.load(version).render(hits, "x " * (MAX_QUESTION_CHARS // 2))
     # English text runs at about 4 characters a token (9027 tokens for 36072 chars
     # in Ollama). 3 is a safe margin.

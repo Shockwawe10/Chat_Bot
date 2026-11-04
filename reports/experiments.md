@@ -202,3 +202,24 @@ What changed against v4:
 - **Grounding fixed the form, not the reasoning.** Bare and leading yes/no answers disappeared, and the judge artifact went with them. But when the right passage is not the one the model quotes (g031), or is not retrieved at all (g032, g066), a fact-first answer still reaches a wrong conclusion. It now sounds better supported.
 - **Two of the three cases still answered wrongly (g031, g032, g066) are retrieval failures.** g032 and g066 lack the gold chunk, so no prompt can make them true. Only refusing can make them safe. That points at the top-k experiment, not a third prompt round.
 - **Prompt wording trades cases.** Each round moves 5 to 10 cases in both directions (g003, g024 and g031 flipped between v4 and v5 with retrieval unchanged). With 52 cases, a 2-case difference between v4 and v5 is within that churn.
+
+## Experiment 4: top-k 8
+
+**Written on 2026-11-04, before the run.** The owner accepted the prompt loop's stop. The prompt stays v2, the best version, so this experiment changes retrieval alone.
+
+**Why.** 11 of the 30 baseline failures are retrieval failures (`reports/error_analysis.md`). In 5, no gold was retrieved (g017, g032, g063, g066, g068). In 6, only part of it was (g031, g041, g043 refused; g038, g039, g042 incomplete). In the baseline, the first gold group is in the top 5 for 35 of the 42 answerable cases (hit rate 0.83), and every gold group is for 31 (0.74). The prompt rounds also showed that when gold is missing, the model can turn a nearby passage into a false answer (g032, g066).
+
+**Change.** `TOP_K=8` instead of 5, set in the environment for the run. Everything else is fixed: chunker, index, embedder, prompt v2, model, seed and judge. The worst-case prompt with 8 of the longest chunks is about 2,050 tokens by the test's estimate, well under `num_ctx` 4096 with 512 for the answer, and `test_worst_case_prompt_leaves_room_for_the_answer` now checks k = 8 too.
+
+**Risk.** More passages means more near-miss text for the model to build an answer from, so out-of-scope cases could be answered, and wrong-product facts could be quoted (the g031 pattern). Latency goes up.
+
+**Predictions.**
+
+1. Retrieval: every gold group is in the context for at least 35 of the 42 answerable cases (up from 31), and the first gold group for at least 38 (up from 35).
+2. At least 4 of the 11 retrieval failures get all their gold into the context.
+3. At least 2 of the 11 retrieval failures pass.
+4. Out-of-scope answered stays 0/7.
+5. Over-refusal is not higher than 22/42. Most baseline refusals are generation failures that more passages do not fix.
+6. Latency p95 rises, reported against the baseline's 7.0 s.
+
+**Decision rule.** Top-k 8 becomes the default only if out-of-scope is 0/7, more than 22 cases pass, over-refusal is not higher than 22/42, no changed answer makes a claim the knowledge base contradicts, and no answer is a bare yes or no. The retrieval metrics alone cannot adopt it. Combining top-k 8 with the v4 or v5 prompt would be a separate experiment, written down before it runs.
