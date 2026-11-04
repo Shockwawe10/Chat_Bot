@@ -119,6 +119,7 @@ def build_manifest(run_id, system, args, env, cases_run, drafts, dataset_version
         "timestamp": datetime.now(UTC).isoformat(timespec="seconds"),
         "system": system.name,
         "label": args.label,
+        "experiment": args.experiment,
         "split": args.split,
         "smoke": args.smoke,
         "git_sha": args.commit or sha,
@@ -189,7 +190,10 @@ def write_outputs(report, scored, reports_dir, history_path, record_baseline=Fal
     folder.mkdir(parents=True, exist_ok=True)
     path = folder / f"{report['run_id']}.json"
     path.write_text(json.dumps({**report, "cases": scored}, ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
-    full_dev = report["system"] == "pipeline" and report["split"] == "dev" and not report["smoke"]
+    # An experiment is compared in reports/experiments.md; it does not replace the adopted setup.
+    full_dev = (
+        report["system"] == "pipeline" and report["split"] == "dev" and not report["smoke"] and not report.get("experiment")
+    )
     if full_dev:
         shutil.copyfile(path, reports_dir / "latest.json")
         append_history(report, history_path, folder)
@@ -353,6 +357,9 @@ def main(argv=None, store=None):
     parser.add_argument("--url", help="base URL for --system http")
     parser.add_argument("--commit", help="commit the http server runs, recorded in the manifest")
     parser.add_argument("--label", default="", help="a note stored in the manifest")
+    parser.add_argument(
+        "--experiment", default="", help="name an experiment run: saved and labelled, but latest.json and history stay"
+    )
     parser.add_argument("--split", choices=("dev", "holdout"), default="dev")
     parser.add_argument("--allow-holdout", action="store_true", help="required for --split holdout")
     parser.add_argument("--smoke", action="store_true", help="only the smoke cases")
@@ -382,6 +389,8 @@ def main(argv=None, store=None):
 
     env = read_env()
     run_id = f"{datetime.now(UTC):%Y%m%dT%H%M%SZ}-{args.system}-{args.split}{'-smoke' if args.smoke else ''}"
+    if args.experiment:
+        run_id += f"-{args.experiment}"
     with ExitStack() as stack:
         system, store = make_system(args, env, stack)
         scored, metrics = run(selected, system, store, stats["overlap"])

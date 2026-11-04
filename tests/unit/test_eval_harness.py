@@ -190,12 +190,13 @@ def test_drafts_are_skipped():
     assert [c["id"] for c in chosen] == ["a"] and drafts == 1
 
 
-def report(system="pipeline", split="dev", smoke=False, **metrics):
+def report(system="pipeline", split="dev", smoke=False, experiment="", **metrics):
     return {
         "run_id": f"r-{system}-{split}-{smoke}",
         "system": system,
         "split": split,
         "smoke": smoke,
+        "experiment": experiment,
         "git_sha": "abcdef1234",
         "dataset_version": "1.2",
         "cases_run": 2,
@@ -251,7 +252,12 @@ def test_an_old_history_without_its_run_file_stops_instead_of_guessing(tmp_path)
 
 @pytest.mark.parametrize(
     ("kind", "folder"),
-    [({"smoke": True}, "runs"), ({"system": "always-abstain"}, "runs"), ({"split": "holdout"}, "holdout")],
+    [
+        ({"smoke": True}, "runs"),
+        ({"system": "always-abstain"}, "runs"),
+        ({"split": "holdout"}, "holdout"),
+        ({"experiment": "prompt-v3"}, "runs"),
+    ],
 )
 def test_other_runs_do_not_touch_latest_or_history(tmp_path, kind, folder):
     path = write_outputs(report(**kind), [], tmp_path, tmp_path / "history.csv")
