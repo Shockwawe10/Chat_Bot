@@ -15,7 +15,7 @@ MAX_INLINE = 300
 PYTHON = r"python(?:3(?:\.\d+)?)?(?:\.exe)?"
 # A python call followed by "<<" in the same simple command (stops at | ; & and newlines).
 HEREDOC = re.compile(rf"(?<![\w.-]){PYTHON}\b[^\n|;&]*<<")
-INLINE = re.compile(rf"(?<![\w.-]){PYTHON}\b(?:\s+-[A-Za-z]+)*?\s+-c\s+(\"(?:\\.|[^\"\\])*\"|'[^']*')", re.S)
+INLINE = re.compile(rf"(?<![\w.-]){PYTHON}\b(?:\s+-[A-Za-z]+)*?\s+-c\s+(\"(?:\\.|[^\"\\])*\"|'[^']*')", re.DOTALL)
 MESSAGE = (
     "Blocked by .claude/hooks/block_inline_python.py: {why}. Write the Python to a scratchpad "
     ".py file with the Write tool and run that file (CLAUDE.md rule)."
