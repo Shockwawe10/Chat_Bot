@@ -30,6 +30,7 @@ from app.generator import (
     generate,
 )
 from app.index import INDEX_DIR
+from app.language import ENGLISH_ONLY, is_english
 from app.retriever import GuardError, IndexUnavailable, Retriever
 from app.settings import ROOT, read_env
 
@@ -142,6 +143,25 @@ def create_app(make_retriever, llm, prompt, trace_dir=TRACE_DIR, checker=None):
         traces.write({"status": 422, "errors": json.loads(json.dumps(error.errors(), default=str))})
         return await request_validation_exception_handler(request, error)
 
+    def english_only(retriever, record, started):
+        """The fixed English reply for a question in another language: no retrieval, no model."""
+        total = _ms(started, time.perf_counter())
+        response = AskResponse(
+            answer=ENGLISH_ONLY,
+            abstained=False,
+            citations=[],
+            retrieved=[],
+            flags=["not_english"],
+            timings_ms=Timings(embed=0.0, retrieve=0.0, generate=0.0, total=total),
+            versions=Versions(
+                index_fingerprint=retriever.fingerprint, prompt=prompt.version, llm_digest=llm.cfg.digest
+            ),
+        )
+        traces.write(
+            {**record, "status": 200, "flags": response.flags, "parsed": {"answer": ENGLISH_ONLY, "abstained": False}}
+        )
+        return response
+
     @app.post("/ask", response_model=AskResponse)
     def ask(request: AskRequest):
         question = request.question
@@ -149,6 +169,8 @@ def create_app(make_retriever, llm, prompt, trace_dir=TRACE_DIR, checker=None):
         started = time.perf_counter()
         try:
             retriever = connect()
+            if not is_english(question):
+                return english_only(retriever, record, started)
             vector = retriever.embed_question(question)
             embedded = time.perf_counter()
             hits = retriever.search(vector, question)

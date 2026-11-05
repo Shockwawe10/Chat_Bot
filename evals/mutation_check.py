@@ -30,6 +30,7 @@ API = ROOT / "app" / "api.py"
 CHECKER = ROOT / "app" / "checker.py"
 KEYWORD = ROOT / "app" / "keyword.py"
 QUESTIONS = ROOT / "app" / "questions.py"
+LANGUAGE = ROOT / "app" / "language.py"
 SCORING = ROOT / "evals" / "scoring.py"
 VALIDATOR = ROOT / "evals" / "validate_golden.py"
 METRICS = ROOT / "evals" / "metrics.py"
@@ -481,6 +482,14 @@ BREAKS = {
     "questions: heading left out of the prompt": [(QUESTIONS, 'substitute(passage=f"{heading_path}\\n{_clean(text)}")', "substitute(passage=_clean(text))")],
     "questions: duplicates kept": [(QUESTIONS, "return list(dict.fromkeys(question.strip()", "return list((question.strip()")],
     "questions: sampled, not temperature 0": [(QUESTIONS, '"options": {"temperature": 0, "seed"', '"options": {"temperature": 0.8, "seed"')],
+    # English-only reply (app/language.py)
+    "language: gate never runs": [(API, "            if not is_english(question):\n                return english_only(retriever, record, started)\n", "")],
+    "language: every question gated": [(API, "            if not is_english(question):\n", "            if True:\n")],
+    "language: reply counted as a refusal": [(API, "            answer=ENGLISH_ONLY,\n            abstained=False,\n", "            answer=ENGLISH_ONLY,\n            abstained=True,\n")],
+    "language: other script ignored": [(LANGUAGE, "        return False\n    words = WORD", "        pass\n    words = WORD")],
+    "language: one foreign word is enough": [(LANGUAGE, "return not (other >= 2 and other > english)", "return not (other >= 1 and other > english)")],
+    "language: accented words not counted": [(LANGUAGE, "word in OTHER or not word.isascii()", "word in OTHER")],
+    "language: English words not counted": [(LANGUAGE, "english = sum(word in ENGLISH for word in words)", "english = 0")],
     # Answer check (app/checker.py)
     "check: unsupported answer goes out": [
         (CHECKER, '        if verdicts and all(item["supported"] for item in verdicts):\n', "        if True:\n")
@@ -630,7 +639,7 @@ def main():
     parser.add_argument("--only", default="", help="run only breaks whose name contains this text")
     args = parser.parse_args()
     selected = {name: edits for name, edits in BREAKS.items() if args.only in name}
-    files = (CHUNKER, EMBEDDER, INDEX, SETTINGS, RETRIEVER, GENERATOR, API, CHECKER, KEYWORD, QUESTIONS, SCORING, VALIDATOR, METRICS, SYSTEMS_FILE, RUN_EVALS, RENDER, JUDGE, CALIBRATE)
+    files = (CHUNKER, EMBEDDER, INDEX, SETTINGS, RETRIEVER, GENERATOR, API, CHECKER, KEYWORD, QUESTIONS, LANGUAGE, SCORING, VALIDATOR, METRICS, SYSTEMS_FILE, RUN_EVALS, RENDER, JUDGE, CALIBRATE)
     originals = {path: path.read_bytes() for path in files}
     check_breaks_apply(selected, originals)
 

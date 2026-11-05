@@ -13,6 +13,7 @@ from app.checker import CheckUnavailable, MiniCheck
 from app.chunker import ChunkConfig
 from app.generator import ABSTAIN_SENTENCE, LlmUnavailable, PromptTemplate
 from app.index import KB_DIR, build, read_manifest
+from app.language import ENGLISH_ONLY
 from app.retriever import GuardError, IndexUnavailable, Retriever
 
 PROMPT = PromptTemplate.load("v2")
@@ -297,6 +298,22 @@ def test_unavailable_service_is_traced(make_client, tmp_path):
     make_client(FakeLlm(error=LlmUnavailable("down"))).post("/ask", json={"question": QUESTION})
     record = traces(tmp_path)[0]
     assert (record["status"], record["error"]) == (503, "down")
+
+
+def test_question_in_another_language_gets_the_english_only_reply_without_search_or_model(make_client, tmp_path):
+    llm, backend = FakeLlm(), TopicalBackend()
+    body = make_client(llm, backend).post("/ask", json={"question": "Wie lange gilt die Produktgarantie?"}).json()
+    assert (body["answer"], body["abstained"], body["citations"], body["retrieved"]) == (ENGLISH_ONLY, False, [], [])
+    assert body["flags"] == ["not_english"]
+    assert llm.calls == [] and backend.inputs == []
+    record = traces(tmp_path)[0]
+    assert (record["status"], record["flags"], record["parsed"]["answer"]) == (200, ["not_english"], ENGLISH_ONLY)
+
+
+def test_english_question_still_goes_through_search_and_model(make_client):
+    llm = FakeLlm()
+    body = make_client(llm).post("/ask", json={"question": QUESTION}).json()
+    assert body["answer"] == "The answer." and len(llm.calls) == 1 and "not_english" not in body["flags"]
 
 
 class FakeChecker(MiniCheck):

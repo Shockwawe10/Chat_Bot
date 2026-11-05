@@ -558,3 +558,18 @@ These were the 3 unexposed cases the code left for reading, so every unexposed c
 | Answers with a false claim | not read | 0 among the 7 answered |
 
 On all 23 cases, 10 pass (8 by code, 2 by reading), and 2 exposed cases are still unread. The "no false claim" condition, which could not be checked in the session, holds on the unexposed answered cases.
+
+
+## English-only reply in code
+
+**Written on 2026-11-05, before the dev run.** This is not a prompt or retrieval experiment. It closes the 3 language failures that every run so far has had (`reports/error_analysis.md`, "No English-only reply").
+
+**Change.** `app/language.py` decides, before retrieval and generation, whether a question is in English. It flags a question only on positive evidence: mostly non-Latin letters, or at least two function words of a common European language (German, French, Spanish, Italian, Portuguese, Dutch or Polish) outnumbering the English ones, with a word with a non-English letter counting as foreign. A flagged question gets the fixed reply "I can only answer questions in English. Please ask your question in English.", with no retrieval, no model call and the flag `not_english`. Everything else is the confirmed Stage 3 setup.
+
+**Checked before this was written, with code only.** It flags all 3 dev language cases and none of the 49 other dev questions, and none of the 455 generated customer questions in `data/chunk_questions.json`. The unit tests pin both. The 7 new mutation-check breaks are all caught.
+
+**Predictions for the full dev run.**
+
+1. The 3 language cases (g071, g072, g074) pass.
+2. Every other dev answer is the same as in `20261105T084127Z-pipeline-dev`, because no other dev question is flagged. One case may still differ, the noise floor from experiment 6.
+3. Out-of-scope answered stays 0/7.
