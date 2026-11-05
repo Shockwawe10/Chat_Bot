@@ -5,7 +5,8 @@
 
 Only the Baseline and Current cells of measured metrics change. A metric with no
 value stays a dash, so nothing in the table is typed by hand. Judged metrics also stay
-a dash until reports/judge_calibration.json shows the same judge model passed.
+a dash until reports/judge_calibration.json shows the same judge model passed, and when
+the run's answer check used the judge's own model, which makes the score 1.00 by construction.
 """
 
 import argparse
@@ -36,8 +37,16 @@ def trusted(report, calibration, key):
     )
 
 
+def independent(report):
+    """False when the answer check blocked every answer the judge would call unsupported."""
+    check = report.get("answer_check") or "off"
+    return check == "off" or report.get("answer_check_model") != report.get("judge_model")
+
+
 def ratio(key, judged=False):
     def cell(report, calibration):
+        if judged and not independent(report):
+            return f"{DASH} (judge = answer check)"
         value = report["metrics"].get(key)
         if value is None or (judged and not trusted(report, calibration, key)):
             return DASH
@@ -45,6 +54,11 @@ def ratio(key, judged=False):
         return f"{value:.2f}" if spread is None else f"{value:.2f} (spread {spread:.2f})"
 
     return cell
+
+
+def hit_rate(report, calibration):
+    value = ratio("hit_rate")(report, calibration)
+    return value if value == DASH else f"{value} (k={report['top_k']})"
 
 
 def latency(report, calibration):
@@ -64,7 +78,7 @@ def agreement(report, calibration):
 
 
 ROWS = {  # first cell of a README row: how to fill its value cells
-    "Hit rate@5": ratio("hit_rate"),
+    "Hit rate@k": hit_rate,
     "MRR": ratio("mrr"),
     "Faithfulness": ratio("faithfulness", judged=True),
     "Answer relevancy": ratio("answer_relevancy", judged=True),
@@ -99,8 +113,6 @@ def render(text, baseline, current, calibration=None):
         raise SystemExit("README.md has no results markers")
     head, rest = text.split(START, 1)
     block, tail = rest.split(END, 1)
-    if current and current["top_k"] != 5:
-        raise SystemExit(f"the table reports hit rate@5, but the run used top_k={current['top_k']}")
 
     lines = []
     for line in block.strip("\n").split("\n"):

@@ -292,7 +292,7 @@ Intro line.
 
 | Metric | Baseline | Current | Threshold | Gate |
 | --- | --- | --- | --- | --- |
-| Hit rate@5 | — | — | ≥ 0.85 | PR |
+| Hit rate@k | — | — | ≥ 0.85 | PR |
 | Faithfulness | — | — | ≥ 0.90 | PR |
 | Latency p95, cost per query | — | — | recorded, not gated | report |
 | Attack success rate | — | — | ≤ 0.05 | nightly |
@@ -304,7 +304,7 @@ after
 
 def test_render_fills_measured_cells_and_keeps_dashes():
     new = render(TABLE, report(hit_rate=0.6), report(hit_rate=0.8))
-    assert "| Hit rate@5 | 0.60 | 0.80 | ≥ 0.85 | PR |" in new
+    assert "| Hit rate@k | 0.60 (k=5) | 0.80 (k=5) | ≥ 0.85 | PR |" in new
     assert f"| Faithfulness | {DASH} | {DASH} | ≥ 0.90 | PR |" in new
     assert "| Latency p95, cost per query | 2.5 s, $0.00 | 2.5 s, $0.00 |" in new
     assert f"| Attack success rate | {DASH} | {DASH} |" in new
@@ -315,13 +315,24 @@ def test_render_fills_measured_cells_and_keeps_dashes():
 def test_render_is_idempotent_and_works_without_runs():
     once = render(TABLE, None, report())
     assert render(once, None, report()) == once
-    assert f"| Hit rate@5 | {DASH} | 0.50 |" in once
+    assert f"| Hit rate@k | {DASH} | 0.50 (k=5) |" in once
 
 
 def test_render_shows_a_dash_not_zero_for_a_metric_with_no_value():
-    assert f"| Hit rate@5 | {DASH} | {DASH} |" in render(TABLE, report(hit_rate=None), report(hit_rate=None))
+    assert f"| Hit rate@k | {DASH} | {DASH} |" in render(TABLE, report(hit_rate=None), report(hit_rate=None))
 
 
-def test_render_refuses_a_run_with_another_k():
-    with pytest.raises(SystemExit):
-        render(TABLE, None, {**report(), "top_k": 8})
+def test_render_names_each_run_s_k():
+    new = render(TABLE, report(hit_rate=0.83), {**report(hit_rate=0.93), "top_k": 8})
+    assert "| Hit rate@k | 0.83 (k=5) | 0.93 (k=8) |" in new
+
+
+def test_judged_score_is_hidden_when_the_answer_check_uses_the_judge_model():
+    calibration = {"passed": True, "metric": "faithfulness", "judge_model": "j:1", "method": "minicheck"}
+    judged = {"judge_passes": 1, "judge_model": "j:1", "judge_method": "minicheck"}
+    own = {**report(faithfulness=1.0), **judged, "answer_check": "minicheck", "answer_check_model": "j:1"}
+    other = {**report(faithfulness=0.95), **judged, "answer_check": "minicheck", "answer_check_model": "c:1"}
+    off = {**report(faithfulness=0.9), **judged, "answer_check": "off", "answer_check_model": None}
+    assert f"| Faithfulness | {DASH} (judge = answer check) |" in render(TABLE, own, None, calibration)
+    assert "| Faithfulness | 0.95 |" in render(TABLE, other, None, calibration)
+    assert "| Faithfulness | 0.90 |" in render(TABLE, off, None, calibration)
