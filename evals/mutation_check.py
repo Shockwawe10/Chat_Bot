@@ -424,7 +424,7 @@ BREAKS = {
         (RENDER, "cells[2] = fill(current, calibration) if current else DASH", "cells[2] = fill(baseline, calibration) if baseline else DASH")
     ],
     "render: k not shown": [(RENDER, "f\"{value} (k={report['top_k']})\"", "value")],
-    "render: dependent judge score shown": [(RENDER, "        if judged and not independent(report):\n", "        if False:\n")],
+    "render: dependent judge score shown": [(RENDER, '        if judged and key == "faithfulness" and not independent(report):\n', "        if False:\n")],
     "render: unmeasured shown as zero": [
         (
             RENDER,

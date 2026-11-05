@@ -45,7 +45,7 @@ def independent(report):
 
 def ratio(key, judged=False):
     def cell(report, calibration):
-        if judged and not independent(report):
+        if judged and key == "faithfulness" and not independent(report):
             return f"{DASH} (judge = answer check)"
         value = report["metrics"].get(key)
         if value is None or (judged and not trusted(report, calibration, key)):

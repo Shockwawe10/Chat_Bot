@@ -1,17 +1,18 @@
 {
- "run_id": "20261103T114147Z-pipeline-dev",
- "timestamp": "2026-11-03T11:45:51+00:00",
+ "run_id": "20261105T084127Z-pipeline-dev",
+ "timestamp": "2026-11-05T08:55:53+00:00",
  "system": "pipeline",
  "label": "",
+ "experiment": "",
  "split": "dev",
  "smoke": false,
- "git_sha": "7719015c409edb37f8bc144ee4c9b8fc5e75004d",
+ "git_sha": "faa01ff14c5278f7ab7e8721c1da6423c5d51602",
  "git_dirty": false,
  "dataset_version": "1.2",
  "cases_run": 52,
  "drafts_skipped": 0,
- "prompt_version": "v2",
- "prompt_sha256": "dbf8a80426f3174dc8a5894e784cefd8d36fc454480d06cd1276f1e851d58f38",
+ "prompt_version": "v5",
+ "prompt_sha256": "2a5543496ba484d78c8696c3bde99a0e5de2455c2a077efbf4ab13f2085f8489",
  "llm_provider": "ollama",
  "llm_model": "qwen3:4b-instruct",
  "llm_digest": "0edcdef34593eac1aa2be9c7d06c432dcf81945adca5eca2f27662c18f168ba0",
@@ -25,38 +26,41 @@
  "chunk_size": 500,
  "chunk_max": 800,
  "chunk_min": 100,
- "top_k": 5,
+ "top_k": 8,
+ "retrieval": "questions",
+ "answer_check": "minicheck",
+ "answer_check_model": "bespoke-minicheck:7b",
  "index_fingerprint": "e5c2f46128e9deaf23b2720a78e917a8184a3f7375c61363c07b2cc604b8db8a",
- "judge_passes": 1,
- "judge_method": "minicheck",
+ "judge_passes": 0,
+ "judge_method": null,
  "total_cost": 0.0,
- "latency_p95_ms": 7005.6,
+ "latency_p95_ms": 23628.0,
  "metrics": {
   "cases": 52,
-  "hit_rate": 0.8333333333333334,
-  "mrr": 0.6900793650793651,
-  "all_groups_recall": 0.7380952380952381,
-  "hit_rate_low_overlap": 0.7619047619047619,
-  "hit_rate_high_overlap": 0.9047619047619048,
+  "hit_rate": 0.9523809523809523,
+  "mrr": 0.6887188208616779,
+  "all_groups_recall": 0.8809523809523809,
+  "hit_rate_low_overlap": 0.9047619047619048,
+  "hit_rate_high_overlap": 1.0,
   "near_misses_with_distractor": 2,
-  "behaviour_accuracy": 0.4090909090909091,
-  "behaviour_decided": 44,
-  "behaviour_for_judge": 8,
-  "refusal_accuracy": 0.5192307692307693,
-  "over_refusal_rate": 0.5238095238095238,
-  "numeric_fidelity": 0.5,
+  "behaviour_accuracy": 0.5526315789473685,
+  "behaviour_decided": 38,
+  "behaviour_for_judge": 14,
+  "refusal_accuracy": 0.6923076923076923,
+  "over_refusal_rate": 0.30952380952380953,
+  "numeric_fidelity": 0.6818181818181818,
   "out_of_scope_answered": 0,
   "errors": 0,
   "behaviour_by_category": {
    "ambiguous": [
     0,
-    3,
-    2
+    2,
+    3
    ],
    "false premise": [
     0,
-    6,
-    0
+    4,
+    2
    ],
    "multi-document": [
     2,
@@ -64,8 +68,8 @@
     2
    ],
    "numeric": [
-    6,
-    4,
+    8,
+    2,
     0
    ],
    "out of scope": [
@@ -74,9 +78,9 @@
     0
    ],
    "single fact": [
+    4,
     3,
-    7,
-    4
+    7
    ],
    "unsupported language": [
     0,
@@ -84,20 +88,11 @@
     0
    ]
   },
-  "latency_p95_ms": 7005.6,
-  "faithfulness": 0.95,
+  "latency_p95_ms": 23628.0,
+  "faithfulness": null,
   "answer_relevancy": null,
   "context_precision": null,
-  "context_recall": null,
-  "faithfulness_spread": null,
-  "faithfulness_cases": 20,
-  "answer_relevancy_spread": null,
-  "answer_relevancy_cases": 0,
-  "context_precision_spread": null,
-  "context_precision_cases": 0,
-  "context_recall_spread": null,
-  "context_recall_cases": 0,
-  "judge_errors": 0
+  "context_recall": null
  },
  "cases": [
   {
@@ -113,29 +108,26 @@
    "retrieved": [
     "pricing-commercial-offer:2:7c057053235f",
     "process-cooperation-stages:2:9fdd6a86f285",
+    "pricing-commercial-offer:1:378da8d65414",
     "services-supply:2:52804edb67b4",
     "process-quote-requirements:4:93baf54ab698",
-    "pricing-commercial-offer:1:378da8d65414"
+    "warranty:0:9d0128a7191a",
+    "process-quote-requirements:0:dfcb7e3de9bf",
+    "pricing-commercial-offer:0:0181282088d1"
    ],
    "status": 200,
-   "latency_ms": 12271.4,
+   "latency_ms": 19112.2,
    "first_group_rank": 1,
    "hit": true,
    "all_groups_found": true,
    "reciprocal_rank": 1.0,
-   "answer": "A commercial offer is valid for 30 days from its date.",
+   "answer": "The offer is valid for 30 days from its date.",
    "refused": false,
    "flags": [],
    "facts": 1,
    "missing_facts": [],
    "behaviour_ok": true,
-   "refusal_ok": true,
-   "judged": {
-    "faithfulness": [
-     1.0
-    ]
-   },
-   "judge_errors": []
+   "refusal_ok": true
   },
   {
    "id": "g003",
@@ -148,31 +140,28 @@
    "seen": false,
    "question": "After we sign, how long do your engineers need before the build drawings are ready?",
    "retrieved": [
-    "services-design:2:74890812a3eb",
     "process-cooperation-stages:2:9fdd6a86f285",
+    "services-design:2:74890812a3eb",
     "process-cooperation-stages:1:b3c11b83268c",
+    "services-installation:4:279a975466d9",
+    "process-site-survey:0:5dc708605682",
     "services-design:4:c79485b8316d",
-    "services-supply:2:52804edb67b4"
+    "process-roof-assessment:4:1cff45f4578b",
+    "pricing-commercial-offer:1:378da8d65414"
    ],
    "status": 200,
-   "latency_ms": 6289.4,
-   "first_group_rank": 2,
+   "latency_ms": 22050.5,
+   "first_group_rank": 1,
    "hit": true,
    "all_groups_found": true,
-   "reciprocal_rank": 0.5,
-   "answer": "The engineers need 3 to 6 weeks after the contract is signed before the build drawings are ready.",
+   "reciprocal_rank": 1.0,
+   "answer": "The detailed design is made after the contract is signed and takes 3 to 6 weeks after the contract.",
    "refused": false,
    "flags": [],
    "facts": 1,
    "missing_facts": [],
    "behaviour_ok": true,
-   "refusal_ok": true,
-   "judged": {
-    "faithfulness": [
-     1.0
-    ]
-   },
-   "judge_errors": []
+   "refusal_ok": true
   },
   {
    "id": "g004",
@@ -187,29 +176,26 @@
    "retrieved": [
     "warranty:3:beedd5aeabf1",
     "warranty:0:9d0128a7191a",
+    "warranty:2:6f52d0242c9d",
+    "company-contacts:0:25cb01771724",
     "warranty:1:5aca3e844773",
+    "process-cooperation-stages:1:b3c11b83268c",
     "services-maintenance:2:4968068c312f",
-    "process-roof-assessment:3:64686e305951"
+    "services-maintenance:0:1af77cbf3b4d"
    ],
    "status": 200,
-   "latency_ms": 1694.2,
+   "latency_ms": 21860.8,
    "first_group_rank": 1,
    "hit": true,
    "all_groups_found": true,
    "reciprocal_rank": 1.0,
-   "answer": "The company replies within 5 working days.",
+   "answer": "The company replies within 5 working days if a claim is made, so a response is expected within 5 working days.",
    "refused": false,
    "flags": [],
    "facts": 1,
    "missing_facts": [],
    "behaviour_ok": true,
-   "refusal_ok": true,
-   "judged": {
-    "faithfulness": [
-     1.0
-    ]
-   },
-   "judge_errors": []
+   "refusal_ok": true
   },
   {
    "id": "g006",
@@ -224,12 +210,15 @@
    "retrieved": [
     "company-contacts:2:06f33376535e",
     "company-overview:3:e737df5faf6e",
-    "company-contacts:1:a43d0efe674b",
     "company-contacts:0:25cb01771724",
-    "process-site-survey:1:4d8de16bf208"
+    "company-overview:0:7772405e2c96",
+    "process-site-survey:3:022b8f64e544",
+    "process-site-survey:0:5dc708605682",
+    "company-contacts:1:a43d0efe674b",
+    "services-installation:0:16ddba31591c"
    ],
    "status": 200,
-   "latency_ms": 2891.3,
+   "latency_ms": 23114.5,
    "first_group_rank": 1,
    "hit": true,
    "all_groups_found": true,
@@ -240,13 +229,7 @@
    "facts": 0,
    "missing_facts": [],
    "behaviour_ok": null,
-   "refusal_ok": true,
-   "judged": {
-    "faithfulness": [
-     1.0
-    ]
-   },
-   "judge_errors": []
+   "refusal_ok": true
   },
   {
    "id": "g007",
@@ -259,31 +242,28 @@
    "seen": false,
    "question": "When your people come for the yearly check-up, what do they actually look at?",
    "retrieved": [
-    "services-maintenance:2:4968068c312f",
-    "services-maintenance:0:1af77cbf3b4d",
+    "process-site-survey:2:119e1f468ab1",
+    "services-supply:0:4c37b06e2133",
     "warranty:1:5aca3e844773",
+    "process-site-survey:0:5dc708605682",
     "services-maintenance:1:1bcab0ca6b81",
-    "process-site-survey:1:4d8de16bf208"
+    "services-design:2:74890812a3eb",
+    "warranty:3:beedd5aeabf1",
+    "services-maintenance:2:4968068c312f"
    ],
    "status": 200,
-   "latency_ms": 3296.1,
-   "first_group_rank": 4,
+   "latency_ms": 23009.3,
+   "first_group_rank": 5,
    "hit": true,
    "all_groups_found": true,
-   "reciprocal_rank": 0.25,
-   "answer": "They look at bolt torque on a sample of connections, coating condition (scratches, white rust and red rust), post and pile movement on ground-mount plants, ballast position on flat roofs, and module clamps.",
+   "reciprocal_rank": 0.2,
+   "answer": "During the yearly check-up, they look at bolt torque on a sample of connections, coating condition (scratches, white rust and red rust), post and pile movement on ground-mount plants, ballast position on flat roofs, and module clamps.",
    "refused": false,
    "flags": [],
    "facts": 0,
    "missing_facts": [],
    "behaviour_ok": null,
-   "refusal_ok": true,
-   "judged": {
-    "faithfulness": [
-     1.0
-    ]
-   },
-   "judge_errors": []
+   "refusal_ok": true
   },
   {
    "id": "g009",
@@ -296,29 +276,28 @@
    "seen": false,
    "question": "Our membrane is getting on a bit. Should we sort that out before your panels go up?",
    "retrieved": [
-    "products-flat-roof-rf1:2:bda97207539c",
+    "products-flat-roof-rf1:0:87f4079e16e5",
     "process-roof-assessment:3:64686e305951",
-    "services-installation:0:16ddba31591c",
-    "process-quote-requirements:1:0cd6c5946f52",
-    "corrosion-coatings:3:adb858e9d1ee"
+    "foundations-ground-mount:2:3f335b1b649d",
+    "services-maintenance:1:1bcab0ca6b81",
+    "services-design:1:78351f1b3370",
+    "services-installation:1:f29b088e0d21",
+    "products-flat-roof-rf2:2:da8be679ccc8",
+    "company-overview:1:b192d0918c28"
    ],
    "status": 200,
-   "latency_ms": 2090.9,
+   "latency_ms": 22135.4,
    "first_group_rank": 2,
    "hit": true,
    "all_groups_found": true,
    "reciprocal_rank": 0.5,
-   "answer": "I can't answer that from the available documents.",
-   "refused": true,
+   "answer": "If the waterproofing has less than 10 years of expected life left, the company recommends replacing it before installation; replacing it later means removing the whole solar plant.",
+   "refused": false,
    "flags": [],
    "facts": 1,
-   "missing_facts": [
-    "10 years"
-   ],
-   "behaviour_ok": false,
-   "refusal_ok": false,
-   "judged": {},
-   "judge_errors": []
+   "missing_facts": [],
+   "behaviour_ok": true,
+   "refusal_ok": true
   },
   {
    "id": "g010",
@@ -332,13 +311,16 @@
    "question": "A different firm put up the racking you sold us. Will you still service it?",
    "retrieved": [
     "services-overview:2:26db0a54b28f",
-    "pricing-commercial-offer:0:0181282088d1",
-    "services-supply:0:4c37b06e2133",
-    "warranty:0:9d0128a7191a",
-    "warranty:1:5aca3e844773"
+    "corrosion-categories:3:d802103773d8",
+    "company-overview:2:d20f72f4c794",
+    "services-installation:0:16ddba31591c",
+    "services-supply:1:78e705e10f55",
+    "loads-wind-and-snow:2:a732ad498eb4",
+    "company-overview:0:7772405e2c96",
+    "services-overview:1:c8f73c434f21"
    ],
    "status": 200,
-   "latency_ms": 2471.1,
+   "latency_ms": 21755.6,
    "first_group_rank": 1,
    "hit": true,
    "all_groups_found": true,
@@ -349,13 +331,7 @@
    "facts": 0,
    "missing_facts": [],
    "behaviour_ok": null,
-   "refusal_ok": true,
-   "judged": {
-    "faithfulness": [
-     1.0
-    ]
-   },
-   "judge_errors": []
+   "refusal_ok": true
   },
   {
    "id": "g012",
@@ -368,27 +344,28 @@
    "seen": false,
    "question": "Do we have to send a truck to your warehouse to collect the steel, or does it come to us?",
    "retrieved": [
-    "services-supply:1:78e705e10f55",
     "services-supply:0:4c37b06e2133",
+    "services-supply:1:78e705e10f55",
     "services-installation:1:f29b088e0d21",
-    "services-installation:4:279a975466d9",
-    "corrosion-coatings:3:adb858e9d1ee"
+    "process-cooperation-stages:1:b3c11b83268c",
+    "services-overview:1:c8f73c434f21",
+    "process-quote-requirements:2:f1883ee81e7e",
+    "services-maintenance:1:1bcab0ca6b81",
+    "corrosion-categories:2:11e181098e62"
    ],
    "status": 200,
-   "latency_ms": 2132.5,
-   "first_group_rank": 1,
+   "latency_ms": 13471.8,
+   "first_group_rank": 2,
    "hit": true,
    "all_groups_found": true,
-   "reciprocal_rank": 1.0,
+   "reciprocal_rank": 0.5,
    "answer": "I can't answer that from the available documents.",
    "refused": true,
    "flags": [],
    "facts": 0,
    "missing_facts": [],
    "behaviour_ok": false,
-   "refusal_ok": false,
-   "judged": {},
-   "judge_errors": []
+   "refusal_ok": false
   },
   {
    "id": "g013",
@@ -402,26 +379,27 @@
    "question": "Can I get hold of someone on a Saturday?",
    "retrieved": [
     "company-contacts:1:a43d0efe674b",
-    "process-quote-requirements:4:93baf54ab698",
-    "process-site-survey:1:4d8de16bf208",
+    "company-overview:3:e737df5faf6e",
     "company-contacts:0:25cb01771724",
-    "company-contacts:2:06f33376535e"
+    "company-contacts:2:06f33376535e",
+    "process-quote-requirements:0:dfcb7e3de9bf",
+    "process-site-survey:1:4d8de16bf208",
+    "process-site-survey:0:5dc708605682",
+    "pricing-commercial-offer:0:0181282088d1"
    ],
    "status": 200,
-   "latency_ms": 2175.1,
+   "latency_ms": 14361.0,
    "first_group_rank": 1,
    "hit": true,
    "all_groups_found": true,
    "reciprocal_rank": 1.0,
-   "answer": "I can't answer that from the available documents.",
-   "refused": true,
+   "answer": "The company is closed on weekends, so it is not open on Saturdays.",
+   "refused": false,
    "flags": [],
    "facts": 0,
    "missing_facts": [],
-   "behaviour_ok": false,
-   "refusal_ok": false,
-   "judged": {},
-   "judge_errors": []
+   "behaviour_ok": null,
+   "refusal_ok": true
   },
   {
    "id": "g014",
@@ -435,30 +413,27 @@
    "question": "We may swap to another panel model after you've signed off the drawings. Is that a problem?",
    "retrieved": [
     "services-design:4:c79485b8316d",
+    "process-cooperation-stages:1:b3c11b83268c",
     "services-design:2:74890812a3eb",
-    "services-installation:4:279a975466d9",
+    "services-supply:2:52804edb67b4",
+    "process-cooperation-stages:2:9fdd6a86f285",
+    "process-roof-assessment:2:2dcafb02721e",
     "process-roof-assessment:3:64686e305951",
-    "process-cooperation-stages:1:b3c11b83268c"
+    "products-flat-roof-rf2:2:da8be679ccc8"
    ],
    "status": 200,
-   "latency_ms": 3648.8,
+   "latency_ms": 21908.6,
    "first_group_rank": 1,
    "hit": true,
    "all_groups_found": true,
    "reciprocal_rank": 1.0,
-   "answer": "Yes, that could be a problem because changes after approval, such as a different module model, may require a new calculation and can change the price and the schedule.",
+   "answer": "Changes after approval, such as a different module model, may require a new calculation and can change the price and the schedule.",
    "refused": false,
    "flags": [],
    "facts": 0,
    "missing_facts": [],
    "behaviour_ok": null,
-   "refusal_ok": true,
-   "judged": {
-    "faithfulness": [
-     1.0
-    ]
-   },
-   "judge_errors": []
+   "refusal_ok": true
   },
   {
    "id": "g015",
@@ -472,13 +447,16 @@
    "question": "What is your phone number?",
    "retrieved": [
     "company-contacts:0:25cb01771724",
+    "company-overview:3:e737df5faf6e",
+    "pricing-commercial-offer:0:0181282088d1",
     "company-contacts:1:a43d0efe674b",
-    "company-contacts:2:06f33376535e",
-    "warranty:3:beedd5aeabf1",
-    "process-quote-requirements:1:0cd6c5946f52"
+    "process-site-survey:1:4d8de16bf208",
+    "process-site-survey:0:5dc708605682",
+    "process-quote-requirements:1:0cd6c5946f52",
+    "company-contacts:2:06f33376535e"
    ],
    "status": 200,
-   "latency_ms": 2382.8,
+   "latency_ms": 11639.3,
    "first_group_rank": 1,
    "hit": true,
    "all_groups_found": true,
@@ -489,9 +467,7 @@
    "facts": 0,
    "missing_facts": [],
    "behaviour_ok": false,
-   "refusal_ok": false,
-   "judged": {},
-   "judge_errors": []
+   "refusal_ok": false
   },
   {
    "id": "g016",
@@ -507,24 +483,25 @@
     "pricing-commercial-offer:0:0181282088d1",
     "process-site-survey:3:022b8f64e544",
     "process-quote-requirements:1:0cd6c5946f52",
+    "company-overview:2:d20f72f4c794",
+    "process-quote-requirements:3:7f0ff5c1edd2",
     "services-installation:2:ca896e7404fc",
-    "services-design:2:74890812a3eb"
+    "services-design:2:74890812a3eb",
+    "company-overview:3:e737df5faf6e"
    ],
    "status": 200,
-   "latency_ms": 3134.4,
+   "latency_ms": 14401.2,
    "first_group_rank": 1,
    "hit": true,
    "all_groups_found": true,
    "reciprocal_rank": 1.0,
-   "answer": "I can't answer that from the available documents.",
-   "refused": true,
+   "answer": "The company does not publish prices and has no standard price per kWp.",
+   "refused": false,
    "flags": [],
    "facts": 0,
    "missing_facts": [],
-   "behaviour_ok": false,
-   "refusal_ok": false,
-   "judged": {},
-   "judge_errors": []
+   "behaviour_ok": null,
+   "refusal_ok": true
   },
   {
    "id": "g017",
@@ -537,14 +514,17 @@
    "seen": false,
    "question": "Can you just email me a ballpark figure so I can budget?",
    "retrieved": [
+    "process-cooperation-stages:0:ac299d58503a",
     "company-contacts:0:25cb01771724",
+    "process-quote-requirements:0:dfcb7e3de9bf",
+    "pricing-commercial-offer:1:378da8d65414",
     "process-quote-requirements:4:93baf54ab698",
     "company-contacts:1:a43d0efe674b",
-    "warranty:3:beedd5aeabf1",
-    "process-site-survey:3:022b8f64e544"
+    "process-roof-assessment:2:2dcafb02721e",
+    "process-quote-requirements:2:f1883ee81e7e"
    ],
    "status": 200,
-   "latency_ms": 2734.9,
+   "latency_ms": 16745.1,
    "first_group_rank": null,
    "hit": false,
    "all_groups_found": false,
@@ -555,9 +535,7 @@
    "facts": 0,
    "missing_facts": [],
    "behaviour_ok": false,
-   "refusal_ok": false,
-   "judged": {},
-   "judge_errors": []
+   "refusal_ok": false
   },
   {
    "id": "g020",
@@ -571,26 +549,27 @@
    "question": "Our old shed has a corrugated asbestos-cement roof. Can you mount panels on it?",
    "retrieved": [
     "products-pitched-roof-rp1:2:15e0861aad71",
-    "products-overview:1:7b291994c46a",
+    "process-roof-assessment:1:0c719377ba2f",
+    "services-installation:0:16ddba31591c",
+    "services-design:1:78351f1b3370",
+    "products-carport-cp1:0:c1380b6d362c",
     "company-overview:1:b192d0918c28",
-    "process-quote-requirements:2:f1883ee81e7e",
-    "process-roof-assessment:3:64686e305951"
+    "products-flat-roof-rf2:1:118910e283fc",
+    "process-quote-requirements:2:f1883ee81e7e"
    ],
    "status": 200,
-   "latency_ms": 5407.5,
+   "latency_ms": 14121.8,
    "first_group_rank": 1,
    "hit": true,
    "all_groups_found": true,
    "reciprocal_rank": 1.0,
-   "answer": "I can't answer that from the available documents.",
-   "refused": true,
+   "answer": "The company does not work on roofs covered with asbestos-cement sheets.",
+   "refused": false,
    "flags": [],
    "facts": 0,
    "missing_facts": [],
-   "behaviour_ok": false,
-   "refusal_ok": false,
-   "judged": {},
-   "judge_errors": []
+   "behaviour_ok": null,
+   "refusal_ok": true
   },
   {
    "id": "g021",
@@ -603,31 +582,28 @@
    "seen": true,
    "question": "What is the minimum ground clearance of GroundFrame GF-2?",
    "retrieved": [
+    "loads-wind-and-snow:1:90b832b5b1fd",
     "products-ground-mount-gf2:1:df7101dcc4db",
+    "products-overview:1:7b291994c46a",
     "products-ground-mount-gf2:0:f61b6af8aebc",
+    "corrosion-coatings:0:60ce170e916d",
     "products-ground-mount-gf2:2:ef6f945572be",
     "products-ground-mount-gf1:1:ea4f4fdab1fe",
     "products-ground-mount-gf1:2:516929ac3734"
    ],
    "status": 200,
-   "latency_ms": 4255.5,
-   "first_group_rank": 1,
+   "latency_ms": 22687.5,
+   "first_group_rank": 2,
    "hit": true,
    "all_groups_found": true,
-   "reciprocal_rank": 1.0,
-   "answer": "At least 0.6 m",
+   "reciprocal_rank": 0.5,
+   "answer": "The minimum ground clearance of GroundFrame GF-2 is at least 0.6 m.",
    "refused": false,
    "flags": [],
    "facts": 1,
    "missing_facts": [],
    "behaviour_ok": true,
-   "refusal_ok": true,
-   "judged": {
-    "faithfulness": [
-     1.0
-    ]
-   },
-   "judge_errors": []
+   "refusal_ok": true
   },
   {
    "id": "g022",
@@ -640,31 +616,28 @@
    "seen": false,
    "question": "How strong a wind can the south-facing flat-roof system take?",
    "retrieved": [
-    "products-flat-roof-rf1:2:bda97207539c",
     "products-flat-roof-rf1:1:96bd3f1c0c6c",
-    "products-flat-roof-rf1:0:87f4079e16e5",
+    "products-overview:1:7b291994c46a",
     "products-flat-roof-rf2:0:37574a244939",
-    "products-flat-roof-rf2:1:118910e283fc"
+    "products-flat-roof-rf1:2:bda97207539c",
+    "products-flat-roof-rf2:1:118910e283fc",
+    "services-installation:3:08aac2252772",
+    "products-overview:2:16e6ba64e21b",
+    "products-pitched-roof-rp1:1:888b406bd5c4"
    ],
    "status": 200,
-   "latency_ms": 2718.6,
-   "first_group_rank": 2,
+   "latency_ms": 26975.9,
+   "first_group_rank": 1,
    "hit": true,
    "all_groups_found": true,
-   "reciprocal_rank": 0.5,
-   "answer": "The south-facing flat-roof system can take a maximum wind speed of 28 m/s.",
+   "reciprocal_rank": 1.0,
+   "answer": "The south-facing flat-roof system, RoofFlat RF-1, can take a maximum wind speed of 28 m/s.",
    "refused": false,
    "flags": [],
    "facts": 1,
    "missing_facts": [],
    "behaviour_ok": true,
-   "refusal_ok": true,
-   "judged": {
-    "faithfulness": [
-     1.0
-    ]
-   },
-   "judge_errors": []
+   "refusal_ok": true
   },
   {
    "id": "g024",
@@ -679,12 +652,15 @@
    "retrieved": [
     "products-carport-cp1:1:a402c784d0d4",
     "products-pitched-roof-rp1:1:888b406bd5c4",
-    "products-flat-roof-rf1:1:96bd3f1c0c6c",
     "products-flat-roof-rf2:1:118910e283fc",
-    "products-carport-cp1:2:6a428ddbed36"
+    "products-flat-roof-rf1:1:96bd3f1c0c6c",
+    "products-carport-cp1:0:c1380b6d362c",
+    "products-carport-cp1:2:6a428ddbed36",
+    "foundations-ground-mount:0:882079e6361a",
+    "products-flat-roof-rf1:2:bda97207539c"
    ],
    "status": 200,
-   "latency_ms": 2248.2,
+   "latency_ms": 16224.4,
    "first_group_rank": 1,
    "hit": true,
    "all_groups_found": true,
@@ -697,9 +673,7 @@
     "5° to 10°"
    ],
    "behaviour_ok": false,
-   "refusal_ok": false,
-   "judged": {},
-   "judge_errors": []
+   "refusal_ok": false
   },
   {
    "id": "g025",
@@ -716,10 +690,13 @@
     "products-ground-mount-gf2:3:01e70f179ec8",
     "products-ground-mount-gf2:1:df7101dcc4db",
     "products-ground-mount-gf1:0:964c52c94b33",
-    "corrosion-coatings:0:60ce170e916d"
+    "corrosion-coatings:0:60ce170e916d",
+    "products-flat-roof-rf1:1:96bd3f1c0c6c",
+    "products-ground-mount-gf1:2:516929ac3734",
+    "products-overview:1:7b291994c46a"
    ],
    "status": 200,
-   "latency_ms": 2384.4,
+   "latency_ms": 4709.2,
    "first_group_rank": 1,
    "hit": true,
    "all_groups_found": true,
@@ -732,9 +709,7 @@
     "85 µm"
    ],
    "behaviour_ok": false,
-   "refusal_ok": false,
-   "judged": {},
-   "judge_errors": []
+   "refusal_ok": false
   },
   {
    "id": "g026",
@@ -749,29 +724,26 @@
    "retrieved": [
     "corrosion-coatings:1:50575ee65d81",
     "products-flat-roof-rf2:1:118910e283fc",
+    "products-pitched-roof-rp1:1:888b406bd5c4",
+    "products-ground-mount-gf2:1:df7101dcc4db",
+    "products-ground-mount-gf1:1:ea4f4fdab1fe",
     "products-flat-roof-rf1:1:96bd3f1c0c6c",
     "products-ground-mount-gf2:3:01e70f179ec8",
-    "products-flat-roof-rf2:2:da8be679ccc8"
+    "products-overview:1:7b291994c46a"
    ],
    "status": 200,
-   "latency_ms": 2397.3,
+   "latency_ms": 13464.1,
    "first_group_rank": 1,
    "hit": true,
    "all_groups_found": true,
    "reciprocal_rank": 1.0,
-   "answer": "The anodising on RF-2 is 20 µm.",
+   "answer": "The anodic layer on RoofFlat RF-2 is 20 µm.",
    "refused": false,
    "flags": [],
    "facts": 1,
    "missing_facts": [],
    "behaviour_ok": true,
-   "refusal_ok": true,
-   "judged": {
-    "faithfulness": [
-     1.0
-    ]
-   },
-   "judge_errors": []
+   "refusal_ok": true
   },
   {
    "id": "g028",
@@ -784,31 +756,28 @@
    "seen": false,
    "question": "Our barn roof is pitched at about 45°. Is that within range for RP-1?",
    "retrieved": [
-    "products-pitched-roof-rp1:1:888b406bd5c4",
     "products-pitched-roof-rp1:0:583cc4e63bda",
+    "products-pitched-roof-rp1:1:888b406bd5c4",
     "products-pitched-roof-rp1:2:15e0861aad71",
+    "loads-wind-and-snow:1:90b832b5b1fd",
     "products-flat-roof-rf1:1:96bd3f1c0c6c",
-    "products-flat-roof-rf2:1:118910e283fc"
+    "products-flat-roof-rf2:1:118910e283fc",
+    "products-flat-roof-rf2:2:da8be679ccc8",
+    "products-flat-roof-rf1:2:bda97207539c"
    ],
    "status": 200,
-   "latency_ms": 3777.9,
-   "first_group_rank": 1,
+   "latency_ms": 23628.0,
+   "first_group_rank": 2,
    "hit": true,
    "all_groups_found": true,
-   "reciprocal_rank": 1.0,
-   "answer": "Yes, a roof pitch of 45° is within the range for RP-1 because the roof slope range for RP-1 is 10° to 60°.",
+   "reciprocal_rank": 0.5,
+   "answer": "The RoofPitch RP-1 system has a roof slope range of 10° to 60°, so a 45° pitch is within that range.",
    "refused": false,
    "flags": [],
    "facts": 1,
    "missing_facts": [],
    "behaviour_ok": true,
-   "refusal_ok": true,
-   "judged": {
-    "faithfulness": [
-     1.0
-    ]
-   },
-   "judge_errors": []
+   "refusal_ok": true
   },
   {
    "id": "g031",
@@ -821,29 +790,28 @@
    "seen": true,
    "question": "Our ground-mount site has a snow load of 3.0 kN/m². Can GF-1 handle it?",
    "retrieved": [
-    "products-ground-mount-gf1:1:ea4f4fdab1fe",
     "products-ground-mount-gf1:3:94569713dff4",
+    "products-ground-mount-gf1:1:ea4f4fdab1fe",
     "products-ground-mount-gf2:2:ef6f945572be",
+    "products-ground-mount-gf2:4:287df327adf3",
+    "products-ground-mount-gf1:0:964c52c94b33",
     "products-ground-mount-gf1:2:516929ac3734",
-    "products-ground-mount-gf1:0:964c52c94b33"
+    "foundations-ground-mount:3:de95285189ec",
+    "products-overview:2:16e6ba64e21b"
    ],
    "status": 200,
-   "latency_ms": 4722.7,
-   "first_group_rank": 1,
+   "latency_ms": 23047.7,
+   "first_group_rank": 2,
    "hit": true,
    "all_groups_found": false,
-   "reciprocal_rank": 1.0,
-   "answer": "I can't answer that from the available documents.",
-   "refused": true,
+   "reciprocal_rank": 0.5,
+   "answer": "GF-1 has a maximum snow load of 2.4 kN/m², and 3.0 kN/m² exceeds this, so GF-1 cannot handle it.",
+   "refused": false,
    "flags": [],
    "facts": 1,
-   "missing_facts": [
-    "2.4 kN/m²"
-   ],
-   "behaviour_ok": false,
-   "refusal_ok": false,
-   "judged": {},
-   "judge_errors": []
+   "missing_facts": [],
+   "behaviour_ok": true,
+   "refusal_ok": true
   },
   {
    "id": "g032",
@@ -856,29 +824,28 @@
    "seen": true,
    "question": "Can you build a 50 kWp system on our office roof?",
    "retrieved": [
-    "process-quote-requirements:1:0cd6c5946f52",
-    "company-overview:3:e737df5faf6e",
-    "company-overview:1:b192d0918c28",
+    "company-overview:2:d20f72f4c794",
     "products-flat-roof-rf2:2:da8be679ccc8",
-    "services-installation:2:ca896e7404fc"
+    "products-overview:2:16e6ba64e21b",
+    "products-pitched-roof-rp1:0:583cc4e63bda",
+    "products-pitched-roof-rp1:1:888b406bd5c4",
+    "company-overview:1:b192d0918c28",
+    "process-quote-requirements:1:0cd6c5946f52",
+    "products-flat-roof-rf1:0:87f4079e16e5"
    ],
    "status": 200,
-   "latency_ms": 2620.1,
-   "first_group_rank": null,
-   "hit": false,
-   "all_groups_found": false,
-   "reciprocal_rank": 0.0,
-   "answer": "I can't answer that from the available documents.",
-   "refused": true,
+   "latency_ms": 22662.0,
+   "first_group_rank": 1,
+   "hit": true,
+   "all_groups_found": true,
+   "reciprocal_rank": 1.0,
+   "answer": "The company does not work on private homes, and the smallest project it accepts is 100 kWp, so a 50 kWp system is not accepted.",
+   "refused": false,
    "flags": [],
    "facts": 1,
-   "missing_facts": [
-    "100 kWp"
-   ],
-   "behaviour_ok": false,
-   "refusal_ok": false,
-   "judged": {},
-   "judge_errors": []
+   "missing_facts": [],
+   "behaviour_ok": true,
+   "refusal_ok": true
   },
   {
    "id": "g033",
@@ -891,31 +858,28 @@
    "seen": true,
    "question": "Can I use GF-1 on a site 5 km from the sea?",
    "retrieved": [
-    "products-ground-mount-gf1:2:516929ac3734",
-    "products-ground-mount-gf2:2:ef6f945572be",
     "products-ground-mount-gf1:0:964c52c94b33",
+    "products-ground-mount-gf1:2:516929ac3734",
     "products-overview:2:16e6ba64e21b",
-    "products-ground-mount-gf1:3:94569713dff4"
+    "products-ground-mount-gf2:2:ef6f945572be",
+    "products-ground-mount-gf1:3:94569713dff4",
+    "products-ground-mount-gf2:3:01e70f179ec8",
+    "corrosion-categories:1:5550df1b43d8",
+    "products-ground-mount-gf2:4:287df327adf3"
    ],
    "status": 200,
-   "latency_ms": 4126.1,
-   "first_group_rank": 1,
+   "latency_ms": 27180.3,
+   "first_group_rank": 2,
    "hit": true,
    "all_groups_found": true,
-   "reciprocal_rank": 1.0,
-   "answer": "Yes, you can use GF-1 on a site 5 km from the sea because GF-1 is not used in corrosivity category C5, which is within 10 km of the sea, and a site 5 km from the sea is within that range.",
+   "reciprocal_rank": 0.5,
+   "answer": "GF-1 is not used in corrosivity category C5, which includes sites within 10 km of the sea, so it is not suitable for a site 5 km from the sea.",
    "refused": false,
    "flags": [],
    "facts": 1,
    "missing_facts": [],
    "behaviour_ok": true,
-   "refusal_ok": true,
-   "judged": {
-    "faithfulness": [
-     0.0
-    ]
-   },
-   "judge_errors": []
+   "refusal_ok": true
   },
   {
    "id": "g035",
@@ -932,27 +896,24 @@
     "services-supply:1:78e705e10f55",
     "products-ground-mount-gf2:2:ef6f945572be",
     "process-quote-requirements:1:0cd6c5946f52",
-    "company-overview:3:e737df5faf6e"
+    "company-overview:3:e737df5faf6e",
+    "process-quote-requirements:3:7f0ff5c1edd2",
+    "foundations-ground-mount:2:3f335b1b649d",
+    "products-overview:2:16e6ba64e21b"
    ],
    "status": 200,
-   "latency_ms": 3600.2,
+   "latency_ms": 22950.1,
    "first_group_rank": 2,
    "hit": true,
    "all_groups_found": true,
    "reciprocal_rank": 0.5,
-   "answer": "You should provide a flat, dry storage area of about 200 m² for each MWp of a ground-mount plant. For a 5 MWp plant, this means 1000 m².",
+   "answer": "The customer provides a flat, dry storage area of about 200 m² for each MWp of a ground-mount plant, so for a 5 MWp plant, 1000 m² of laydown space should be kept free.",
    "refused": false,
    "flags": [],
    "facts": 1,
    "missing_facts": [],
    "behaviour_ok": true,
-   "refusal_ok": true,
-   "judged": {
-    "faithfulness": [
-     1.0
-    ]
-   },
-   "judge_errors": []
+   "refusal_ok": true
   },
   {
    "id": "g036",
@@ -967,29 +928,26 @@
    "retrieved": [
     "corrosion-coatings:2:ba3c27ef881b",
     "products-overview:2:16e6ba64e21b",
+    "corrosion-coatings:1:50575ee65d81",
     "products-flat-roof-rf2:2:da8be679ccc8",
+    "products-overview:1:7b291994c46a",
     "products-flat-roof-rf2:0:37574a244939",
-    "products-flat-roof-rf2:1:118910e283fc"
+    "products-flat-roof-rf2:1:118910e283fc",
+    "corrosion-coatings:0:60ce170e916d"
    ],
    "status": 200,
-   "latency_ms": 2934.2,
-   "first_group_rank": 5,
+   "latency_ms": 23232.5,
+   "first_group_rank": 7,
    "hit": true,
    "all_groups_found": true,
-   "reciprocal_rank": 0.2,
-   "answer": "RF-2 uses stainless steel A4 fasteners because they resist chlorides from salt and are used in systems rated C4 and above.",
+   "reciprocal_rank": 0.14285714285714285,
+   "answer": "RF-2 uses stainless steel A4 fasteners because it is rated for a corrosivity category of C4 and A4 stainless steel resists chlorides from salt better than A2 stainless steel.",
    "refused": false,
    "flags": [],
    "facts": 1,
    "missing_facts": [],
    "behaviour_ok": true,
-   "refusal_ok": true,
-   "judged": {
-    "faithfulness": [
-     1.0
-    ]
-   },
-   "judge_errors": []
+   "refusal_ok": true
   },
   {
    "id": "g037",
@@ -1004,29 +962,26 @@
    "retrieved": [
     "products-ground-mount-gf2:3:01e70f179ec8",
     "products-ground-mount-gf2:2:ef6f945572be",
+    "corrosion-coatings:3:adb858e9d1ee",
+    "foundations-ground-mount:0:882079e6361a",
     "corrosion-coatings:0:60ce170e916d",
+    "foundations-ground-mount:2:3f335b1b649d",
     "products-overview:1:7b291994c46a",
     "products-ground-mount-gf2:1:df7101dcc4db"
    ],
    "status": 200,
-   "latency_ms": 3076.1,
+   "latency_ms": 23171.7,
    "first_group_rank": 2,
    "hit": true,
    "all_groups_found": true,
    "reciprocal_rank": 0.5,
-   "answer": "GroundFrame GF-2 would be used, and its zinc-magnesium coating protects it from rusting.",
+   "answer": "The GroundFrame GF-2 twin-post ground-mount system is used at sites near chemical plants, fertiliser storage or other sources of aggressive air, and its zinc-magnesium coating protects it from rusting.",
    "refused": false,
    "flags": [],
    "facts": 1,
    "missing_facts": [],
    "behaviour_ok": true,
-   "refusal_ok": true,
-   "judged": {
-    "faithfulness": [
-     1.0
-    ]
-   },
-   "judge_errors": []
+   "refusal_ok": true
   },
   {
    "id": "g038",
@@ -1039,19 +994,22 @@
    "seen": false,
    "question": "What do we need to have sorted on our land before your crew turns up to build?",
    "retrieved": [
-    "foundations-ground-mount:2:3f335b1b649d",
     "process-site-survey:2:119e1f468ab1",
-    "services-design:1:78351f1b3370",
-    "foundations-ground-mount:0:882079e6361a",
-    "loads-wind-and-snow:3:88bf1760221a"
+    "foundations-ground-mount:2:3f335b1b649d",
+    "process-quote-requirements:3:7f0ff5c1edd2",
+    "process-roof-assessment:4:1cff45f4578b",
+    "services-supply:0:4c37b06e2133",
+    "services-installation:3:08aac2252772",
+    "foundations-ground-mount:3:de95285189ec",
+    "process-roof-assessment:0:58218dd6ba1c"
    ],
    "status": 200,
-   "latency_ms": 3287.0,
+   "latency_ms": 21818.6,
    "first_group_rank": null,
    "hit": false,
    "all_groups_found": false,
    "reciprocal_rank": 0.0,
-   "answer": "A geotechnical survey, including soil drilling, pull-out tests on sample posts, and a check for groundwater and frost depth, must be completed before the crew turns up to build.",
+   "answer": "We need to have land plot boundaries, any existing soil reports, and known underground cables or pipes sorted before the crew turns up to build.",
    "refused": false,
    "flags": [],
    "facts": 1,
@@ -1059,13 +1017,7 @@
     "200 m²"
    ],
    "behaviour_ok": false,
-   "refusal_ok": true,
-   "judged": {
-    "faithfulness": [
-     1.0
-    ]
-   },
-   "judge_errors": []
+   "refusal_ok": true
   },
   {
    "id": "g039",
@@ -1078,31 +1030,28 @@
    "seen": false,
    "question": "We'd like panels on the warehouse but we've lost all the building plans. Can it still happen?",
    "retrieved": [
-    "process-quote-requirements:1:0cd6c5946f52",
-    "services-supply:1:78e705e10f55",
-    "process-roof-assessment:3:64686e305951",
+    "services-supply:0:4c37b06e2133",
+    "process-roof-assessment:2:2dcafb02721e",
+    "process-roof-assessment:0:58218dd6ba1c",
+    "process-roof-assessment:4:1cff45f4578b",
     "services-installation:0:16ddba31591c",
-    "process-roof-assessment:2:2dcafb02721e"
+    "process-quote-requirements:2:f1883ee81e7e",
+    "process-roof-assessment:3:64686e305951",
+    "services-design:1:78351f1b3370"
    ],
    "status": 200,
-   "latency_ms": 3203.4,
-   "first_group_rank": 5,
+   "latency_ms": 21207.3,
+   "first_group_rank": 2,
    "hit": true,
-   "all_groups_found": false,
-   "reciprocal_rank": 0.2,
-   "answer": "Yes, it can happen because the company can order a roof assessment from a partner engineer at the customer's cost if neither roof drawings nor an existing structural report exists.",
+   "all_groups_found": true,
+   "reciprocal_rank": 0.5,
+   "answer": "The company can order a roof assessment from a partner engineer at the customer's cost if neither roof drawings nor an existing structural report exists, so it can still happen.",
    "refused": false,
    "flags": [],
    "facts": 0,
    "missing_facts": [],
    "behaviour_ok": null,
-   "refusal_ok": true,
-   "judged": {
-    "faithfulness": [
-     1.0
-    ]
-   },
-   "judge_errors": []
+   "refusal_ok": true
   },
   {
    "id": "g041",
@@ -1115,27 +1064,28 @@
    "seen": false,
    "question": "What happens on the last day of the build, and why does that date matter to us later?",
    "retrieved": [
-    "services-design:4:c79485b8316d",
-    "services-installation:4:279a975466d9",
-    "process-cooperation-stages:1:b3c11b83268c",
     "process-cooperation-stages:2:9fdd6a86f285",
+    "process-cooperation-stages:1:b3c11b83268c",
+    "services-installation:4:279a975466d9",
+    "process-site-survey:1:4d8de16bf208",
+    "services-design:4:c79485b8316d",
+    "services-supply:2:52804edb67b4",
+    "services-design:0:a7b6ef576218",
     "warranty:1:5aca3e844773"
    ],
    "status": 200,
-   "latency_ms": 2420.7,
-   "first_group_rank": 2,
+   "latency_ms": 11812.8,
+   "first_group_rank": 3,
    "hit": true,
    "all_groups_found": false,
-   "reciprocal_rank": 0.5,
+   "reciprocal_rank": 0.3333333333333333,
    "answer": "I can't answer that from the available documents.",
    "refused": true,
    "flags": [],
    "facts": 0,
    "missing_facts": [],
    "behaviour_ok": false,
-   "refusal_ok": false,
-   "judged": {},
-   "judge_errors": []
+   "refusal_ok": false
   },
   {
    "id": "g042",
@@ -1148,31 +1098,28 @@
    "seen": false,
    "question": "What happens between your engineer's visit and us signing a contract?",
    "retrieved": [
-    "process-cooperation-stages:1:b3c11b83268c",
-    "process-cooperation-stages:0:ac299d58503a",
+    "process-site-survey:0:5dc708605682",
     "process-cooperation-stages:2:9fdd6a86f285",
+    "process-cooperation-stages:0:ac299d58503a",
     "services-design:2:74890812a3eb",
-    "services-installation:4:279a975466d9"
+    "process-cooperation-stages:1:b3c11b83268c",
+    "services-maintenance:2:4968068c312f",
+    "pricing-commercial-offer:1:378da8d65414",
+    "process-site-survey:4:7752dc27aa77"
    ],
    "status": 200,
-   "latency_ms": 2434.6,
-   "first_group_rank": null,
-   "hit": false,
-   "all_groups_found": false,
-   "reciprocal_rank": 0.0,
-   "answer": "The company prepares a preliminary design and sends a commercial offer after the engineer's visit.",
+   "latency_ms": 15282.7,
+   "first_group_rank": 8,
+   "hit": true,
+   "all_groups_found": true,
+   "reciprocal_rank": 0.125,
+   "answer": "Between the engineer's visit and the customer signing a contract, the company prepares a preliminary design and sends a commercial offer, which are based on the site survey report.",
    "refused": false,
    "flags": [],
    "facts": 0,
    "missing_facts": [],
    "behaviour_ok": null,
-   "refusal_ok": true,
-   "judged": {
-    "faithfulness": [
-     1.0
-    ]
-   },
-   "judge_errors": []
+   "refusal_ok": true
   },
   {
    "id": "g043",
@@ -1185,29 +1132,32 @@
    "seen": false,
    "question": "Our 'flat' roof actually falls at about 7 degrees. Which of your ballasted systems would fit it?",
    "retrieved": [
+    "products-overview:2:16e6ba64e21b",
     "products-flat-roof-rf1:1:96bd3f1c0c6c",
+    "products-pitched-roof-rp1:0:583cc4e63bda",
     "products-flat-roof-rf2:1:118910e283fc",
     "products-flat-roof-rf1:2:bda97207539c",
     "products-flat-roof-rf2:0:37574a244939",
-    "products-flat-roof-rf2:2:da8be679ccc8"
+    "products-flat-roof-rf2:2:da8be679ccc8",
+    "services-maintenance:1:1bcab0ca6b81"
    ],
    "status": 200,
-   "latency_ms": 4095.7,
-   "first_group_rank": 1,
+   "latency_ms": 22471.1,
+   "first_group_rank": 2,
    "hit": true,
    "all_groups_found": false,
-   "reciprocal_rank": 1.0,
+   "reciprocal_rank": 0.5,
    "answer": "I can't answer that from the available documents.",
    "refused": true,
-   "flags": [],
+   "flags": [
+    "answer_check_failed"
+   ],
    "facts": 1,
    "missing_facts": [
     "5°"
    ],
    "behaviour_ok": false,
-   "refusal_ok": false,
-   "judged": {},
-   "judge_errors": []
+   "refusal_ok": false
   },
   {
    "id": "g046",
@@ -1222,21 +1172,22 @@
    "retrieved": [
     "company-overview:0:7772405e2c96",
     "company-overview:3:e737df5faf6e",
+    "products-overview:0:7f2f6479c51d",
     "company-overview:1:b192d0918c28",
     "company-overview:2:d20f72f4c794",
-    "services-overview:0:bc95ca542289"
+    "services-overview:0:bc95ca542289",
+    "process-quote-requirements:1:0cd6c5946f52",
+    "services-installation:0:16ddba31591c"
    ],
    "status": 200,
-   "latency_ms": 1618.7,
+   "latency_ms": 11180.4,
    "answer": "I can't answer that from the available documents.",
    "refused": true,
    "flags": [],
    "facts": 0,
    "missing_facts": [],
    "behaviour_ok": true,
-   "refusal_ok": true,
-   "judged": {},
-   "judge_errors": []
+   "refusal_ok": true
   },
   {
    "id": "g047",
@@ -1253,19 +1204,20 @@
     "services-supply:1:78e705e10f55",
     "products-overview:2:16e6ba64e21b",
     "products-ground-mount-gf2:2:ef6f945572be",
-    "services-installation:2:ca896e7404fc"
+    "services-installation:2:ca896e7404fc",
+    "process-quote-requirements:1:0cd6c5946f52",
+    "products-flat-roof-rf2:2:da8be679ccc8",
+    "pricing-commercial-offer:0:0181282088d1"
    ],
    "status": 200,
-   "latency_ms": 2061.7,
+   "latency_ms": 4497.8,
    "answer": "I can't answer that from the available documents.",
    "refused": true,
    "flags": [],
    "facts": 0,
    "missing_facts": [],
    "behaviour_ok": true,
-   "refusal_ok": true,
-   "judged": {},
-   "judge_errors": []
+   "refusal_ok": true
   },
   {
    "id": "g049",
@@ -1278,23 +1230,24 @@
    "seen": false,
    "question": "Which bank would you recommend to finance the project?",
    "retrieved": [
-    "foundations-ground-mount:3:de95285189ec",
+    "pricing-commercial-offer:0:0181282088d1",
     "foundations-ground-mount:0:882079e6361a",
-    "products-overview:2:16e6ba64e21b",
-    "products-ground-mount-gf1:2:516929ac3734",
-    "process-quote-requirements:1:0cd6c5946f52"
+    "process-cooperation-stages:0:ac299d58503a",
+    "company-contacts:0:25cb01771724",
+    "company-contacts:2:06f33376535e",
+    "process-cooperation-stages:1:b3c11b83268c",
+    "foundations-ground-mount:3:de95285189ec",
+    "products-overview:2:16e6ba64e21b"
    ],
    "status": 200,
-   "latency_ms": 2053.0,
+   "latency_ms": 1611.6,
    "answer": "I can't answer that from the available documents.",
    "refused": true,
    "flags": [],
    "facts": 0,
    "missing_facts": [],
    "behaviour_ok": true,
-   "refusal_ok": true,
-   "judged": {},
-   "judge_errors": []
+   "refusal_ok": true
   },
   {
    "id": "g050",
@@ -1307,24 +1260,25 @@
    "seen": true,
    "question": "What torque should GF-1 bolts be tightened to?",
    "retrieved": [
+    "products-overview:1:7b291994c46a",
+    "products-ground-mount-gf1:3:94569713dff4",
     "products-ground-mount-gf1:2:516929ac3734",
-    "products-ground-mount-gf1:1:ea4f4fdab1fe",
     "products-ground-mount-gf1:0:964c52c94b33",
+    "products-ground-mount-gf1:1:ea4f4fdab1fe",
+    "services-maintenance:1:1bcab0ca6b81",
     "products-ground-mount-gf2:3:01e70f179ec8",
     "products-overview:2:16e6ba64e21b"
    ],
    "status": 200,
-   "latency_ms": 2345.5,
-   "distractor_in_context": false,
+   "latency_ms": 1687.2,
+   "distractor_in_context": true,
    "answer": "I can't answer that from the available documents.",
    "refused": true,
    "flags": [],
    "facts": 0,
    "missing_facts": [],
    "behaviour_ok": true,
-   "refusal_ok": true,
-   "judged": {},
-   "judge_errors": []
+   "refusal_ok": true
   },
   {
    "id": "g053",
@@ -1338,23 +1292,24 @@
    "question": "What bolt diameter is used on the CP-1 carport?",
    "retrieved": [
     "products-carport-cp1:0:c1380b6d362c",
+    "products-overview:1:7b291994c46a",
+    "loads-wind-and-snow:1:90b832b5b1fd",
     "products-carport-cp1:1:a402c784d0d4",
     "products-carport-cp1:2:6a428ddbed36",
-    "corrosion-coatings:0:60ce170e916d",
-    "products-ground-mount-gf1:2:516929ac3734"
+    "foundations-ground-mount:0:882079e6361a",
+    "services-installation:4:279a975466d9",
+    "services-maintenance:1:1bcab0ca6b81"
    ],
    "status": 200,
-   "latency_ms": 2140.4,
-   "distractor_in_context": true,
+   "latency_ms": 1829.9,
+   "distractor_in_context": false,
    "answer": "I can't answer that from the available documents.",
    "refused": true,
    "flags": [],
    "facts": 0,
    "missing_facts": [],
    "behaviour_ok": true,
-   "refusal_ok": true,
-   "judged": {},
-   "judge_errors": []
+   "refusal_ok": true
   },
   {
    "id": "g054",
@@ -1368,13 +1323,16 @@
    "question": "How long does your crew take to install a 500 kWp system on a flat roof?",
    "retrieved": [
     "services-installation:2:ca896e7404fc",
-    "services-installation:3:08aac2252772",
-    "process-quote-requirements:1:0cd6c5946f52",
+    "products-overview:2:16e6ba64e21b",
+    "products-flat-roof-rf1:0:87f4079e16e5",
+    "company-overview:2:d20f72f4c794",
     "products-flat-roof-rf2:2:da8be679ccc8",
-    "products-overview:2:16e6ba64e21b"
+    "process-roof-assessment:4:1cff45f4578b",
+    "company-overview:1:b192d0918c28",
+    "process-roof-assessment:0:58218dd6ba1c"
    ],
    "status": 200,
-   "latency_ms": 2475.9,
+   "latency_ms": 1945.3,
    "distractor_in_context": true,
    "answer": "I can't answer that from the available documents.",
    "refused": true,
@@ -1382,9 +1340,7 @@
    "facts": 0,
    "missing_facts": [],
    "behaviour_ok": true,
-   "refusal_ok": true,
-   "judged": {},
-   "judge_errors": []
+   "refusal_ok": true
   },
   {
    "id": "g055",
@@ -1398,13 +1354,16 @@
    "question": "What fire rating do your flat-roof systems have?",
    "retrieved": [
     "products-overview:2:16e6ba64e21b",
+    "products-pitched-roof-rp1:0:583cc4e63bda",
+    "products-flat-roof-rf1:0:87f4079e16e5",
+    "products-pitched-roof-rp1:2:15e0861aad71",
+    "products-overview:1:7b291994c46a",
     "products-flat-roof-rf2:2:da8be679ccc8",
     "products-pitched-roof-rp1:1:888b406bd5c4",
-    "products-overview:1:7b291994c46a",
     "products-flat-roof-rf1:1:96bd3f1c0c6c"
    ],
    "status": 200,
-   "latency_ms": 2302.2,
+   "latency_ms": 1758.0,
    "distractor_in_context": false,
    "answer": "I can't answer that from the available documents.",
    "refused": true,
@@ -1412,9 +1371,7 @@
    "facts": 0,
    "missing_facts": [],
    "behaviour_ok": true,
-   "refusal_ok": true,
-   "judged": {},
-   "judge_errors": []
+   "refusal_ok": true
   },
   {
    "id": "g056",
@@ -1428,26 +1385,27 @@
    "question": "GF-1's coating is 85 µm and GF-2's only 25 µm, so GF-1 resists corrosion better, right?",
    "retrieved": [
     "products-ground-mount-gf2:3:01e70f179ec8",
+    "products-ground-mount-gf2:0:f61b6af8aebc",
+    "corrosion-coatings:0:60ce170e916d",
     "products-ground-mount-gf1:2:516929ac3734",
     "products-overview:2:16e6ba64e21b",
-    "corrosion-coatings:0:60ce170e916d",
+    "products-overview:1:7b291994c46a",
+    "products-ground-mount-gf1:0:964c52c94b33",
     "products-ground-mount-gf2:1:df7101dcc4db"
    ],
    "status": 200,
-   "latency_ms": 6841.6,
+   "latency_ms": 12236.0,
    "first_group_rank": 1,
    "hit": true,
    "all_groups_found": true,
    "reciprocal_rank": 1.0,
-   "answer": "I can't answer that from the available documents.",
-   "refused": true,
+   "answer": "Coating thickness alone does not show which system resists corrosion better; the corrosivity category does.",
+   "refused": false,
    "flags": [],
    "facts": 0,
    "missing_facts": [],
-   "behaviour_ok": false,
-   "refusal_ok": false,
-   "judged": {},
-   "judge_errors": []
+   "behaviour_ok": null,
+   "refusal_ok": true
   },
   {
    "id": "g057",
@@ -1461,17 +1419,20 @@
    "question": "Why do all your mounting systems use corrosivity category C5?",
    "retrieved": [
     "corrosion-categories:3:d802103773d8",
-    "products-ground-mount-gf1:2:516929ac3734",
     "products-overview:1:7b291994c46a",
+    "products-ground-mount-gf1:2:516929ac3734",
+    "products-overview:0:7f2f6479c51d",
     "corrosion-categories:2:11e181098e62",
-    "corrosion-categories:1:5550df1b43d8"
+    "corrosion-categories:1:5550df1b43d8",
+    "corrosion-coatings:2:ba3c27ef881b",
+    "products-overview:2:16e6ba64e21b"
    ],
    "status": 200,
-   "latency_ms": 6033.5,
-   "first_group_rank": 3,
+   "latency_ms": 16521.9,
+   "first_group_rank": 2,
    "hit": true,
    "all_groups_found": true,
-   "reciprocal_rank": 0.3333333333333333,
+   "reciprocal_rank": 0.5,
    "answer": "I can't answer that from the available documents.",
    "refused": true,
    "flags": [],
@@ -1480,9 +1441,7 @@
     "C5"
    ],
    "behaviour_ok": false,
-   "refusal_ok": false,
-   "judged": {},
-   "judge_errors": []
+   "refusal_ok": false
   },
   {
    "id": "g059",
@@ -1496,13 +1455,16 @@
    "question": "Your posts always go 2.5 m into the ground anyway, so we can skip the soil investigation, can't we?",
    "retrieved": [
     "foundations-ground-mount:1:749fcc790271",
+    "services-maintenance:1:1bcab0ca6b81",
+    "process-site-survey:4:7752dc27aa77",
     "services-installation:2:ca896e7404fc",
     "foundations-ground-mount:2:3f335b1b649d",
+    "process-quote-requirements:3:7f0ff5c1edd2",
     "products-ground-mount-gf2:2:ef6f945572be",
     "products-ground-mount-gf1:2:516929ac3734"
    ],
    "status": 200,
-   "latency_ms": 6441.2,
+   "latency_ms": 5564.9,
    "first_group_rank": 1,
    "hit": true,
    "all_groups_found": true,
@@ -1516,9 +1478,7 @@
     "2.5 m"
    ],
    "behaviour_ok": false,
-   "refusal_ok": false,
-   "judged": {},
-   "judge_errors": []
+   "refusal_ok": false
   },
   {
    "id": "g060",
@@ -1532,29 +1492,32 @@
    "question": "Our installer said your installation warranty runs 15 years. When does it end for a plant handed over in March 2026?",
    "retrieved": [
     "warranty:0:9d0128a7191a",
+    "process-cooperation-stages:1:b3c11b83268c",
     "process-roof-assessment:3:64686e305951",
+    "services-installation:2:ca896e7404fc",
+    "warranty:2:6f52d0242c9d",
     "warranty:1:5aca3e844773",
-    "services-installation:4:279a975466d9",
-    "services-installation:2:ca896e7404fc"
+    "company-overview:3:e737df5faf6e",
+    "services-installation:4:279a975466d9"
    ],
    "status": 200,
-   "latency_ms": 7005.6,
+   "latency_ms": 12901.2,
    "first_group_rank": 1,
    "hit": true,
    "all_groups_found": true,
    "reciprocal_rank": 1.0,
    "answer": "I can't answer that from the available documents.",
    "refused": true,
-   "flags": [],
+   "flags": [
+    "answer_check_failed"
+   ],
    "facts": 2,
    "missing_facts": [
     "5 years",
     "2031"
    ],
    "behaviour_ok": false,
-   "refusal_ok": false,
-   "judged": {},
-   "judge_errors": []
+   "refusal_ok": false
   },
   {
    "id": "g062",
@@ -1568,28 +1531,27 @@
    "question": "Your offers are good for 90 days, so we can sign in two months at the same price?",
    "retrieved": [
     "pricing-commercial-offer:2:7c057053235f",
+    "pricing-commercial-offer:1:378da8d65414",
     "process-cooperation-stages:2:9fdd6a86f285",
     "services-supply:2:52804edb67b4",
-    "process-quote-requirements:4:93baf54ab698",
-    "process-site-survey:1:4d8de16bf208"
+    "services-maintenance:2:4968068c312f",
+    "process-quote-requirements:1:0cd6c5946f52",
+    "process-site-survey:1:4d8de16bf208",
+    "services-installation:4:279a975466d9"
    ],
    "status": 200,
-   "latency_ms": 2741.1,
+   "latency_ms": 22035.1,
    "first_group_rank": 1,
    "hit": true,
    "all_groups_found": true,
    "reciprocal_rank": 1.0,
-   "answer": "I can't answer that from the available documents.",
-   "refused": true,
+   "answer": "The offer is valid for 30 days from its date, so it is not valid for 90 days, and therefore we cannot sign in two months at the same price.",
+   "refused": false,
    "flags": [],
    "facts": 1,
-   "missing_facts": [
-    "30 days"
-   ],
-   "behaviour_ok": false,
-   "refusal_ok": false,
-   "judged": {},
-   "judge_errors": []
+   "missing_facts": [],
+   "behaviour_ok": null,
+   "refusal_ok": true
   },
   {
    "id": "g063",
@@ -1602,27 +1564,28 @@
    "seen": false,
    "question": "The carport is aluminium like your roof kits, so rust won't ever be an issue, will it?",
    "retrieved": [
-    "products-pitched-roof-rp1:1:888b406bd5c4",
+    "products-carport-cp1:1:a402c784d0d4",
+    "products-flat-roof-rf2:1:118910e283fc",
+    "services-maintenance:1:1bcab0ca6b81",
+    "products-carport-cp1:0:c1380b6d362c",
+    "products-carport-cp1:2:6a428ddbed36",
     "corrosion-coatings:1:50575ee65d81",
     "products-flat-roof-rf1:1:96bd3f1c0c6c",
-    "products-overview:1:7b291994c46a",
-    "products-flat-roof-rf2:1:118910e283fc"
+    "process-roof-assessment:1:0c719377ba2f"
    ],
    "status": 200,
-   "latency_ms": 2560.6,
-   "first_group_rank": null,
-   "hit": false,
-   "all_groups_found": false,
-   "reciprocal_rank": 0.0,
+   "latency_ms": 14407.4,
+   "first_group_rank": 1,
+   "hit": true,
+   "all_groups_found": true,
+   "reciprocal_rank": 1.0,
    "answer": "I can't answer that from the available documents.",
    "refused": true,
    "flags": [],
    "facts": 0,
    "missing_facts": [],
    "behaviour_ok": false,
-   "refusal_ok": false,
-   "judged": {},
-   "judge_errors": []
+   "refusal_ok": false
   },
   {
    "id": "g064",
@@ -1635,31 +1598,28 @@
    "seen": true,
    "question": "What is the maximum wind speed?",
    "retrieved": [
+    "products-ground-mount-gf2:1:df7101dcc4db",
+    "products-carport-cp1:1:a402c784d0d4",
     "loads-wind-and-snow:1:90b832b5b1fd",
-    "loads-wind-and-snow:2:a732ad498eb4",
-    "services-design:3:b84ef2f275b3",
+    "products-pitched-roof-rp1:1:888b406bd5c4",
+    "services-maintenance:0:1af77cbf3b4d",
     "products-flat-roof-rf2:1:118910e283fc",
-    "products-flat-roof-rf1:1:96bd3f1c0c6c"
+    "loads-wind-and-snow:0:460f94755e8c",
+    "services-installation:3:08aac2252772"
    ],
    "status": 200,
-   "latency_ms": 5753.8,
-   "first_group_rank": 1,
+   "latency_ms": 18862.6,
+   "first_group_rank": 3,
    "hit": true,
    "all_groups_found": true,
-   "reciprocal_rank": 1.0,
-   "answer": "The maximum wind speed is 36 m/s for the GroundFrame GF-2 product, 30 m/s for the RoofFlat RF-2 and CarportFrame CP-1, 28 m/s for the RoofFlat RF-1, and 30 m/s for the RoofPitch RP-1.",
+   "reciprocal_rank": 0.3333333333333333,
+   "answer": "The maximum wind speed is the basic wind velocity from EN 1991-1-4, and it varies per product: GroundFrame GF-1 has 32 m/s, GroundFrame GF-2 has 36 m/s, RoofFlat RF-1 has 28 m/s, RoofFlat RF-2 has 30 m/s, RoofPitch RP-1 has 30 m/s, and CarportFrame CP-1 has 30 m/s.",
    "refused": false,
    "flags": [],
    "facts": 0,
    "missing_facts": [],
    "behaviour_ok": null,
-   "refusal_ok": true,
-   "judged": {
-    "faithfulness": [
-     1.0
-    ]
-   },
-   "judge_errors": []
+   "refusal_ok": true
   },
   {
    "id": "g065",
@@ -1673,30 +1633,27 @@
    "question": "How long is the warranty?",
    "retrieved": [
     "warranty:0:9d0128a7191a",
+    "process-cooperation-stages:1:b3c11b83268c",
     "warranty:3:beedd5aeabf1",
     "warranty:1:5aca3e844773",
     "services-supply:2:52804edb67b4",
-    "process-cooperation-stages:2:9fdd6a86f285"
+    "warranty:2:6f52d0242c9d",
+    "process-cooperation-stages:2:9fdd6a86f285",
+    "services-maintenance:0:1af77cbf3b4d"
    ],
    "status": 200,
-   "latency_ms": 5024.3,
+   "latency_ms": 22053.7,
    "first_group_rank": 1,
    "hit": true,
    "all_groups_found": true,
    "reciprocal_rank": 1.0,
-   "answer": "The product warranty is 15 years and the installation warranty is 5 years. Both periods start on the date of the handover certificate.",
+   "answer": "The product warranty is 15 years and the installation warranty is 5 years, both starting on the date of the handover certificate.",
    "refused": false,
    "flags": [],
    "facts": 0,
    "missing_facts": [],
    "behaviour_ok": null,
-   "refusal_ok": true,
-   "judged": {
-    "faithfulness": [
-     1.0
-    ]
-   },
-   "judge_errors": []
+   "refusal_ok": true
   },
   {
    "id": "g066",
@@ -1713,23 +1670,26 @@
     "corrosion-categories:0:879e4aaf12d5",
     "corrosion-categories:2:11e181098e62",
     "corrosion-categories:1:5550df1b43d8",
-    "products-ground-mount-gf1:2:516929ac3734"
+    "products-ground-mount-gf1:2:516929ac3734",
+    "warranty:1:5aca3e844773",
+    "corrosion-coatings:2:ba3c27ef881b",
+    "products-overview:1:7b291994c46a"
    ],
    "status": 200,
-   "latency_ms": 5566.1,
-   "first_group_rank": null,
-   "hit": false,
-   "all_groups_found": false,
-   "reciprocal_rank": 0.0,
+   "latency_ms": 23054.3,
+   "first_group_rank": 8,
+   "hit": true,
+   "all_groups_found": true,
+   "reciprocal_rank": 0.125,
    "answer": "I can't answer that from the available documents.",
    "refused": true,
-   "flags": [],
+   "flags": [
+    "answer_check_failed"
+   ],
    "facts": 0,
    "missing_facts": [],
    "behaviour_ok": false,
-   "refusal_ok": false,
-   "judged": {},
-   "judge_errors": []
+   "refusal_ok": false
   },
   {
    "id": "g067",
@@ -1742,27 +1702,28 @@
    "seen": false,
    "question": "How thick is the coating?",
    "retrieved": [
-    "corrosion-coatings:0:60ce170e916d",
-    "corrosion-coatings:1:50575ee65d81",
+    "products-ground-mount-gf1:1:ea4f4fdab1fe",
+    "products-ground-mount-gf2:1:df7101dcc4db",
     "products-ground-mount-gf2:3:01e70f179ec8",
-    "products-flat-roof-rf2:1:118910e283fc",
-    "products-flat-roof-rf1:1:96bd3f1c0c6c"
+    "products-pitched-roof-rp1:1:888b406bd5c4",
+    "corrosion-coatings:1:50575ee65d81",
+    "corrosion-coatings:0:60ce170e916d",
+    "products-flat-roof-rf1:1:96bd3f1c0c6c",
+    "products-flat-roof-rf2:1:118910e283fc"
    ],
    "status": 200,
-   "latency_ms": 10513.1,
-   "first_group_rank": 1,
+   "latency_ms": 16166.6,
+   "first_group_rank": 6,
    "hit": true,
    "all_groups_found": true,
-   "reciprocal_rank": 1.0,
+   "reciprocal_rank": 0.16666666666666666,
    "answer": "I can't answer that from the available documents.",
    "refused": true,
    "flags": [],
    "facts": 0,
    "missing_facts": [],
    "behaviour_ok": false,
-   "refusal_ok": false,
-   "judged": {},
-   "judge_errors": []
+   "refusal_ok": false
   },
   {
    "id": "g068",
@@ -1775,27 +1736,28 @@
    "seen": false,
    "question": "How long until you get back to me?",
    "retrieved": [
-    "process-quote-requirements:4:93baf54ab698",
+    "company-contacts:1:a43d0efe674b",
     "warranty:3:beedd5aeabf1",
-    "process-cooperation-stages:2:9fdd6a86f285",
+    "process-quote-requirements:4:93baf54ab698",
     "process-site-survey:1:4d8de16bf208",
-    "services-supply:2:52804edb67b4"
+    "process-cooperation-stages:2:9fdd6a86f285",
+    "services-supply:2:52804edb67b4",
+    "company-contacts:0:25cb01771724",
+    "warranty:0:9d0128a7191a"
    ],
    "status": 200,
-   "latency_ms": 4791.4,
-   "first_group_rank": null,
-   "hit": false,
-   "all_groups_found": false,
-   "reciprocal_rank": 0.0,
-   "answer": "I can't answer that from the available documents.",
-   "refused": true,
+   "latency_ms": 14497.2,
+   "first_group_rank": 1,
+   "hit": true,
+   "all_groups_found": true,
+   "reciprocal_rank": 1.0,
+   "answer": "Emails received outside working hours are answered on the next working day, and the usual reply time is within 2 working days.",
+   "refused": false,
    "flags": [],
    "facts": 0,
    "missing_facts": [],
-   "behaviour_ok": false,
-   "refusal_ok": false,
-   "judged": {},
-   "judge_errors": []
+   "behaviour_ok": null,
+   "refusal_ok": true
   },
   {
    "id": "g071",
@@ -1808,23 +1770,24 @@
    "seen": true,
    "question": "Wie lange gilt die Produktgarantie?",
    "retrieved": [
-    "services-supply:0:4c37b06e2133",
-    "corrosion-coatings:0:60ce170e916d",
     "company-overview:3:e737df5faf6e",
+    "services-supply:0:4c37b06e2133",
+    "company-contacts:2:06f33376535e",
+    "corrosion-coatings:0:60ce170e916d",
     "services-supply:1:78e705e10f55",
-    "products-overview:1:7b291994c46a"
+    "products-overview:1:7b291994c46a",
+    "process-cooperation-stages:2:9fdd6a86f285",
+    "products-ground-mount-gf2:3:01e70f179ec8"
    ],
    "status": 200,
-   "latency_ms": 1920.8,
+   "latency_ms": 16231.7,
    "answer": "I can't answer that from the available documents.",
    "refused": true,
    "flags": [],
    "facts": 0,
    "missing_facts": [],
    "behaviour_ok": false,
-   "refusal_ok": false,
-   "judged": {},
-   "judge_errors": []
+   "refusal_ok": false
   },
   {
    "id": "g072",
@@ -1838,22 +1801,23 @@
    "question": "Яке максимальне снігове навантаження для GF-2?",
    "retrieved": [
     "products-ground-mount-gf2:0:f61b6af8aebc",
-    "products-ground-mount-gf2:2:ef6f945572be",
-    "products-ground-mount-gf2:3:01e70f179ec8",
+    "loads-wind-and-snow:1:90b832b5b1fd",
     "products-ground-mount-gf2:4:287df327adf3",
-    "products-overview:2:16e6ba64e21b"
+    "products-overview:1:7b291994c46a",
+    "corrosion-coatings:0:60ce170e916d",
+    "products-ground-mount-gf2:2:ef6f945572be",
+    "products-ground-mount-gf1:0:964c52c94b33",
+    "products-ground-mount-gf2:3:01e70f179ec8"
    ],
    "status": 200,
-   "latency_ms": 2222.1,
-   "answer": "До 3.5 кН/м²",
+   "latency_ms": 14824.3,
+   "answer": "The maximum snow load for GroundFrame GF-2 is 3.5 kN/m².",
    "refused": false,
    "flags": [],
    "facts": 0,
    "missing_facts": [],
    "behaviour_ok": false,
-   "refusal_ok": false,
-   "judged": {},
-   "judge_errors": []
+   "refusal_ok": false
   },
   {
    "id": "g074",
@@ -1870,19 +1834,20 @@
     "services-installation:2:ca896e7404fc",
     "products-ground-mount-gf1:0:964c52c94b33",
     "services-supply:1:78e705e10f55",
-    "products-ground-mount-gf1:3:94569713dff4"
+    "products-ground-mount-gf1:3:94569713dff4",
+    "products-pitched-roof-rp1:0:583cc4e63bda",
+    "corrosion-categories:3:d802103773d8",
+    "process-quote-requirements:1:0cd6c5946f52"
    ],
    "status": 200,
-   "latency_ms": 2308.5,
+   "latency_ms": 16356.7,
    "answer": "I can't answer that from the available documents.",
    "refused": true,
    "flags": [],
    "facts": 0,
    "missing_facts": [],
    "behaviour_ok": false,
-   "refusal_ok": false,
-   "judged": {},
-   "judge_errors": []
+   "refusal_ok": false
   }
  ]
 }
