@@ -74,6 +74,7 @@ class ApiSystem:
             "answer": body["answer"],
             "abstained": body["abstained"],
             "retrieved": [hit["chunk_id"] for hit in body["retrieved"]],
+            "citations": body["citations"],
             "flags": body["flags"],
             "latency_ms": latency,
         }

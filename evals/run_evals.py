@@ -286,7 +286,9 @@ def rescore(report, cases, overlap, store):
     has_retrieval, has_generation = CAPABILITIES[report["system"]]
     scored = []
     for saved in report["cases"]:
-        response = {key: saved[key] for key in ("status", "latency_ms", "retrieved", "flags") if key in saved}
+        response = {
+            key: saved[key] for key in ("status", "latency_ms", "retrieved", "citations", "flags") if key in saved
+        }
         if has_generation:
             response["answer"] = saved.get("answer", "")
             response["abstained"] = saved.get("refused", False)

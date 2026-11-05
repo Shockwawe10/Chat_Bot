@@ -66,6 +66,20 @@ def test_only_the_first_group_decides_a_hit():
     assert not scored["hit"] and scored["reciprocal_rank"] == 0.0
 
 
+def test_citations_and_their_text_are_saved_and_kept_by_a_rescore():
+    answered = {**reply(), "citations": ["w:0"]}
+    scored = score_case(case(), answered, STORE, True, True)
+    assert scored["citations"] == ["w:0"]
+    assert scored["cited_texts"] == ["| Product warranty | 15 years |\n| Installation warranty | 5 years |"]
+    saved = {**run_evals_report([scored]), "system": "pipeline"}
+    again, _, _ = run_evals.rescore(saved, [case()], {}, STORE)
+    assert (again[0]["citations"], again[0]["cited_texts"]) == (scored["citations"], scored["cited_texts"])
+
+
+def run_evals_report(scored):
+    return {"split": "dev", "cases": scored, "metrics": {}}
+
+
 def test_gold_quote_in_another_document_does_not_count():
     group = [span("other", "| Installation warranty | 5 years |")]
     assert group_rank(group, ["o:0", "w:0"], STORE) is None
