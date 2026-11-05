@@ -525,9 +525,11 @@ About 8 weeks at 25–35 hours a week, in stages 0 to 8. Every stage ends with s
 
 - [x] Hallucination suite in CI (`tests/ai`, gates in `evals/gates.py`): out-of-scope refusals, unsupported language, false premises, numeric fidelity, citation check (the cited source really contains the claim). Plain pytest, not DeepEval: DeepEval 4.3 needs `click<8.4`, while Ragas's `huggingface-hub` needs `click>=8.4.2`. CI has no model for DeepEval's LLM metrics anyway, so the checks are code either way
 - [x] Experiments on the dev set: top-k and prompt version, plus an answer check, hybrid search and example questions per chunk (8 experiments in `reports/experiments.md`). Chunk size was not run
-- [ ] Error analysis: read every failed case, group failures by cause (retrieval miss, invented fact, incomplete answer), count them
+- [x] Error analysis: read every failed case, group failures by cause (retrieval miss, invented fact, incomplete answer), count them. `reports/error_analysis.md`: 30 of 52 fail at the baseline, 21 at the end of the stage
 
 **Exit criteria:** at least 3 experiments compared in `reports/experiments.md`; the winning setup confirmed once on holdout; hallucination suite runs in CI; error categories with counts.
+
+**Status: done (2026-11-05).** 8 experiments compared; the winner (prompt v5, top-k 8, example questions per chunk, answer check) confirmed on holdout; English-only reply built; hallucination suite in `tests/ai`; failures 30 → 21 of 52 dev cases, with causes counted in `reports/error_analysis.md`.
 
 ### Stage 4. Security: prompt injection and jailbreak (weeks 4–5)
 
@@ -764,6 +766,12 @@ GitHub, which checks our code every time we save a change, has no robot brain to
 A guard is only useful if it catches mistakes, so we tested the guard too. We fed it a robot that always says "I don't know", one that always says "Yes", answers with "15 years" where "5 years" is right, and a citation pointing at the wrong card. The guard caught every one. The real test passes every rule.
 
 One rule needed thought. For "how much space for a 5 MWp plant?", the answer, 1,000 m², isn't written on any card: the robot works it out from "200 m² per MWp". So for that answer the guard checks that the card says 200 m².
+
+### Stage 3, part 12: what's still wrong
+
+At the end of the stage we sorted the robot's mistakes again, the same way as at the start. It now gets 21 of 52 practice questions wrong instead of 30. At the start, 11 mistakes came from not finding the right card. Now only 4 do. And none of its answers says anything false.
+
+Almost every mistake left is about how it answers: 10 times it had the right card and still said "I don't know", and 7 times its answer was true but too short, leaving out a reason or a second fact. Those are the problems for later stages to work on.
 
 ---
 
