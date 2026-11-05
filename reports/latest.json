@@ -1,12 +1,12 @@
 {
- "run_id": "20261105T084127Z-pipeline-dev",
- "timestamp": "2026-11-05T08:55:53+00:00",
+ "run_id": "20261105T091225Z-pipeline-dev",
+ "timestamp": "2026-11-05T09:26:16+00:00",
  "system": "pipeline",
  "label": "",
  "experiment": "",
  "split": "dev",
  "smoke": false,
- "git_sha": "faa01ff14c5278f7ab7e8721c1da6423c5d51602",
+ "git_sha": "6fc9a9da796db0703dc73e4501621a03d3a49d46",
  "git_dirty": false,
  "dataset_version": "1.2",
  "cases_run": 52,
@@ -34,7 +34,7 @@
  "judge_passes": 0,
  "judge_method": null,
  "total_cost": 0.0,
- "latency_p95_ms": 23628.0,
+ "latency_p95_ms": 27678.0,
  "metrics": {
   "cases": 52,
   "hit_rate": 0.9523809523809523,
@@ -43,10 +43,10 @@
   "hit_rate_low_overlap": 0.9047619047619048,
   "hit_rate_high_overlap": 1.0,
   "near_misses_with_distractor": 2,
-  "behaviour_accuracy": 0.5526315789473685,
+  "behaviour_accuracy": 0.631578947368421,
   "behaviour_decided": 38,
   "behaviour_for_judge": 14,
-  "refusal_accuracy": 0.6923076923076923,
+  "refusal_accuracy": 0.75,
   "over_refusal_rate": 0.30952380952380953,
   "numeric_fidelity": 0.6818181818181818,
   "out_of_scope_answered": 0,
@@ -83,12 +83,12 @@
     7
    ],
    "unsupported language": [
-    0,
     3,
+    0,
     0
    ]
   },
-  "latency_p95_ms": 23628.0,
+  "latency_p95_ms": 27678.0,
   "faithfulness": null,
   "answer_relevancy": null,
   "context_precision": null,
@@ -116,7 +116,7 @@
     "pricing-commercial-offer:0:0181282088d1"
    ],
    "status": 200,
-   "latency_ms": 19112.2,
+   "latency_ms": 16093.7,
    "first_group_rank": 1,
    "hit": true,
    "all_groups_found": true,
@@ -150,7 +150,7 @@
     "pricing-commercial-offer:1:378da8d65414"
    ],
    "status": 200,
-   "latency_ms": 22050.5,
+   "latency_ms": 22671.5,
    "first_group_rank": 1,
    "hit": true,
    "all_groups_found": true,
@@ -184,7 +184,7 @@
     "services-maintenance:0:1af77cbf3b4d"
    ],
    "status": 200,
-   "latency_ms": 21860.8,
+   "latency_ms": 22161.3,
    "first_group_rank": 1,
    "hit": true,
    "all_groups_found": true,
@@ -218,7 +218,7 @@
     "services-installation:0:16ddba31591c"
    ],
    "status": 200,
-   "latency_ms": 23114.5,
+   "latency_ms": 22446.8,
    "first_group_rank": 1,
    "hit": true,
    "all_groups_found": true,
@@ -252,7 +252,7 @@
     "services-maintenance:2:4968068c312f"
    ],
    "status": 200,
-   "latency_ms": 23009.3,
+   "latency_ms": 22807.8,
    "first_group_rank": 5,
    "hit": true,
    "all_groups_found": true,
@@ -286,7 +286,7 @@
     "company-overview:1:b192d0918c28"
    ],
    "status": 200,
-   "latency_ms": 22135.4,
+   "latency_ms": 22306.2,
    "first_group_rank": 2,
    "hit": true,
    "all_groups_found": true,
@@ -320,7 +320,7 @@
     "services-overview:1:c8f73c434f21"
    ],
    "status": 200,
-   "latency_ms": 21755.6,
+   "latency_ms": 26364.1,
    "first_group_rank": 1,
    "hit": true,
    "all_groups_found": true,
@@ -354,7 +354,7 @@
     "corrosion-categories:2:11e181098e62"
    ],
    "status": 200,
-   "latency_ms": 13471.8,
+   "latency_ms": 13419.1,
    "first_group_rank": 2,
    "hit": true,
    "all_groups_found": true,
@@ -388,7 +388,7 @@
     "pricing-commercial-offer:0:0181282088d1"
    ],
    "status": 200,
-   "latency_ms": 14361.0,
+   "latency_ms": 14414.0,
    "first_group_rank": 1,
    "hit": true,
    "all_groups_found": true,
@@ -422,7 +422,7 @@
     "products-flat-roof-rf2:2:da8be679ccc8"
    ],
    "status": 200,
-   "latency_ms": 21908.6,
+   "latency_ms": 22039.6,
    "first_group_rank": 1,
    "hit": true,
    "all_groups_found": true,
@@ -456,7 +456,7 @@
     "company-contacts:2:06f33376535e"
    ],
    "status": 200,
-   "latency_ms": 11639.3,
+   "latency_ms": 11565.3,
    "first_group_rank": 1,
    "hit": true,
    "all_groups_found": true,
@@ -490,7 +490,7 @@
     "company-overview:3:e737df5faf6e"
    ],
    "status": 200,
-   "latency_ms": 14401.2,
+   "latency_ms": 14362.7,
    "first_group_rank": 1,
    "hit": true,
    "all_groups_found": true,
@@ -524,7 +524,7 @@
     "process-quote-requirements:2:f1883ee81e7e"
    ],
    "status": 200,
-   "latency_ms": 16745.1,
+   "latency_ms": 12814.2,
    "first_group_rank": null,
    "hit": false,
    "all_groups_found": false,
@@ -558,7 +558,7 @@
     "process-quote-requirements:2:f1883ee81e7e"
    ],
    "status": 200,
-   "latency_ms": 14121.8,
+   "latency_ms": 14082.3,
    "first_group_rank": 1,
    "hit": true,
    "all_groups_found": true,
@@ -592,7 +592,7 @@
     "products-ground-mount-gf1:2:516929ac3734"
    ],
    "status": 200,
-   "latency_ms": 22687.5,
+   "latency_ms": 23171.3,
    "first_group_rank": 2,
    "hit": true,
    "all_groups_found": true,
@@ -626,7 +626,7 @@
     "products-pitched-roof-rp1:1:888b406bd5c4"
    ],
    "status": 200,
-   "latency_ms": 26975.9,
+   "latency_ms": 22728.6,
    "first_group_rank": 1,
    "hit": true,
    "all_groups_found": true,
@@ -660,7 +660,7 @@
     "products-flat-roof-rf1:2:bda97207539c"
    ],
    "status": 200,
-   "latency_ms": 16224.4,
+   "latency_ms": 21357.9,
    "first_group_rank": 1,
    "hit": true,
    "all_groups_found": true,
@@ -696,7 +696,7 @@
     "products-overview:1:7b291994c46a"
    ],
    "status": 200,
-   "latency_ms": 4709.2,
+   "latency_ms": 4796.8,
    "first_group_rank": 1,
    "hit": true,
    "all_groups_found": true,
@@ -732,7 +732,7 @@
     "products-overview:1:7b291994c46a"
    ],
    "status": 200,
-   "latency_ms": 13464.1,
+   "latency_ms": 14526.7,
    "first_group_rank": 1,
    "hit": true,
    "all_groups_found": true,
@@ -766,7 +766,7 @@
     "products-flat-roof-rf1:2:bda97207539c"
    ],
    "status": 200,
-   "latency_ms": 23628.0,
+   "latency_ms": 23163.0,
    "first_group_rank": 2,
    "hit": true,
    "all_groups_found": true,
@@ -800,7 +800,7 @@
     "products-overview:2:16e6ba64e21b"
    ],
    "status": 200,
-   "latency_ms": 23047.7,
+   "latency_ms": 22470.5,
    "first_group_rank": 2,
    "hit": true,
    "all_groups_found": false,
@@ -834,7 +834,7 @@
     "products-flat-roof-rf1:0:87f4079e16e5"
    ],
    "status": 200,
-   "latency_ms": 22662.0,
+   "latency_ms": 22357.3,
    "first_group_rank": 1,
    "hit": true,
    "all_groups_found": true,
@@ -868,7 +868,7 @@
     "products-ground-mount-gf2:4:287df327adf3"
    ],
    "status": 200,
-   "latency_ms": 27180.3,
+   "latency_ms": 22879.1,
    "first_group_rank": 2,
    "hit": true,
    "all_groups_found": true,
@@ -902,7 +902,7 @@
     "products-overview:2:16e6ba64e21b"
    ],
    "status": 200,
-   "latency_ms": 22950.1,
+   "latency_ms": 23223.5,
    "first_group_rank": 2,
    "hit": true,
    "all_groups_found": true,
@@ -936,7 +936,7 @@
     "corrosion-coatings:0:60ce170e916d"
    ],
    "status": 200,
-   "latency_ms": 23232.5,
+   "latency_ms": 28058.9,
    "first_group_rank": 7,
    "hit": true,
    "all_groups_found": true,
@@ -970,7 +970,7 @@
     "products-ground-mount-gf2:1:df7101dcc4db"
    ],
    "status": 200,
-   "latency_ms": 23171.7,
+   "latency_ms": 23331.7,
    "first_group_rank": 2,
    "hit": true,
    "all_groups_found": true,
@@ -1004,7 +1004,7 @@
     "process-roof-assessment:0:58218dd6ba1c"
    ],
    "status": 200,
-   "latency_ms": 21818.6,
+   "latency_ms": 21664.2,
    "first_group_rank": null,
    "hit": false,
    "all_groups_found": false,
@@ -1040,7 +1040,7 @@
     "services-design:1:78351f1b3370"
    ],
    "status": 200,
-   "latency_ms": 21207.3,
+   "latency_ms": 21766.8,
    "first_group_rank": 2,
    "hit": true,
    "all_groups_found": true,
@@ -1074,7 +1074,7 @@
     "warranty:1:5aca3e844773"
    ],
    "status": 200,
-   "latency_ms": 11812.8,
+   "latency_ms": 12768.3,
    "first_group_rank": 3,
    "hit": true,
    "all_groups_found": false,
@@ -1108,7 +1108,7 @@
     "process-site-survey:4:7752dc27aa77"
    ],
    "status": 200,
-   "latency_ms": 15282.7,
+   "latency_ms": 15496.1,
    "first_group_rank": 8,
    "hit": true,
    "all_groups_found": true,
@@ -1142,7 +1142,7 @@
     "services-maintenance:1:1bcab0ca6b81"
    ],
    "status": 200,
-   "latency_ms": 22471.1,
+   "latency_ms": 27678.0,
    "first_group_rank": 2,
    "hit": true,
    "all_groups_found": false,
@@ -1180,7 +1180,7 @@
     "services-installation:0:16ddba31591c"
    ],
    "status": 200,
-   "latency_ms": 11180.4,
+   "latency_ms": 11729.0,
    "answer": "I can't answer that from the available documents.",
    "refused": true,
    "flags": [],
@@ -1210,7 +1210,7 @@
     "pricing-commercial-offer:0:0181282088d1"
    ],
    "status": 200,
-   "latency_ms": 4497.8,
+   "latency_ms": 4582.4,
    "answer": "I can't answer that from the available documents.",
    "refused": true,
    "flags": [],
@@ -1240,7 +1240,7 @@
     "products-overview:2:16e6ba64e21b"
    ],
    "status": 200,
-   "latency_ms": 1611.6,
+   "latency_ms": 1600.4,
    "answer": "I can't answer that from the available documents.",
    "refused": true,
    "flags": [],
@@ -1270,7 +1270,7 @@
     "products-overview:2:16e6ba64e21b"
    ],
    "status": 200,
-   "latency_ms": 1687.2,
+   "latency_ms": 1733.3,
    "distractor_in_context": true,
    "answer": "I can't answer that from the available documents.",
    "refused": true,
@@ -1301,7 +1301,7 @@
     "services-maintenance:1:1bcab0ca6b81"
    ],
    "status": 200,
-   "latency_ms": 1829.9,
+   "latency_ms": 1886.8,
    "distractor_in_context": false,
    "answer": "I can't answer that from the available documents.",
    "refused": true,
@@ -1332,7 +1332,7 @@
     "process-roof-assessment:0:58218dd6ba1c"
    ],
    "status": 200,
-   "latency_ms": 1945.3,
+   "latency_ms": 1965.0,
    "distractor_in_context": true,
    "answer": "I can't answer that from the available documents.",
    "refused": true,
@@ -1363,7 +1363,7 @@
     "products-flat-roof-rf1:1:96bd3f1c0c6c"
    ],
    "status": 200,
-   "latency_ms": 1758.0,
+   "latency_ms": 1807.8,
    "distractor_in_context": false,
    "answer": "I can't answer that from the available documents.",
    "refused": true,
@@ -1394,7 +1394,7 @@
     "products-ground-mount-gf2:1:df7101dcc4db"
    ],
    "status": 200,
-   "latency_ms": 12236.0,
+   "latency_ms": 17196.5,
    "first_group_rank": 1,
    "hit": true,
    "all_groups_found": true,
@@ -1428,7 +1428,7 @@
     "products-overview:2:16e6ba64e21b"
    ],
    "status": 200,
-   "latency_ms": 16521.9,
+   "latency_ms": 12314.3,
    "first_group_rank": 2,
    "hit": true,
    "all_groups_found": true,
@@ -1464,7 +1464,7 @@
     "products-ground-mount-gf1:2:516929ac3734"
    ],
    "status": 200,
-   "latency_ms": 5564.9,
+   "latency_ms": 5372.7,
    "first_group_rank": 1,
    "hit": true,
    "all_groups_found": true,
@@ -1501,7 +1501,7 @@
     "services-installation:4:279a975466d9"
    ],
    "status": 200,
-   "latency_ms": 12901.2,
+   "latency_ms": 12680.1,
    "first_group_rank": 1,
    "hit": true,
    "all_groups_found": true,
@@ -1540,7 +1540,7 @@
     "services-installation:4:279a975466d9"
    ],
    "status": 200,
-   "latency_ms": 22035.1,
+   "latency_ms": 22424.6,
    "first_group_rank": 1,
    "hit": true,
    "all_groups_found": true,
@@ -1574,7 +1574,7 @@
     "process-roof-assessment:1:0c719377ba2f"
    ],
    "status": 200,
-   "latency_ms": 14407.4,
+   "latency_ms": 14911.2,
    "first_group_rank": 1,
    "hit": true,
    "all_groups_found": true,
@@ -1608,7 +1608,7 @@
     "services-installation:3:08aac2252772"
    ],
    "status": 200,
-   "latency_ms": 18862.6,
+   "latency_ms": 19402.8,
    "first_group_rank": 3,
    "hit": true,
    "all_groups_found": true,
@@ -1642,7 +1642,7 @@
     "services-maintenance:0:1af77cbf3b4d"
    ],
    "status": 200,
-   "latency_ms": 22053.7,
+   "latency_ms": 22387.1,
    "first_group_rank": 1,
    "hit": true,
    "all_groups_found": true,
@@ -1676,7 +1676,7 @@
     "products-overview:1:7b291994c46a"
    ],
    "status": 200,
-   "latency_ms": 23054.3,
+   "latency_ms": 27716.0,
    "first_group_rank": 8,
    "hit": true,
    "all_groups_found": true,
@@ -1712,7 +1712,7 @@
     "products-flat-roof-rf2:1:118910e283fc"
    ],
    "status": 200,
-   "latency_ms": 16166.6,
+   "latency_ms": 16136.0,
    "first_group_rank": 6,
    "hit": true,
    "all_groups_found": true,
@@ -1746,7 +1746,7 @@
     "warranty:0:9d0128a7191a"
    ],
    "status": 200,
-   "latency_ms": 14497.2,
+   "latency_ms": 14974.0,
    "first_group_rank": 1,
    "hit": true,
    "all_groups_found": true,
@@ -1769,25 +1769,18 @@
    "smoke": true,
    "seen": true,
    "question": "Wie lange gilt die Produktgarantie?",
-   "retrieved": [
-    "company-overview:3:e737df5faf6e",
-    "services-supply:0:4c37b06e2133",
-    "company-contacts:2:06f33376535e",
-    "corrosion-coatings:0:60ce170e916d",
-    "services-supply:1:78e705e10f55",
-    "products-overview:1:7b291994c46a",
-    "process-cooperation-stages:2:9fdd6a86f285",
-    "products-ground-mount-gf2:3:01e70f179ec8"
-   ],
+   "retrieved": [],
    "status": 200,
-   "latency_ms": 16231.7,
-   "answer": "I can't answer that from the available documents.",
-   "refused": true,
-   "flags": [],
+   "latency_ms": 2.6,
+   "answer": "I can only answer questions in English. Please ask your question in English.",
+   "refused": false,
+   "flags": [
+    "not_english"
+   ],
    "facts": 0,
    "missing_facts": [],
-   "behaviour_ok": false,
-   "refusal_ok": false
+   "behaviour_ok": true,
+   "refusal_ok": true
   },
   {
    "id": "g072",
@@ -1799,25 +1792,18 @@
    "smoke": true,
    "seen": false,
    "question": "Яке максимальне снігове навантаження для GF-2?",
-   "retrieved": [
-    "products-ground-mount-gf2:0:f61b6af8aebc",
-    "loads-wind-and-snow:1:90b832b5b1fd",
-    "products-ground-mount-gf2:4:287df327adf3",
-    "products-overview:1:7b291994c46a",
-    "corrosion-coatings:0:60ce170e916d",
-    "products-ground-mount-gf2:2:ef6f945572be",
-    "products-ground-mount-gf1:0:964c52c94b33",
-    "products-ground-mount-gf2:3:01e70f179ec8"
-   ],
+   "retrieved": [],
    "status": 200,
-   "latency_ms": 14824.3,
-   "answer": "The maximum snow load for GroundFrame GF-2 is 3.5 kN/m².",
+   "latency_ms": 2.9,
+   "answer": "I can only answer questions in English. Please ask your question in English.",
    "refused": false,
-   "flags": [],
+   "flags": [
+    "not_english"
+   ],
    "facts": 0,
    "missing_facts": [],
-   "behaviour_ok": false,
-   "refusal_ok": false
+   "behaviour_ok": true,
+   "refusal_ok": true
   },
   {
    "id": "g074",
@@ -1829,25 +1815,18 @@
    "smoke": true,
    "seen": false,
    "question": "¿Cuánto cuesta un sistema de montaje para 1 MWp?",
-   "retrieved": [
-    "company-overview:3:e737df5faf6e",
-    "services-installation:2:ca896e7404fc",
-    "products-ground-mount-gf1:0:964c52c94b33",
-    "services-supply:1:78e705e10f55",
-    "products-ground-mount-gf1:3:94569713dff4",
-    "products-pitched-roof-rp1:0:583cc4e63bda",
-    "corrosion-categories:3:d802103773d8",
-    "process-quote-requirements:1:0cd6c5946f52"
-   ],
+   "retrieved": [],
    "status": 200,
-   "latency_ms": 16356.7,
-   "answer": "I can't answer that from the available documents.",
-   "refused": true,
-   "flags": [],
+   "latency_ms": 2.5,
+   "answer": "I can only answer questions in English. Please ask your question in English.",
+   "refused": false,
+   "flags": [
+    "not_english"
+   ],
    "facts": 0,
    "missing_facts": [],
-   "behaviour_ok": false,
-   "refusal_ok": false
+   "behaviour_ok": true,
+   "refusal_ok": true
   }
  ]
 }

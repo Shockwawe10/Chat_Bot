@@ -573,3 +573,13 @@ On all 23 cases, 10 pass (8 by code, 2 by reading), and 2 exposed cases are stil
 1. The 3 language cases (g071, g072, g074) pass.
 2. Every other dev answer is the same as in `20261105T084127Z-pipeline-dev`, because no other dev question is flagged. One case may still differ, the noise floor from experiment 6.
 3. Out-of-scope answered stays 0/7.
+
+**Result: all three predictions held.** Run `20261105T091225Z-pipeline-dev`, 2026-11-05.
+
+1. **Held.** g071 (German), g072 (Ukrainian) and g074 (Spanish) get the English-only reply and pass. The language category goes from 0/3 to 3/3.
+2. **Held.** The other 49 answers are word for word the same as in `20261105T084127Z-pipeline-dev`. Only the 3 language cases changed.
+3. **Held.** Out-of-scope answered stays 0/7.
+
+Dev passes rise from 28/52 to 31/52 (24 by code and the same 7 by reading), and refusal accuracy from 0.69 to 0.75. Latency p95 is 27.7 s against 23.6 s in the previous run. The answers before and after are the same, so the difference is timing noise from model swapping, not the change: a language reply takes no model call.
+
+The German case g071 no longer says "No passage mentions a product guarantee", the false answer from experiment 5.
