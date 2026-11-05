@@ -31,6 +31,7 @@ CHECKER = ROOT / "app" / "checker.py"
 KEYWORD = ROOT / "app" / "keyword.py"
 QUESTIONS = ROOT / "app" / "questions.py"
 LANGUAGE = ROOT / "app" / "language.py"
+GATES = ROOT / "evals" / "gates.py"
 SCORING = ROOT / "evals" / "scoring.py"
 VALIDATOR = ROOT / "evals" / "validate_golden.py"
 METRICS = ROOT / "evals" / "metrics.py"
@@ -490,6 +491,15 @@ BREAKS = {
     "language: one foreign word is enough": [(LANGUAGE, "return not (other >= 2 and other > english)", "return not (other >= 1 and other > english)")],
     "language: accented words not counted": [(LANGUAGE, "word in OTHER or not word.isascii()", "word in OTHER")],
     "language: English words not counted": [(LANGUAGE, "english = sum(word in ENGLISH for word in words)", "english = 0")],
+    # CI gates (evals/gates.py)
+    "gates: out-of-scope answers ignored": [(GATES, 'Gate("out-of-scope answered", not answered_oos,', 'Gate("out-of-scope answered", True,')],
+    "gates: any reply counts as English-only": [(GATES, "if not (answered(c) and language_reply(c.get(\"answer\", \"\")))]", "if not answered(c)]")],
+    "gates: facts never rechecked": [(GATES, 'return missing_facts(case.get("answer", ""), facts) if answered(case) else list(facts)', "return []")],
+    "gates: citations never checked": [(GATES, '        if missing_facts("\\n".join(c.get("cited_texts", [])), stated):\n', "        if False:\n")],
+    "gates: calculated facts excused outright": [(GATES, "stated = [part for fact in facts for part in inputs.get(fact, [fact])]", "stated = [fact for fact in facts if fact not in inputs]")],
+    "gates: hit rate has no floor": [(GATES, "HIT_RATE_MIN = 35", "HIT_RATE_MIN = 0")],
+    "gates: run without citations accepted": [(GATES, '    if any(answered(case) and "cited_texts" not in case for case in report.get("cases", [])):\n', "    if False:\n")],
+    "gates: experiment run accepted": [(GATES, ' or report.get("experiment"):', ":")],
     # Answer check (app/checker.py)
     "check: unsupported answer goes out": [
         (CHECKER, '        if verdicts and all(item["supported"] for item in verdicts):\n', "        if True:\n")
@@ -580,6 +590,9 @@ def copy_project(folder):
     """A copy with what the unit and API tests need, like a clean CI checkout."""
     work = folder / "project"
     shutil.copytree(ROOT, work, ignore=LEFT_OUT)
+    # The CI gate tests check the committed run, which a CI checkout has too.
+    (work / "reports").mkdir()
+    shutil.copy2(ROOT / "reports" / "latest.json", work / "reports" / "latest.json")
     return work
 
 
@@ -639,7 +652,7 @@ def main():
     parser.add_argument("--only", default="", help="run only breaks whose name contains this text")
     args = parser.parse_args()
     selected = {name: edits for name, edits in BREAKS.items() if args.only in name}
-    files = (CHUNKER, EMBEDDER, INDEX, SETTINGS, RETRIEVER, GENERATOR, API, CHECKER, KEYWORD, QUESTIONS, LANGUAGE, SCORING, VALIDATOR, METRICS, SYSTEMS_FILE, RUN_EVALS, RENDER, JUDGE, CALIBRATE)
+    files = (CHUNKER, EMBEDDER, INDEX, SETTINGS, RETRIEVER, GENERATOR, API, CHECKER, KEYWORD, QUESTIONS, LANGUAGE, GATES, SCORING, VALIDATOR, METRICS, SYSTEMS_FILE, RUN_EVALS, RENDER, JUDGE, CALIBRATE)
     originals = {path: path.read_bytes() for path in files}
     check_breaks_apply(selected, originals)
 
