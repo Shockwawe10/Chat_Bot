@@ -1,0 +1,918 @@
+{
+ "model": "qwen3:4b-instruct",
+ "digest": "0edcdef34593eac1aa2be9c7d06c432dcf81945adca5eca2f27662c18f168ba0",
+ "prompt": "chunk_questions_v1.txt",
+ "prompt_sha256": "35385276e7b81a4dd6bacffdcaeacf955ee2cb783d20bb2dd80e75ba11e76f47",
+ "chunks": {
+  "company-contacts:0:25cb01771724": {
+   "chunk_sha256": "e74b7d3c8eb9342cfe2dc8a8a8623735417302bbf96509d9b77f05f54d0b845d",
+   "questions": [
+    "Which email should I use if I have a new project or a quote?",
+    "What email do I send if I need help with a project I already have or a warranty issue?",
+    "Can I talk to someone on the phone if I send an email?",
+    "Do you have a phone number I can call?",
+    "If I send an email and they need to call me back, who will do that?"
+   ]
+  },
+  "company-contacts:1:a43d0efe674b": {
+   "chunk_sha256": "81feeb181c8b9bb76e019aa410049920ba5b3addb1b4a7a2e840caf882324787",
+   "questions": [
+    "Can I email the support team after 6 PM on a weekday?",
+    "What time does the support team stop answering emails?",
+    "Will my email get answered if I send it on a weekend?",
+    "How long does it usually take to get a reply to my email?",
+    "If I send an email after work hours, when will I get a response?"
+   ]
+  },
+  "company-contacts:2:06f33376535e": {
+   "chunk_sha256": "134adb54b9231779e25c4f1ce0557b66fa8ce60f16190d449a01c7eaa3f53adc",
+   "questions": [
+    "Who handles support for a customer in the North region?",
+    "If I'm in the Central region, who do I talk to for my sales issue?",
+    "Does each region have a person in charge of sales projects?",
+    "Can I get help from someone who knows my area?",
+    "What happens after I first ask for help with a sales issue?"
+   ]
+  },
+  "company-overview:0:7772405e2c96": {
+   "chunk_sha256": "385bebc180ceef357c53b63dba782b5b743f96f7a02503cc262579ebf1e9dda0",
+   "questions": [
+    "What kind of solar systems does Example Solar Ltd. help install?",
+    "Do they offer services for businesses using solar power?",
+    "Can I get a solar mounting system from them?",
+    "What kind of customers do they work with?",
+    "Do they help set up solar farms for companies?"
+   ]
+  },
+  "company-overview:1:b192d0918c28": {
+   "chunk_sha256": "15a5d41c34b1e91809239c3cf6fee668283dc2d8c2ff8249807e13c9ceaab713",
+   "questions": [
+    "How do you help people install solar panels on their roofs?",
+    "Do you offer support for solar panels on flat roofs?",
+    "Can you help me fix a solar panel system that’s not working?",
+    "What kind of parts do you supply for solar mounting?",
+    "Do you check solar systems after they’re installed?"
+   ]
+  },
+  "company-overview:2:d20f72f4c794": {
+   "chunk_sha256": "41e17433728076fce349a60d34f2100d65ec3447adb550a897be4758e2234ba6",
+   "questions": [
+    "Can I get a solar system for my house that's under 100 kWp?",
+    "Do you sell the solar panels or the wires I'd need for my system?",
+    "Will you help me connect my solar system to the power grid?",
+    "Do you handle the electrical work when installing solar?",
+    "Can I use your service for a small solar setup like on a garage or shed?"
+   ]
+  },
+  "company-overview:3:e737df5faf6e": {
+   "chunk_sha256": "044eeb712661ff4c2fb75c37d9e302d46880f85084c3e9afff8c0d855dadb9e1",
+   "questions": [
+    "How much solar power has your company installed in total?",
+    "Do you work with businesses that want to set up solar panels?",
+    "Can you tell me which regions you serve?",
+    "What kind of companies do you usually work with?",
+    "How can I get in touch with someone at your company?"
+   ]
+  },
+  "corrosion-categories:0:879e4aaf12d5": {
+   "chunk_sha256": "25035ea4bedf2006917ee82d3f445b5d81a7ac68906abcfbb28a9db1553dcea1",
+   "questions": [
+    "Is there a way to know how bad the air is for metal at a location?",
+    "What does the company use to rate how much air is harmful to metal?",
+    "Can I find out how aggressive the air is at a site?",
+    "Does the company use a standard system to measure air damage to metal?",
+    "How do I check if the air at a place is likely to damage metal?"
+   ]
+  },
+  "corrosion-categories:1:5550df1b43d8": {
+   "chunk_sha256": "0454ee1a9d8a7b5634ab995aee572dba5cc68067784d6f9da1c3ccca60c7eda4",
+   "questions": [
+    "Is it safe to use my outdoor equipment in a coastal area near the sea?",
+    "What kind of environment has the most corrosive air?",
+    "Does salt water make things rust faster?",
+    "Can I trust my metal tools in a city that's not near the ocean?",
+    "What happens to metal items in places like offshore areas or where waves splash on the shore?"
+   ]
+  },
+  "corrosion-categories:2:11e181098e62": {
+   "chunk_sha256": "16f22784b833bb8dd747cc1976838eb09c82b58c97b3c03bf8de13ce39f27af8",
+   "questions": [
+    "Why does my area get a higher corrosion level if it's between two categories?",
+    "How do workers figure out how bad the rust risk is at a location?",
+    "Does wind direction matter when checking for rust?",
+    "Can I see signs of rust on metal things near me to know the risk?",
+    "What happens if a place is halfway between two corrosion levels?"
+   ]
+  },
+  "corrosion-categories:3:d802103773d8": {
+   "chunk_sha256": "68645b8790cf2bd99599caa82714e5c143a70138ba34d857678c2f1e80b06eaa",
+   "questions": [
+    "What's the highest corrosion level a mounting system can handle?",
+    "Can I use a mounting system in a salty or wet environment?",
+    "Do you sell any mounting systems for the most corrosive sites?",
+    "Is there a mounting system that works in very harsh weather?",
+    "What happens if I want a system for a really bad environment?"
+   ]
+  },
+  "corrosion-coatings:0:60ce170e916d": {
+   "chunk_sha256": "88cb53cee63ca47cfde84bad7147792c7abeac0cca00e885f3ec89e14f72eb64",
+   "questions": [
+    "Why is my steel frame protected on the edges?",
+    "What kind of coating do the GroundFrame GF-2 frames have?",
+    "Are the bolts on the steel frames also coated?",
+    "Does the galvanising cover the holes in the steel parts?",
+    "Can I trust the steel frame to last even if it gets wet?"
+   ]
+  },
+  "corrosion-coatings:1:50575ee65d81": {
+   "chunk_sha256": "26a66ba1fb0936de4c93708beeb76c276c09777867ff5a2beae0b785276b4e1a",
+   "questions": [
+    "How thick is the aluminium coating on the RoofFlat RF-1?",
+    "What's the difference in coating thickness between RoofFlat RF-1 and RF-2?",
+    "Do the RoofFlat products have aluminium in them?",
+    "Is the aluminium on RoofPitch RP-1 protected in a special way?",
+    "Can I tell how strong the aluminium layer is just by looking at the thickness number?"
+   ]
+  },
+  "corrosion-coatings:2:ba3c27ef881b": {
+   "chunk_sha256": "7ada641677d8fcb63b0ade050aa313dbd4b5b6fba45b92e17c96e5744e8215c9",
+   "questions": [
+    "What kind of stainless steel is used in systems that handle salt exposure?",
+    "Do different types of stainless steel work for different system ratings?",
+    "Why is A4 stainless steel better than A2 for salty environments?",
+    "Can I use regular stainless steel in a system that's rated C4 or higher?",
+    "What happens if I use A2 steel in a system that has salt in it?"
+   ]
+  },
+  "corrosion-coatings:3:adb858e9d1ee": {
+   "chunk_sha256": "c85ed683c92d73b08d9717eb79494dfb47b012cf1700f44cd824cb2ff9281842",
+   "questions": [
+    "Why do aluminium and steel parts not react badly when they touch?",
+    "What do we use between aluminium and steel parts to stop them from corroding?",
+    "Can aluminium and steel parts touch each other without causing damage?",
+    "Is there a special material used to stop metal parts from rusting when they touch?",
+    "What happens if aluminium and steel parts touch directly?"
+   ]
+  },
+  "foundations-ground-mount:0:882079e6361a": {
+   "chunk_sha256": "31437bba903af3d0b6092ad167bc903846e84415048e15ead10196ec7ae4b0ca",
+   "questions": [
+    "What kind of foundation do they use if the soil is rocky?",
+    "Can I avoid using concrete if I have a ground-mount system?",
+    "What do I do if my soil doesn’t pass the pull-out test?",
+    "Is there a foundation that works for carports?",
+    "Do they have a foundation that doesn’t need digging or concrete?"
+   ]
+  },
+  "foundations-ground-mount:1:749fcc790271": {
+   "chunk_sha256": "e0f767cd14d0852fe6e024b0307e9a6858c11323771cdca105eb110ae34bcbfc",
+   "questions": [
+    "How deep should I drive the posts into the ground?",
+    "Does the depth of the posts depend on the soil?",
+    "Can I just guess how deep to dig the posts?",
+    "What does a geotechnical survey do for the posts?",
+    "I'm not sure what a foundation is — can you explain how deep the posts go?"
+   ]
+  },
+  "foundations-ground-mount:2:3f335b1b649d": {
+   "chunk_sha256": "27c392ba775339e8584df8ae895f2f8cbf30d44f1b34c95d70602f512360383d",
+   "questions": [
+    "Do I need a soil test before my ground-mounted system is designed?",
+    "How many soil pull-out tests are done at a site?",
+    "Is there a check for water or freezing depth in the soil test?",
+    "Who does the soil test and how much does it cost?",
+    "What happens if I want to add more solar panels later and I already have a soil test?"
+   ]
+  },
+  "foundations-ground-mount:3:de95285189ec": {
+   "chunk_sha256": "33f4d448c79b1747e0234056f15e8c6c981c212c69f9d681c24037ae7330457a",
+   "questions": [
+    "Can I install a solar system on a slope of 12% without digging or moving the ground?",
+    "What's the steepest slope I can have and still not need to move the land?",
+    "Do you help with leveling the ground before installing a system?",
+    "If my land is steeper than 10%, do I need to do something before installing?",
+    "Can I put a system on a hill without having to change the shape of the land?"
+   ]
+  },
+  "loads-wind-and-snow:0:460f94755e8c": {
+   "chunk_sha256": "0458000f11adc1d51983c434a6e63b5c2a50ca888a7e507a55cc0f6c46f396b3",
+   "questions": [
+    "How do you make sure the thing I'm installing can handle strong winds?",
+    "Does the system work well in snowy areas?",
+    "What standards do you use to check how much wind or snow it can take?",
+    "Can I trust that the setup will stay safe in winter storms?",
+    "What does the company use to figure out how much wind or snow it can handle?"
+   ]
+  },
+  "loads-wind-and-snow:1:90b832b5b1fd": {
+   "chunk_sha256": "8366772ebef05a2a54f5a41121f698ad50a492506c70f7a7eafc65944a4fed77",
+   "questions": [
+    "What's the highest wind speed the GroundFrame GF-2 can handle?",
+    "How much snow load can the RoofPitch RP-1 handle?",
+    "What's the wind speed limit for the RoofFlat RF-1?",
+    "Can you tell me how much snow load the CarportFrame CP-1 is designed for?",
+    "What's the maximum wind speed for any of these products?"
+   ]
+  },
+  "loads-wind-and-snow:2:a732ad498eb4": {
+   "chunk_sha256": "ae8bd0a16b236f6e3e2c2dda1eeffc804a9efc42d007b518a057e7b5ac9484d3",
+   "questions": [
+    "What happens if my site needs more strength than the product can handle?",
+    "Can the company make a stronger version of the product if it's not strong enough?",
+    "Do they change the design if the site is too big for the product?",
+    "Will I get a different product if my site is too large?",
+    "What kind of changes can be made if the product isn't strong enough for my site?"
+   ]
+  },
+  "loads-wind-and-snow:3:88bf1760221a": {
+   "chunk_sha256": "f9936d1ce3bb5f1c0fd1aab1562d213e73c1680cdf2d1b7801d448aad86b99a4",
+   "questions": [
+    "Why do some places have different wind or snow values?",
+    "How do they decide what wind or snow strength to use for a building?",
+    "Can a hill or a coastal area change the wind or snow values?",
+    "Do engineers check the local area when picking these values?",
+    "What kind of places might have different wind or snow rules?"
+   ]
+  },
+  "pricing-commercial-offer:0:0181282088d1": {
+   "chunk_sha256": "67e91518ea83d3967477852c99b22a20974b44533a25ebda6c937a5f039442f2",
+   "questions": [
+    "Why don't you show prices on your website?",
+    "Can I get a quote over the phone or in a chat?",
+    "Does the size of my solar panel system affect the price?",
+    "Will the weather at my location impact how much it costs?",
+    "How does the type of ground or foundation affect the price?"
+   ]
+  },
+  "pricing-commercial-offer:1:378da8d65414": {
+   "chunk_sha256": "787d8a1a3b960f6159c5067778bf828b2d080da0bd56f7656cfb13710df2a075",
+   "questions": [
+    "How do I get a quote for a project?",
+    "What do I need to send to get a price?",
+    "Does the company visit the site before giving a price?",
+    "When will I get the offer after sending my project details?",
+    "Can I get a price without sending any documents?"
+   ]
+  },
+  "pricing-commercial-offer:2:7c057053235f": {
+   "chunk_sha256": "6e3e874bd1681074c893e5a5c6720f57e5b14b1cf53e2c05457a17bb53726a22",
+   "questions": [
+    "How long is a commercial offer good for?",
+    "If I don't use the offer in 30 days, does it still work?",
+    "Does the price of steel or aluminum change after the offer expires?",
+    "Can I get a new price if the offer is no longer valid?",
+    "What does a commercial offer actually cover?"
+   ]
+  },
+  "process-cooperation-stages:0:ac299d58503a": {
+   "chunk_sha256": "46ecacdbf6c691149f57b0934fe1dfdd2574e115e3bf0c39cb2d21e6d3305b21",
+   "questions": [
+    "What email should I use to send my project details to get a quote?",
+    "Do engineers visit the site, and if so, what do they do there?",
+    "Is there a special survey for ground-mounted projects?",
+    "What kind of plan does the company send after the first steps?",
+    "Can I get a price quote before the design is finished?"
+   ]
+  },
+  "process-cooperation-stages:1:b3c11b83268c": {
+   "chunk_sha256": "a0ca289be989181943b6c92b7f058815c3fb39ba0f895895019f69b3eb7c21f2",
+   "questions": [
+    "When do I get my warranty started?",
+    "What happens after the parts are delivered?",
+    "Do I have to approve the drawings before they go to production?",
+    "Who actually puts the equipment in place?",
+    "When do I officially get my project finished?"
+   ]
+  },
+  "process-cooperation-stages:2:9fdd6a86f285": {
+   "chunk_sha256": "f7b47a0a441e29a70073038c4183b392edde91be91f876c794042c2d3fb2efb2",
+   "questions": [
+    "How long does it take to get a site survey after I ask for one?",
+    "After the site survey, how many days do I usually get to see a design and a price?",
+    "How long after I sign the contract do they usually do the detailed design?",
+    "How long after the design is approved does it take to get the supplies?",
+    "Can I expect a fixed date for my project, or is that just what's written in the contract?"
+   ]
+  },
+  "process-quote-requirements:0:dfcb7e3de9bf": {
+   "chunk_sha256": "f659393c7e816aef8f5a20947f7d006dd56dba61ed221f0b4d849ca955c0bdb4",
+   "questions": [
+    "What do I need to give when asking for a price?",
+    "What information should I send to get a quote?",
+    "Do I have to send anything special to get a price estimate?",
+    "What kind of details do they need before giving a price?",
+    "Can I just say hello and get a quote without sending anything?"
+   ]
+  },
+  "process-quote-requirements:1:0cd6c5946f52": {
+   "chunk_sha256": "8a138cf7041273920fd9415d0c8e434828c2826c2d4acc8369f40e1a9d2c0032",
+   "questions": [
+    "What do I need to give when asking for a price on a solar project?",
+    "Do I have to tell them where my site is, and how?",
+    "What kind of roof or ground setup do I need to say for my solar setup?",
+    "Can I just say I want to start in a few months, or do I have to pick a specific date?",
+    "What if I don’t know which solar panels to pick—will they still give me a quote?"
+   ]
+  },
+  "process-quote-requirements:2:f1883ee81e7e": {
+   "chunk_sha256": "517e7fff06c366c5d1159f1bd9ceee1227a57e3cb9bd04139bd1a32d1b88ded7",
+   "questions": [
+    "What do I need to tell them about my roof when asking for a price?",
+    "Do I need to give them a picture of my roof?",
+    "How old should I say my house is when getting a quote?",
+    "What kind of roof materials are common for roof jobs?",
+    "Do I have to send a report about the roof's structure?"
+   ]
+  },
+  "process-quote-requirements:3:7f0ff5c1edd2": {
+   "chunk_sha256": "96d007337e253c411d9f386f6a95738c308d86bd9a4460e0e06a2e4340978532",
+   "questions": [
+    "What do I need to give when asking for a price on a ground-mount setup?",
+    "Do I have to tell them about pipes under the ground?",
+    "What if there's already a soil report from before?",
+    "What kind of info about the land do they want?",
+    "Do I need to share the edges of the land when getting a quote?"
+   ]
+  },
+  "process-quote-requirements:4:93baf54ab698": {
+   "chunk_sha256": "e93ec7933dcaa71d3bcd7e298d78b9857c20d7042df7bfa352b66afdd8702924",
+   "questions": [
+    "How long does it take to get a reply after I send a request with all the details?",
+    "Will I get an offer to schedule a site visit after my request is processed?",
+    "Can I still get a quote if I don’t have all the info right away?",
+    "Do I need to provide everything before getting a reply?",
+    "What happens if I don’t give all the information at first?"
+   ]
+  },
+  "process-roof-assessment:0:58218dd6ba1c": {
+   "chunk_sha256": "cd8ddf677b70813c2f1988978da2ad030d7b2f1a2b9383762266f7ab47d7bdc9",
+   "questions": [
+    "Do I need to get a professional check before fixing my roof?",
+    "Will my roof be able to handle a repair or new roof?",
+    "Is there a step before I start working on my roof?",
+    "Can I just fix my roof without checking if it can handle the weight?",
+    "What kind of expert looks at my roof before any work starts?"
+   ]
+  },
+  "process-roof-assessment:1:0c719377ba2f": {
+   "chunk_sha256": "f3dd905cf43d52c1198eea73cb21e8b1ea28e9fb7094825a982e98f0c2183d79",
+   "questions": [
+    "Can I hang things on my roof without damaging it?",
+    "Is there a risk of water getting stuck if I install a new roof system?",
+    "Do I need to clear a path for firefighters to reach the roof?",
+    "Will adding a new system make my roof too heavy?",
+    "Will the roof blocks water from flowing to the drains?"
+   ]
+  },
+  "process-roof-assessment:2:2dcafb02721e": {
+   "chunk_sha256": "6aca1427d24c656ebf9b3072f26abae1719e4c784b4763a531497389907b9259",
+   "questions": [
+    "Do I need to send any drawings or reports for a roof check?",
+    "Will I have to pay if someone comes to check my roof?",
+    "Can the company send someone to check my roof if I don’t have drawings?",
+    "What kind of report do I need to send for a roof check?",
+    "Is there a fee for a roof check, and how much is it?"
+   ]
+  },
+  "process-roof-assessment:3:64686e305951": {
+   "chunk_sha256": "e0302f8c90c8f6b73f9a6ffb901dd15763aef34f5dd519d9d9f098bd8900274e",
+   "questions": [
+    "Can I keep my solar panels if the waterproofing is only going to last a few years?",
+    "What happens if I don’t replace the old waterproofing before putting up solar panels?",
+    "Do I need to replace the waterproofing if it’s going to last less than 10 years?",
+    "Is it better to replace the waterproofing now or wait until it’s almost gone?",
+    "What if the roof’s waterproofing is only 5 years old—do I have to take down my solar panels?"
+   ]
+  },
+  "process-roof-assessment:4:1cff45f4578b": {
+   "chunk_sha256": "c580d1023ceee1d484ac2f6b843c7de5d5398a3bf0f9da961add7f2bf6876220",
+   "questions": [
+    "Can I get a roof installed without first having a check done?",
+    "What does the check say about my roof?",
+    "Do I need to approve something before workers start putting a new roof on?",
+    "If the check says no, what does that mean for my roof?",
+    "Will workers start working on my roof right away after the check?"
+   ]
+  },
+  "process-site-survey:0:5dc708605682": {
+   "chunk_sha256": "3ecec7de3aad086c141f97353d80ab9193f495ca8987db2ded0a324337920ed0",
+   "questions": [
+    "What happens when someone visits a location to check the setup for a new system?",
+    "Do engineers go to a place to gather information for planning?",
+    "Is there a step where someone goes to a site to collect data?",
+    "Can I get a list of what an engineer does when visiting a location?",
+    "What kind of visit do engineers make to get the info they need for a design?"
+   ]
+  },
+  "process-site-survey:1:4d8de16bf208": {
+   "chunk_sha256": "d0c9e59742f845b6a326c1076ed95a8645e81982b06fe7167ed20ba780e69a1b",
+   "questions": [
+    "When will I get a call to confirm the site visit date?",
+    "How many days after I ask do they usually schedule the visit?",
+    "Do I have to agree on a date before they go to my site?",
+    "Can they come to my place within 10 days of me asking?",
+    "What happens if I don’t confirm the date they suggest?"
+   ]
+  },
+  "process-site-survey:2:119e1f468ab1": {
+   "chunk_sha256": "3996371a34b7dc43071fbbd18b93ebe6fcd4e8bbd936fe1b1abc4907fc72b35e",
+   "questions": [
+    "Can I park a big truck at my site without hitting anything or blocking access?",
+    "Is there a problem if the roof is old or has leaks?",
+    "Do I need to worry about the ground being rocky or sloping?",
+    "Will being close to the sea affect how the equipment will wear out?",
+    "What do I need to check before someone comes to look at my site?"
+   ]
+  },
+  "process-site-survey:3:022b8f64e544": {
+   "chunk_sha256": "db501f53f3b3cd642891d529921358ec01b335be6902a5615398a20143c6ae0c",
+   "questions": [
+    "Is a site survey free if my solar project is 100 kWp or bigger?",
+    "Do I have to pay to visit my site if I'm in one of the three sales areas?",
+    "Will I be charged extra for going to my site if I'm not in one of the three sales regions?",
+    "Can I get a free site visit for a big solar project?",
+    "What if I live outside the three sales regions—will I have to pay to go there?"
+   ]
+  },
+  "process-site-survey:4:7752dc27aa77": {
+   "chunk_sha256": "b21325555f77b213e11f07e499d20262b208d6859cf1e0b874f4c2f12049b7a7",
+   "questions": [
+    "What does the engineer do after the site survey?",
+    "Where is the geotechnical survey done for ground-mount sites?",
+    "What document is made after the survey?",
+    "What does the survey report help with?",
+    "If I have a ground-mount site, where will the soil test happen?"
+   ]
+  },
+  "products-carport-cp1:0:c1380b6d362c": {
+   "chunk_sha256": "0f44d6ea6af6e3473a9d6b6d9d45580442adddefdad002253af74bb5a54dd8a0",
+   "questions": [
+    "Can I use this carport for two rows of cars?",
+    "Does the roof of this carport have solar panels?",
+    "How many parking spots can this carport cover?",
+    "Is the CP-1 carport made of steel?",
+    "Can I connect two of these carports together to cover more spaces?"
+   ]
+  },
+  "products-carport-cp1:1:a402c784d0d4": {
+   "chunk_sha256": "eac181705506d23c204ebd9717a0761292e37b93aa72815a652cf6241a28ce43",
+   "questions": [
+    "How tall is the carport?",
+    "What kind of steel is used in the carport frame?",
+    "Can it handle heavy snow?",
+    "How wide is each row of parking spots?",
+    "What's the highest wind speed it can handle?"
+   ]
+  },
+  "products-carport-cp1:2:6a428ddbed36": {
+   "chunk_sha256": "d576940677d9751923e501f4622d52146e05bdc58e0d51de47b5241501aac1f6",
+   "questions": [
+    "Can I add a gutter to the edge of my carport?",
+    "Do the columns have places to attach electric car chargers?",
+    "Is there protection at the bottom of the columns to stop damage?",
+    "Can I install a rain gutter on the carport?",
+    "Do the columns come with built-in protection from impacts?"
+   ]
+  },
+  "products-flat-roof-rf1:0:87f4079e16e5": {
+   "chunk_sha256": "f6a04ed7f44a1e9b9f8b928ce3be9a07788e39215358c786dda397636c63f905",
+   "questions": [
+    "Does this roof system go through the roof or just sit on top?",
+    "Is the RF-1 system designed to face south?",
+    "Can I use this system on a flat roof without drilling holes?",
+    "Does this system use ballast to hold the panels in place?",
+    "Will this work on a flat roof without damaging the existing material?"
+   ]
+  },
+  "products-flat-roof-rf1:1:96bd3f1c0c6c": {
+   "chunk_sha256": "ec2e7e12bbbf01f210d9b733d25cfe1ee06b22cda017b2716975a0e41b376e71",
+   "questions": [
+    "What kind of metal is used in the roof system?",
+    "How heavy can the extra weight on the roof be?",
+    "Can this roof system handle strong winds?",
+    "What is the steepest slope this roof can have?",
+    "Does it come with a coating to protect it from weather?"
+   ]
+  },
+  "products-flat-roof-rf1:2:bda97207539c": {
+   "chunk_sha256": "e1036a2c2d6cda51db5596c05d14fadce07ca0876a14803842c47f3c9a91b464",
+   "questions": [
+    "Do I need to check something before putting this roof system on my building?",
+    "Why do the corners of the roof need more weight?",
+    "Is there a mat that goes under each part of the roof system to protect it?",
+    "Does this roof system work only on south-facing roofs?",
+    "Will the amount of weight needed change depending on where it's installed on the roof?"
+   ]
+  },
+  "products-flat-roof-rf2:0:37574a244939": {
+   "chunk_sha256": "6b80a9af85d4aecfe39f2e04d84c69ebf095b3f205a6b859f128a321d21e8f6a",
+   "questions": [
+    "How does the roof system with modules facing east and west work?",
+    "Does this roof system need less weight than other types?",
+    "Why are the modules paired facing east and west?",
+    "Is this roof system good for windy areas?",
+    "Can I use this system if I don't want much wind resistance?"
+   ]
+  },
+  "products-flat-roof-rf2:1:118910e283fc": {
+   "chunk_sha256": "ecd238999c5650d42b2b7d172078f624351cb592596e2a6c95993de65018fb5d",
+   "questions": [
+    "How heavy can the roof system be when it's loaded with snow and extra weight?",
+    "What's the steepest slope this roof can have?",
+    "Is the roof made of metal, and if so, what kind?",
+    "Can this roof handle strong winds, and if so, how fast?",
+    "What kind of screws are used to hold the roof in place?"
+   ]
+  },
+  "products-flat-roof-rf2:2:da8be679ccc8": {
+   "chunk_sha256": "704b145be0858b6e3a2de8c631cc9d78b2a69bfb794847863781acc1d9c0131d",
+   "questions": [
+    "Can I fit more solar panels on my roof with this system than with the older one?",
+    "Do I need a special check before installing this system on my roof?",
+    "Is this system better for roofs that don’t have much weight capacity?",
+    "How many more panels can I add with this system compared to the old one?",
+    "Will this system work well on a roof that’s already carrying a lot of weight?"
+   ]
+  },
+  "products-ground-mount-gf1:0:964c52c94b33": {
+   "chunk_sha256": "359ff1b7c14080317bf842ab1a501b6970d44b8c4ee57dc911a1d4c4abd36ccd",
+   "questions": [
+    "What kind of system is the GF-1?",
+    "Can I use the GF-1 if I'm far from the sea?",
+    "How many posts does the GF-1 have?",
+    "Is the GF-1 good for open land?",
+    "Do I need a special setup for the GF-1?"
+   ]
+  },
+  "products-ground-mount-gf1:1:ea4f4fdab1fe": {
+   "chunk_sha256": "6db5764890e23c3f437365b1cbbd7b9de15bb96bbeb75a9fd90133729ac3cab0",
+   "questions": [
+    "What kind of metal is the ground mount made from?",
+    "How thick is the protective coating on the system?",
+    "Can I use this system in a snowy area?",
+    "What's the tallest it can be tilted?",
+    "What's the biggest solar setup this system can support?"
+   ]
+  },
+  "products-ground-mount-gf1:2:516929ac3734": {
+   "chunk_sha256": "9693a20d5c9589c32a2846b39254ef6c1d08e398f8f6e314558cee55199a27a5",
+   "questions": [
+    "Can I use my GF-1 system if I'm near the ocean?",
+    "What happens if I install the GF-1 system in a very salty area?",
+    "Is there a different system for places close to the sea?",
+    "Will my warranty be okay if I put the GF-1 in a place with high salt air?",
+    "Do I need a special system if I live near the coast?"
+   ]
+  },
+  "products-ground-mount-gf1:3:94569713dff4": {
+   "chunk_sha256": "ae469400bbb23070c8c9e4bcadb3d98cfb224c4fc1e9c1203e9f09d4f10def11",
+   "questions": [
+    "Can my GF-1 system handle hills or slopes?",
+    "What's the steepest slope it can handle without digging or changing the ground?",
+    "Does the GF-1 work on uneven ground?",
+    "Can I use this system on a hillside without doing any digging?",
+    "Will it work on a slope going north to south?"
+   ]
+  },
+  "products-ground-mount-gf2:0:f61b6af8aebc": {
+   "chunk_sha256": "e69375b214aeb378755027b1b87a2b5a3eab50211ebe26052b47a599a7d8e28e",
+   "questions": [
+    "Can I use this system for a big table that weighs a lot?",
+    "How is the GF-2 different from the GF-1?",
+    "Does this system work well in rough weather?",
+    "Is this system made for two rows of posts?",
+    "Can I put a heavy table on this setup without worrying about it breaking?"
+   ]
+  },
+  "products-ground-mount-gf2:1:df7101dcc4db": {
+   "chunk_sha256": "b5dd13f310334fb8a961282fe59e11f25df8746e65413d4df3962416144879e1",
+   "questions": [
+    "What kind of metal is the ground mount made from?",
+    "How thick is the protective coating on the steel?",
+    "Can I use this system in a snowy area?",
+    "What's the highest wind speed it can handle?",
+    "Does this system work for a small solar farm or a big one?"
+   ]
+  },
+  "products-ground-mount-gf2:2:ef6f945572be": {
+   "chunk_sha256": "bf66c1f187e5f146357b475fd9c5cdfbf2a9d98e9a76400a7c75cdf9e5238751",
+   "questions": [
+    "Can I use this system near the ocean?",
+    "Do you recommend it for places with a lot of snow?",
+    "Is it safe to use near a fertilizer storage site?",
+    "Will this work in a coastal area within 10 km of the sea?",
+    "Can I install this on a site with heavy snow loads?"
+   ]
+  },
+  "products-ground-mount-gf2:3:01e70f179ec8": {
+   "chunk_sha256": "64cc143c961e96c1dbb4f7bb04ffe88b5d7e1ad8204795a8f89e4ac51efa754e",
+   "questions": [
+    "Why does my GF-2 post last longer in coastal areas?",
+    "Is the coating on GF-2 thinner than on GF-1?",
+    "Does the coating thickness tell me how well it resists rust?",
+    "How does the GF-2 coating handle salt air better than older models?",
+    "Can I trust the coating to protect my post even if it's thin?"
+   ]
+  },
+  "products-ground-mount-gf2:4:287df327adf3": {
+   "chunk_sha256": "40b1d1341e42fefeb2dd2b703351e66e40113d58ef2deb9934c9bd05a81b8b2f",
+   "questions": [
+    "Can my GF-2 system handle hills or slopes?",
+    "Does the GF-2 work on steep ground?",
+    "What's the steepest slope the GF-2 can handle without digging?",
+    "Can I use this system on a hillside without doing any digging?",
+    "Will the GF-2 work on a slope going north to south?"
+   ]
+  },
+  "products-overview:0:7f2f6479c51d": {
+   "chunk_sha256": "f79cb92bf9c4d55cf90266f9e8ddaa72b7c64ea99a2f50cf359ea9a9ed373eb8",
+   "questions": [
+    "How many mounting systems does Example Solar Ltd. offer?",
+    "Can you tell me what the different mounting systems are for?",
+    "Do they have a full guide for each mounting system?",
+    "Is there a document for each mounting system?",
+    "What kind of support do they give for mounting systems?"
+   ]
+  },
+  "products-overview:1:7b291994c46a": {
+   "chunk_sha256": "162c9b8a219b5db3928214054a7086be4ffd9f369fccb081aa28b2d48fcf59fe",
+   "questions": [
+    "What kind of steel is used in the GroundFrame GF-2 mounting system?",
+    "Is the RF-1 roof system made from aluminium?",
+    "Which mounting system works best for a flat roof that faces south?",
+    "Can I use the CP-1 system for a carport?",
+    "What does the corrosion rating C4 mean for a mounting system?"
+   ]
+  },
+  "products-overview:2:16e6ba64e21b": {
+   "chunk_sha256": "39e8cf6fc4f493e43f848a29fbae107cca3d9b4b5502ba2f0220c1e00b68acb3",
+   "questions": [
+    "Which one should I pick if I'm near the sea or close to a chemical plant?",
+    "Is there a system that works better for flat roofs with less weight?",
+    "What's the difference between the two systems on a south-facing roof?",
+    "When do I get to pick which system to use?",
+    "Can I use the GF-1 system if I'm not near the sea or a chemical plant?"
+   ]
+  },
+  "products-pitched-roof-rp1:0:583cc4e63bda": {
+   "chunk_sha256": "90f41c84566f6e3c1c8dd7f0067be6a3f2dc5cee634bcd11808993db8a6a8848",
+   "questions": [
+    "How do I attach a roof system to a sloped roof?",
+    "Can I use this system on a roof that slopes?",
+    "What kind of roof does the RP-1 system work on?",
+    "Do the modules go straight across or along the roof?",
+    "Is there a system for roofs that aren't flat?"
+   ]
+  },
+  "products-pitched-roof-rp1:1:888b406bd5c4": {
+   "chunk_sha256": "35fa7185c2e2b5c685838d7495ad429fdfefda64ba8a455bea16d4b3621fae09",
+   "questions": [
+    "What kind of metal is used in the rails for the pitched roof system?",
+    "How thick is the protective coating on the aluminium rails?",
+    "Can this roof system handle snow loads of up to 3.0 kN/m²?",
+    "What is the steepest angle this roof can have?",
+    "Does this system work in strong winds, and if so, how fast can the wind be?"
+   ]
+  },
+  "products-pitched-roof-rp1:2:15e0861aad71": {
+   "chunk_sha256": "427d4c3b562b539d1e51a228d75387ff73b7ab934ace9f67c49a341ef7278df1",
+   "questions": [
+    "How do you attach clay and concrete tiles to a roof?",
+    "Can I use metal sheets with short rails on my roof?",
+    "Do standing seam metal roofs need holes to be installed?",
+    "Why can't your team work on roofs with asbestos-cement sheets?",
+    "What kind of roof system do you use for pitched roofs?"
+   ]
+  },
+  "services-design:0:a7b6ef576218": {
+   "chunk_sha256": "62003e1825cb781e37668c9699f5c95fcc2bee582f9a3202c8c632d60a9bc01b",
+   "questions": [
+    "How do you turn website data into something that can be built?",
+    "Can I get a system that's built from website data?",
+    "What does the design process do with the data from a website?",
+    "Do you make physical things from website information?",
+    "How do you turn online data into a real-world system?"
+   ]
+  },
+  "services-design:1:78351f1b3370": {
+   "chunk_sha256": "689bc375b28d40751d7a0fc4f9f42fc064fa06430d3b6d49d2204e641862f78b",
+   "questions": [
+    "How are the panels arranged on the roof or ground?",
+    "Do they check how strong the structure is against wind and snow?",
+    "What kind of base is used for mounting on the ground?",
+    "Can I get a list of all the parts that go into the system?",
+    "What does the assembly drawing show?"
+   ]
+  },
+  "services-design:2:74890812a3eb": {
+   "chunk_sha256": "7b8ffe14e107b14f8230989f15a0b80ef6791dc34bc5ecb4e4e976f0e858e32c",
+   "questions": [
+    "What happens after I visit the site for a survey?",
+    "When do they make the full drawings for installation?",
+    "Do they give a price quote based on the first design step?",
+    "What kind of design comes after I sign the contract?",
+    "Can I get a layout and size estimate before I sign the contract?"
+   ]
+  },
+  "services-design:3:b84ef2f275b3": {
+   "chunk_sha256": "b92faa155b064bee186c21b4ef48967d592efce2c202065a96944ee6f36b4b4e",
+   "questions": [
+    "How do we figure out how much wind and snow pressure a building can handle?",
+    "Do you use any specific rules for calculating wind and snow loads on buildings?",
+    "What standards do you use for wind and snow calculations?",
+    "Can you explain how wind and snow are measured for buildings?",
+    "I'm worried about snow buildup—how does your system handle that?"
+   ]
+  },
+  "services-design:4:c79485b8316d": {
+   "chunk_sha256": "54648b93034706964c7e8495472a4643a11ce0c580e4212b2cac5ed1958131b4",
+   "questions": [
+    "Can I change the design after I've approved it?",
+    "If I want a different part after the design is approved, will that affect the cost?",
+    "Will changing the design after approval delay the delivery date?",
+    "Does the company need to recalculate everything if I make a change after approval?",
+    "What happens if I want to switch to a different model after I say yes to the design?"
+   ]
+  },
+  "services-installation:0:16ddba31591c": {
+   "chunk_sha256": "2f9dbf67c11237db5beb87f7968a6283be71ea869242dff6c7f73689b614746c",
+   "questions": [
+    "Who puts the panels up on my roof?",
+    "Do they include wiring when they install the solar panels?",
+    "Is the mounting system built by the company or by me?",
+    "Who handles the part that attaches the panels to the roof?",
+    "Can I ask someone else to do the electrical work after installation?"
+   ]
+  },
+  "services-installation:1:f29b088e0d21": {
+   "chunk_sha256": "88d237c884f969a352ee6a50c3386dab996d9a289630ba11f7aada8495786b44",
+   "questions": [
+    "Do I need to give the company access to my site for trucks and machines?",
+    "Will I have to provide a place to store the parts before they're installed?",
+    "Do I need to have electricity and water available on my site for workers and tools?",
+    "When do the solar panels arrive at the site?",
+    "What do I need to provide for the installation to start?"
+   ]
+  },
+  "services-installation:2:ca896e7404fc": {
+   "chunk_sha256": "1dc4be9956e21eba308d41c02ebf18f7205b9b4abd47764b14b82ec13aecf7a3",
+   "questions": [
+    "How long does it take a team to set up a ground-mount system on a site?",
+    "Can bad weather slow down the installation process?",
+    "What kind of soil makes installation harder?",
+    "Do they use machines to drive the posts into the ground?",
+    "If I have a big solar setup, how long would it take to install it?"
+   ]
+  },
+  "services-installation:3:08aac2252772": {
+   "chunk_sha256": "3615f139aca2a8cc02ae304eebc7f35106536aebcd1be592cec50457dc449c14",
+   "questions": [
+    "Can I get a roof inspection before any work starts?",
+    "Do workers use safety gear when they're on the roof?",
+    "What happens if the wind is too strong during roof work?",
+    "Is there a step I need to take before roof workers come to my house?",
+    "Will roof work stop if the wind is over 12 meters per second?"
+   ]
+  },
+  "services-installation:4:279a975466d9": {
+   "chunk_sha256": "8fb0341a045c70812aaccb723b91f99b88dae8a32e169fd8b3f7993e2566bcd4",
+   "questions": [
+    "When do they check the bolts after installation?",
+    "Do they take a photo after the installation is done?",
+    "What document do they sign when everything is ready?",
+    "Can I expect the installation to happen exactly on the date I agreed to?",
+    "Is there a sample of bolts they check during the process?"
+   ]
+  },
+  "services-maintenance:0:1af77cbf3b4d": {
+   "chunk_sha256": "19f8350b6ae9ab226db1c56a559e0150f219ab96028aff58dca0e3de0ddc99e3",
+   "questions": [
+    "How often should I check my equipment for wear or damage?",
+    "Do I need to check my system again after a big storm?",
+    "What happens if there's a lot of snow on my property?",
+    "Is there a specific wind speed that means I have to do an extra check?",
+    "Can I skip the inspection if I don’t feel like it?"
+   ]
+  },
+  "services-maintenance:1:1bcab0ca6b81": {
+   "chunk_sha256": "49cda53333d9bc2f44444aed2d61f3e934fda73685265105b340020ad89bde75",
+   "questions": [
+    "Do you check if the bolts are tight during a inspection?",
+    "Is there a check for rust on the panels or metal parts?",
+    "Do they look at how much the posts have moved in the ground?",
+    "What about the ballast on flat roofs during a check?",
+    "Do they check if the panel clamps are secure?"
+   ]
+  },
+  "services-maintenance:2:4968068c312f": {
+   "chunk_sha256": "f8509723b6e5d189e19843aa4d2e7f9061dfa544b4dffeaa14cda5025be24ff0",
+   "questions": [
+    "If my product has a small scratch, will they fix it with paint?",
+    "Do they replace parts after I say yes to a repair?",
+    "Is it true that I have to have regular checks to keep my warranty?",
+    "Can I get a repair if only a small part is damaged?",
+    "What happens if I don’t agree to a repair offer?"
+   ]
+  },
+  "services-overview:0:bc95ca542289": {
+   "chunk_sha256": "e1886f724843f925683d2f76c8885da86e355a7b0cde1faa62da2c3c9f3c7804",
+   "questions": [
+    "Can I get just one service instead of all of them?",
+    "Do you offer a bundle of services together?",
+    "Is it possible to pick only some of the services I need?",
+    "Can I choose which services to use?",
+    "What services do you actually offer?"
+   ]
+  },
+  "services-overview:1:c8f73c434f21": {
+   "chunk_sha256": "678fecfd92f89742bfc7793c0b2a070fca9f75bc4a31b4c0bd4a963b8685e1ce",
+   "questions": [
+    "Can I get parts delivered to my site without having a design first?",
+    "What does the installation service actually do?",
+    "Do you check the mounting system after it's installed?",
+    "What kind of parts do you deliver to the site?",
+    "If I want a system built for my specific location, do I need a design?"
+   ]
+  },
+  "services-overview:2:26db0a54b28f": {
+   "chunk_sha256": "a8cc7a0e6e1c06c4de12b7dad5763df5a64d2b213dd561023d7a0cd8294ac58f",
+   "questions": [
+    "Can I get help with setting up my mounting system?",
+    "Do I need to buy the mounting system from you to get maintenance?",
+    "If someone else installed my system, can I still get maintenance?",
+    "Can I get installation help if I bought the mounting system from a different company?",
+    "Is maintenance available for any system I bought from you, even if it wasn’t installed by you?"
+   ]
+  },
+  "services-supply:0:4c37b06e2133": {
+   "chunk_sha256": "0f0a471be1ab2a32d5886aafd670b6a793ac15d0b1b243d6a7660d92df359f12",
+   "questions": [
+    "How do you make sure the parts we get are the right size and quality?",
+    "Do you check the parts before they arrive at your warehouse?",
+    "What kind of tests are done on the parts when they come in?",
+    "Are the parts made by other factories or in your own place?",
+    "Can I trust that the parts I receive will match what we agreed on?"
+   ]
+  },
+  "services-supply:1:78e705e10f55": {
+   "chunk_sha256": "a33b8203309027e9186bb6fe749106fa5c18997166e734812d59d5a7391dd7a9",
+   "questions": [
+    "How big does my storage space need to be for a solar roof system?",
+    "Do I have to pay extra for delivery to my site?",
+    "Can the company help me lift parts onto my roof?",
+    "What kind of storage space do I need for a ground-mounted solar system?",
+    "Is there a list of what's inside each delivery pallet?"
+   ]
+  },
+  "services-supply:2:52804edb67b4": {
+   "chunk_sha256": "afb4132664b3e8a38296ee2ef3d9e9d91a1dde8b7d3e56d04e7ff411a1c18c9b",
+   "questions": [
+    "How long does it take to get my order after I approve the design?",
+    "Is 6 to 10 weeks a guarantee for when I’ll get my product?",
+    "When do the delivery dates actually start being set?",
+    "Can I expect my order to arrive in less than 6 weeks?",
+    "What happens if I don’t approve the design right away?"
+   ]
+  },
+  "warranty:0:9d0128a7191a": {
+   "chunk_sha256": "e87b96ddefe5227f2e9beca013d41f7a4f805380dce6ab2834bb3cfc9a8bce37",
+   "questions": [
+    "How long does the warranty last for the product itself?",
+    "Does the warranty cover problems with how the product was installed?",
+    "What kind of damage is covered under the product warranty?",
+    "If I get a problem after 5 years, will the company fix it?",
+    "What happens if part of my product has more than 5% red rust?"
+   ]
+  },
+  "warranty:1:5aca3e844773": {
+   "chunk_sha256": "e59996c427fe89b89eb13382ffc85f965b3a0116934d02e234db3b387c28e052",
+   "questions": [
+    "If my system was changed without telling the company, will it still be covered by the warranty?",
+    "Do I need to have someone check my system every year to keep the warranty?",
+    "What if the place where my system is used is very corrosive, like in a salty or wet area?",
+    "Can I still get warranty support if the system wasn’t built exactly as the company approved?",
+    "What happens if I don’t keep the inspection reports after a check-up?"
+   ]
+  },
+  "warranty:2:6f52d0242c9d": {
+   "chunk_sha256": "5010fca85d2373d013eebcf3bc6b2adb86c446202cb0a91744aba0aea4aec099",
+   "questions": [
+    "My solar panels got damaged by a car driving too close—will that be covered by the warranty?",
+    "Does the warranty cover damage from a storm or heavy snow?",
+    "If a tree fell and hit my solar setup, is that included in the warranty?",
+    "Will the warranty cover problems with the wiring or the inverter?",
+    "What if someone broke into my system and damaged it—will that be fixed under warranty?"
+   ]
+  },
+  "warranty:3:beedd5aeabf1": {
+   "chunk_sha256": "7cd0a4022999241b507cdfdf891a813baf9522536b3c521785ab798e7bcf7fa3",
+   "questions": [
+    "How do I send a warranty claim to your support team?",
+    "What do I need to include when I send a claim?",
+    "How long does it take to get a reply after I send a claim?",
+    "Do you need photos to check a claim?",
+    "Can I get help with a problem without knowing the product name?"
+   ]
+  }
+ }
+}

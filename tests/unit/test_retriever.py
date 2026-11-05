@@ -7,6 +7,7 @@ from fake_backend import TopicalBackend
 from app.chunker import ChunkConfig
 from app.embedder import DOCUMENT_PREFIX, QUERY_PREFIX, EmbeddingError
 from app.index import KB_DIR, build, open_client, read_manifest
+from app.keyword import Bm25, fuse
 from app.retriever import GuardError, Hit, IndexUnavailable, Retriever, check_guard
 
 CFG = ChunkConfig()
@@ -80,6 +81,52 @@ def test_hit_carries_text_heading_and_document(retriever):
     assert hit.doc_id == "warranty"
     assert hit.text
     assert hit.heading_path.startswith("Warranty")
+
+
+def test_dense_is_the_default_and_unknown_modes_are_refused(index_dir, retriever):
+    assert (retriever.mode, retriever.keyword) == ("dense", None)
+    with pytest.raises(ValueError, match="RETRIEVAL must be"):
+        Retriever(index_dir, TopicalBackend(), top_k=5, mode="sparse")
+
+
+def test_hybrid_fuses_the_full_cosine_ranking_with_bm25_over_heading_and_text(index_dir):
+    question = "warranty claim photos project number"
+    hybrid = Retriever(index_dir, TopicalBackend(), top_k=5, mode="hybrid")
+    count = hybrid.collection.count()
+    dense = [hit.chunk_id for hit in Retriever(index_dir, TopicalBackend(), top_k=count).retrieve(question)]
+    stored = hybrid.collection.get(include=["documents", "metadatas"])
+    texts = [f"{meta['heading_path']}\n{text}" for text, meta in zip(stored["documents"], stored["metadatas"])]
+    expected = fuse(dense, Bm25(stored["ids"], texts).ranking(question))[:5]
+    hits = hybrid.retrieve(question)
+    assert [(hit.chunk_id, hit.score) for hit in hits] == [(chunk_id, pytest.approx(score)) for chunk_id, score in expected]
+    assert [hit.rank for hit in hits] == [1, 2, 3, 4, 5]
+    stored_by_id = dict(zip(stored["ids"], zip(stored["documents"], stored["metadatas"])))
+    for hit in hits:
+        document, metadata = stored_by_id[hit.chunk_id]
+        assert (hit.text, hit.doc_id, hit.heading_path) == (document, metadata["doc_id"], metadata["heading_path"])
+
+
+def test_hybrid_search_refuses_a_vector_without_its_question(index_dir):
+    hybrid = Retriever(index_dir, TopicalBackend(), top_k=5, mode="hybrid")
+    with pytest.raises(ValueError, match="question text"):
+        hybrid.search(hybrid.embed_question("warranty"))
+
+
+def test_hybrid_finds_a_chunk_by_a_word_only_in_its_heading(tmp_path):
+    # A chunk's text starts with its own heading; the parent headings are only in heading_path.
+    kb = tmp_path / "kb"
+    kb.mkdir()
+    body = "Some ordinary body text about mounting systems and their parts. " * 3
+    (kb / "a.md").write_text(f"# Zebra guide\n\n{body}\n\n## Section\n\n{body}\n", encoding="utf-8")
+    (kb / "b.md").write_text(f"# Other guide\n\n{body}\n\n## Section\n\n{body}\n", encoding="utf-8")
+    build(kb, tmp_path / "index", CFG, TopicalBackend())
+    hybrid = Retriever(tmp_path / "index", TopicalBackend(), top_k=2, mode="hybrid")
+    stored = hybrid.collection.get(include=["documents", "metadatas"])
+    section = next(i for i, meta in enumerate(stored["metadatas"]) if meta["heading_path"] == "Zebra guide > Section")
+    assert "zebra" not in stored["documents"][section].lower()
+    scores = hybrid.keyword.scores("zebra")
+    assert scores[section] > 0
+    assert sorted(scores)[:2] == [0.0, 0.0]  # the other guide's two chunks
 
 
 def manifest(model="fake:1", digest="fake-digest", prefix=DOCUMENT_PREFIX):

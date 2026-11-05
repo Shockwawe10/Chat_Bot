@@ -1,0 +1,16 @@
+You help a search system for a company's customer support. Below is one passage from the company's documents.
+
+Write 5 different questions that a customer could ask, where this passage gives the answer or part of it.
+
+Rules:
+- Write as a customer would: everyday words, short, sometimes informal. Do not copy the passage's wording when a customer would say it differently.
+- Cover different facts in the passage, not one fact five times. If the passage lists several things, ask about different items.
+- Include at least one question that a customer could ask without knowing the company's terms or product names.
+- Ask only about what the passage says. Do not ask about things it does not cover.
+- English only.
+
+<passage>
+$passage
+</passage>
+
+Reply with JSON: {"questions": ["...", "...", "...", "...", "..."]}

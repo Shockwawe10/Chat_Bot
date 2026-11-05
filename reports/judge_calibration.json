@@ -1,6 +1,7 @@
 {
  "date": "2026-11-03",
- "labelled_by": "Shockwawe10",
+ "labelled_by": "Claude",
+ "labelled_by_note": "Corrected on 2026-11-04 (reports/thresholds.md): the 30 labels were written by Claude and confirmed by Shockwawe10. No person has labelled them yet, so this is agreement between two models.",
  "judge_model": "bespoke-minicheck:7b",
  "method": "minicheck",
  "metric": "faithfulness",

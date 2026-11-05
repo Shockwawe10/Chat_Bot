@@ -66,6 +66,20 @@ def test_only_the_first_group_decides_a_hit():
     assert not scored["hit"] and scored["reciprocal_rank"] == 0.0
 
 
+def test_citations_and_their_text_are_saved_and_kept_by_a_rescore():
+    answered = {**reply(), "citations": ["w:0"]}
+    scored = score_case(case(), answered, STORE, True, True)
+    assert scored["citations"] == ["w:0"]
+    assert scored["cited_texts"] == ["| Product warranty | 15 years |\n| Installation warranty | 5 years |"]
+    saved = {**run_evals_report([scored]), "system": "pipeline"}
+    again, _, _ = run_evals.rescore(saved, [case()], {}, STORE)
+    assert (again[0]["citations"], again[0]["cited_texts"]) == (scored["citations"], scored["cited_texts"])
+
+
+def run_evals_report(scored):
+    return {"split": "dev", "cases": scored, "metrics": {}}
+
+
 def test_gold_quote_in_another_document_does_not_count():
     group = [span("other", "| Installation warranty | 5 years |")]
     assert group_rank(group, ["o:0", "w:0"], STORE) is None
@@ -190,12 +204,13 @@ def test_drafts_are_skipped():
     assert [c["id"] for c in chosen] == ["a"] and drafts == 1
 
 
-def report(system="pipeline", split="dev", smoke=False, **metrics):
+def report(system="pipeline", split="dev", smoke=False, experiment="", **metrics):
     return {
         "run_id": f"r-{system}-{split}-{smoke}",
         "system": system,
         "split": split,
         "smoke": smoke,
+        "experiment": experiment,
         "git_sha": "abcdef1234",
         "dataset_version": "1.2",
         "cases_run": 2,
@@ -215,9 +230,48 @@ def test_full_dev_pipeline_run_writes_the_run_latest_and_one_history_row(tmp_pat
     assert len(rows) == 2 and rows[0]["hit_rate"] == "0.5"
 
 
+def old_history(tmp_path, run):
+    """A history file started before some columns existed, with one row from a saved run."""
+    write_outputs(run, [], tmp_path, tmp_path / "unused.csv")
+    old_fields = [f for f in run_evals.HISTORY_FIELDS if f not in ("judge_model", "judge_method", "faithfulness")]
+    history = tmp_path / "history.csv"
+    with history.open("w", encoding="utf-8", newline="") as handle:
+        writer = csv.DictWriter(handle, old_fields, extrasaction="ignore")
+        writer.writeheader()
+        writer.writerow(run_evals.history_row(run))
+    return history
+
+
+def test_new_columns_rebuild_the_history_so_every_value_stays_under_its_name(tmp_path):
+    first = {**report(hit_rate=0.5, faithfulness=0.9), "run_id": "first", "judge_model": "j:1"}
+    history = old_history(tmp_path, first)
+    later = {**report(hit_rate=0.7, faithfulness=0.95), "run_id": "later", "judge_model": "j:1"}
+    write_outputs(later, [], tmp_path, history)
+    lines = history.read_text(encoding="utf-8").splitlines()
+    assert lines[0].split(",") == run_evals.HISTORY_FIELDS
+    assert all(len(next(csv.reader([line]))) == len(run_evals.HISTORY_FIELDS) for line in lines)
+    rows = list(csv.DictReader(history.open(encoding="utf-8")))
+    assert [(r["run_id"], r["hit_rate"], r["faithfulness"], r["judge_model"]) for r in rows] == [
+        ("first", "0.5", "0.9", "j:1"),
+        ("later", "0.7", "0.95", "j:1"),
+    ]
+
+
+def test_an_old_history_without_its_run_file_stops_instead_of_guessing(tmp_path):
+    history = old_history(tmp_path, {**report(), "run_id": "gone"})
+    (tmp_path / "runs" / "gone.json").unlink()
+    with pytest.raises(SystemExit, match="no run file for gone"):
+        write_outputs({**report(), "run_id": "next"}, [], tmp_path, history)
+
+
 @pytest.mark.parametrize(
     ("kind", "folder"),
-    [({"smoke": True}, "runs"), ({"system": "always-abstain"}, "runs"), ({"split": "holdout"}, "holdout")],
+    [
+        ({"smoke": True}, "runs"),
+        ({"system": "always-abstain"}, "runs"),
+        ({"split": "holdout"}, "holdout"),
+        ({"experiment": "prompt-v3"}, "runs"),
+    ],
 )
 def test_other_runs_do_not_touch_latest_or_history(tmp_path, kind, folder):
     path = write_outputs(report(**kind), [], tmp_path, tmp_path / "history.csv")
@@ -252,7 +306,7 @@ Intro line.
 
 | Metric | Baseline | Current | Threshold | Gate |
 | --- | --- | --- | --- | --- |
-| Hit rate@5 | — | — | ≥ 0.85 | PR |
+| Hit rate@k | — | — | ≥ 0.85 | PR |
 | Faithfulness | — | — | ≥ 0.90 | PR |
 | Latency p95, cost per query | — | — | recorded, not gated | report |
 | Attack success rate | — | — | ≤ 0.05 | nightly |
@@ -264,7 +318,7 @@ after
 
 def test_render_fills_measured_cells_and_keeps_dashes():
     new = render(TABLE, report(hit_rate=0.6), report(hit_rate=0.8))
-    assert "| Hit rate@5 | 0.60 | 0.80 | ≥ 0.85 | PR |" in new
+    assert "| Hit rate@k | 0.60 (k=5) | 0.80 (k=5) | ≥ 0.85 | PR |" in new
     assert f"| Faithfulness | {DASH} | {DASH} | ≥ 0.90 | PR |" in new
     assert "| Latency p95, cost per query | 2.5 s, $0.00 | 2.5 s, $0.00 |" in new
     assert f"| Attack success rate | {DASH} | {DASH} |" in new
@@ -275,13 +329,24 @@ def test_render_fills_measured_cells_and_keeps_dashes():
 def test_render_is_idempotent_and_works_without_runs():
     once = render(TABLE, None, report())
     assert render(once, None, report()) == once
-    assert f"| Hit rate@5 | {DASH} | 0.50 |" in once
+    assert f"| Hit rate@k | {DASH} | 0.50 (k=5) |" in once
 
 
 def test_render_shows_a_dash_not_zero_for_a_metric_with_no_value():
-    assert f"| Hit rate@5 | {DASH} | {DASH} |" in render(TABLE, report(hit_rate=None), report(hit_rate=None))
+    assert f"| Hit rate@k | {DASH} | {DASH} |" in render(TABLE, report(hit_rate=None), report(hit_rate=None))
 
 
-def test_render_refuses_a_run_with_another_k():
-    with pytest.raises(SystemExit):
-        render(TABLE, None, {**report(), "top_k": 8})
+def test_render_names_each_run_s_k():
+    new = render(TABLE, report(hit_rate=0.83), {**report(hit_rate=0.93), "top_k": 8})
+    assert "| Hit rate@k | 0.83 (k=5) | 0.93 (k=8) |" in new
+
+
+def test_judged_score_is_hidden_when_the_answer_check_uses_the_judge_model():
+    calibration = {"passed": True, "metric": "faithfulness", "judge_model": "j:1", "method": "minicheck"}
+    judged = {"judge_passes": 1, "judge_model": "j:1", "judge_method": "minicheck"}
+    own = {**report(faithfulness=1.0), **judged, "answer_check": "minicheck", "answer_check_model": "j:1"}
+    other = {**report(faithfulness=0.95), **judged, "answer_check": "minicheck", "answer_check_model": "c:1"}
+    off = {**report(faithfulness=0.9), **judged, "answer_check": "off", "answer_check_model": None}
+    assert f"| Faithfulness | {DASH} (judge = answer check) |" in render(TABLE, own, None, calibration)
+    assert "| Faithfulness | 0.95 |" in render(TABLE, other, None, calibration)
+    assert "| Faithfulness | 0.90 |" in render(TABLE, off, None, calibration)

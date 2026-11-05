@@ -27,6 +27,11 @@ SETTINGS = ROOT / "app" / "settings.py"
 RETRIEVER = ROOT / "app" / "retriever.py"
 GENERATOR = ROOT / "app" / "generator.py"
 API = ROOT / "app" / "api.py"
+CHECKER = ROOT / "app" / "checker.py"
+KEYWORD = ROOT / "app" / "keyword.py"
+QUESTIONS = ROOT / "app" / "questions.py"
+LANGUAGE = ROOT / "app" / "language.py"
+GATES = ROOT / "evals" / "gates.py"
 SCORING = ROOT / "evals" / "scoring.py"
 VALIDATOR = ROOT / "evals" / "validate_golden.py"
 METRICS = ROOT / "evals" / "metrics.py"
@@ -410,12 +415,18 @@ BREAKS = {
     "harness: always-abstain answers": [(SYSTEMS_FILE, '"answer": ABSTAIN_SENTENCE, "abstained": True,', '"answer": ABSTAIN_SENTENCE, "abstained": False,')],
     "harness: drafts are run": [(RUN_EVALS, 'reviewed = [c for c in chosen if c["reviewed_by"] is not None]', "reviewed = chosen")],
     "harness: smoke run updates latest": [(RUN_EVALS, 'full_dev = report["system"] == "pipeline" and report["split"] == "dev" and not report["smoke"]', 'full_dev = report["system"] == "pipeline" and report["split"] == "dev"')],
+    "harness: history appended under an old header": [(RUN_EVALS, "    if header == HISTORY_FIELDS:\n", "    if header is not None:\n")],
+    "harness: missing run file guessed": [
+        (RUN_EVALS, "        if not run_file.exists():\n            raise SystemExit", "        if False:\n            raise SystemExit")
+    ],
+    "render: labeller hidden": [(RENDER, "{'undefined' if kappa is None else f'{kappa:.2f}'}{who}", "{'undefined' if kappa is None else f'{kappa:.2f}'}")],
     "harness: any run can be the baseline": [(RUN_EVALS, "        if not full_dev:\n            raise SystemExit", "        if False:\n            raise SystemExit")],
     "harness: holdout without a flag": [(RUN_EVALS, 'if args.split == "holdout" and not args.allow_holdout:', "if False:")],
     "render: baseline shown as current": [
         (RENDER, "cells[2] = fill(current, calibration) if current else DASH", "cells[2] = fill(baseline, calibration) if baseline else DASH")
     ],
-    "render: another k accepted": [(RENDER, 'if current and current["top_k"] != 5:', "if False:")],
+    "render: k not shown": [(RENDER, "f\"{value} (k={report['top_k']})\"", "value")],
+    "render: dependent judge score shown": [(RENDER, '        if judged and key == "faithfulness" and not independent(report):\n', "        if False:\n")],
     "render: unmeasured shown as zero": [
         (
             RENDER,
@@ -424,7 +435,7 @@ BREAKS = {
         )
     ],
     # Claim-check judge
-    "judge: abbreviation ends a sentence": [(JUDGE, "        if not current.lower().endswith(ABBREVIATIONS):\n", "        if True:\n")],
+    "judge: abbreviation ends a sentence": [(CHECKER, "        if not current.lower().endswith(ABBREVIATIONS):\n", "        if True:\n")],
     "judge: no output schema for the judge": [(JUDGE, '            "format": CLAIM_SCHEMA,\n', "")],
     "judge: judge not at temperature 0": [(JUDGE, '"options": {"temperature": 0, "seed": self.seed,', '"options": {"temperature": 0.8, "seed": self.seed,')],
     "judge: question left out of the check": [(JUDGE, "passages=\"\\n\\n\".join(contexts), question=question,", "passages=\"\\n\\n\".join(contexts), question=\"\",")],
@@ -445,6 +456,67 @@ BREAKS = {
     "minicheck: whole answer in one claim": [
         (JUDGE, "        return MiniCheckJudge(model, url)\n", "        return GuardianJudge(model, url)\n")
     ],
+    # Keyword search and hybrid retrieval (app/keyword.py, RETRIEVAL=hybrid)
+    "hybrid: dense only": [(RETRIEVER, "            return self._hybrid(vector, question)\n", "            pass\n")],
+    "hybrid: keyword ranking ignored": [(RETRIEVER, "fuse(found[\"ids\"][0], self.keyword.ranking(question))", "fuse(found[\"ids\"][0])")],
+    "hybrid: heading not indexed": [(RETRIEVER, "texts = [f\"{meta['heading_path']}\\n{text}\" for", "texts = [text for")],
+    "hybrid: dense pool cut to k": [(RETRIEVER, "            n_results=self.collection.count(),\n", "            n_results=self.top_k,\n")],
+    "hybrid: empty question accepted": [(RETRIEVER, "        if not question.strip():\n", "        if False:\n")],
+    "hybrid: mode not checked": [(RETRIEVER, "        if mode not in MODES:\n", "        if False:\n")],
+    "hybrid: question not passed": [(API, "retriever.search(vector, question)", "retriever.search(vector)")],
+    "hybrid: mode not read": [(API, "Retriever(INDEX_DIR, backend, top_k, mode)", "Retriever(INDEX_DIR, backend, top_k)")],
+    "bm25: idf ignored": [(KEYWORD, "score += self.idf[word] * tf", "score += tf")],
+    "bm25: no length normalisation": [(KEYWORD, "B = 0.75\n", "B = 0.0\n")],
+    "bm25: stopwords kept": [(KEYWORD, "if word not in STOPWORDS]", "if word]")],
+    "bm25: numbers split at the point": [(KEYWORD, 'TOKEN = re.compile(r"[a-z0-9]+(?:[.,][0-9]+)*")', 'TOKEN = re.compile(r"[a-z0-9]+")')],
+    "bm25: worst first": [(KEYWORD, "key=lambda i: -scores[i]", "key=lambda i: scores[i]")],
+    "rrf: ranks from zero": [(KEYWORD, "enumerate(ranking, start=1)", "enumerate(ranking, start=0)")],
+    "rrf: worst first": [(KEYWORD, "key=lambda item: -item[1]", "key=lambda item: item[1]")],
+    # Example questions per chunk (app/questions.py, RETRIEVAL=questions)
+    "questions: mode never used": [(RETRIEVER, "        if self.question_owners is not None:\n            return self._with_questions(vector)\n", "")],
+    "questions: question score ignored": [(RETRIEVER, "            best[owner] = max(best[owner], float(similarity))\n", "            pass\n")],
+    "questions: worst of chunk and question": [(RETRIEVER, "best[owner] = max(best[owner], float(similarity))", "best[owner] = min(best[owner], float(similarity))")],
+    "questions: embedded as documents": [(RETRIEVER, "self.embedder.embed_queries([q for", "self.embedder.embed_documents([q for")],
+    "questions: vectors not normalised": [(RETRIEVER, "self.question_vectors = vectors / np.linalg.norm(vectors, axis=1, keepdims=True)", "self.question_vectors = vectors * 2")],
+    "questions: worst first": [(RETRIEVER, "key=lambda chunk_id: -best[chunk_id]", "key=lambda chunk_id: best[chunk_id]")],
+    "questions: stale file accepted": [(QUESTIONS, 'if entry is None or entry["chunk_sha256"] != chunk_hash(meta["heading_path"], text):', "if entry is None:")],
+    "questions: heading left out of the prompt": [(QUESTIONS, 'substitute(passage=f"{heading_path}\\n{_clean(text)}")', "substitute(passage=_clean(text))")],
+    "questions: duplicates kept": [(QUESTIONS, "return list(dict.fromkeys(question.strip()", "return list((question.strip()")],
+    "questions: sampled, not temperature 0": [(QUESTIONS, '"options": {"temperature": 0, "seed"', '"options": {"temperature": 0.8, "seed"')],
+    # English-only reply (app/language.py)
+    "language: gate never runs": [(API, "            if not is_english(question):\n                return english_only(retriever, record, started)\n", "")],
+    "language: every question gated": [(API, "            if not is_english(question):\n", "            if True:\n")],
+    "language: reply counted as a refusal": [(API, "            answer=ENGLISH_ONLY,\n            abstained=False,\n", "            answer=ENGLISH_ONLY,\n            abstained=True,\n")],
+    "language: other script ignored": [(LANGUAGE, "        return False\n    words = WORD", "        pass\n    words = WORD")],
+    "language: one foreign word is enough": [(LANGUAGE, "return not (other >= 2 and other > english)", "return not (other >= 1 and other > english)")],
+    "language: accented words not counted": [(LANGUAGE, "word in OTHER or not word.isascii()", "word in OTHER")],
+    "language: English words not counted": [(LANGUAGE, "english = sum(word in ENGLISH for word in words)", "english = 0")],
+    # CI gates (evals/gates.py)
+    "gates: out-of-scope answers ignored": [(GATES, 'Gate("out-of-scope answered", not answered_oos,', 'Gate("out-of-scope answered", True,')],
+    "gates: any reply counts as English-only": [(GATES, "if not (answered(c) and language_reply(c.get(\"answer\", \"\")))]", "if not answered(c)]")],
+    "gates: facts never rechecked": [(GATES, 'return missing_facts(case.get("answer", ""), facts) if answered(case) else list(facts)', "return []")],
+    "gates: citations never checked": [(GATES, '        if missing_facts("\\n".join(c.get("cited_texts", [])), stated):\n', "        if False:\n")],
+    "gates: calculated facts excused outright": [(GATES, "stated = [part for fact in facts for part in inputs.get(fact, [fact])]", "stated = [fact for fact in facts if fact not in inputs]")],
+    "gates: hit rate has no floor": [(GATES, "HIT_RATE_MIN = 35", "HIT_RATE_MIN = 0")],
+    "gates: run without citations accepted": [(GATES, '    if any(answered(case) and "cited_texts" not in case for case in report.get("cases", [])):\n', "    if False:\n")],
+    "gates: experiment run accepted": [(GATES, ' or report.get("experiment"):', ":")],
+    # Answer check (app/checker.py)
+    "check: unsupported answer goes out": [
+        (CHECKER, '        if verdicts and all(item["supported"] for item in verdicts):\n', "        if True:\n")
+    ],
+    "check: empty answer counts as checked": [(CHECKER, "        if verdicts and all(", "        if all(")],
+    "check: unclear reply counts as supported": [(CHECKER, '== "yes" if reply else False', '!= "no" if reply else True')],
+    "check: passages without headings": [
+        (CHECKER, 'f"{hit.heading_path}\\n{hit.text}" if hit.heading_path else hit.text', "hit.text")
+    ],
+    "check: abstention keeps citations": [(CHECKER, "            citations=[],\n", "")],
+    "check: no flag on a blocked answer": [(CHECKER, '{*result.flags, "answer_check_failed"}', "{*result.flags}")],
+    "check: unknown method accepted": [(CHECKER, "        if method not in METHODS:\n", "        if False:\n")],
+    "check: pin not checked": [(API, "            if checker is not None:\n                checker.check_pinned()\n", "")],
+    "check: verdict ignored": [
+        (API, "                result, verdicts = checker.review(result, hits)\n", "                _, verdicts = checker.review(result, hits)\n")
+    ],
+    "check: down is not a 503": [(API, "    CheckUnavailable,\n)", ")")],
     # Guardian judge
     "guardian: yes read as grounded": [(JUDGE, 'return 1.0 if word == "no" else 0.0', 'return 1.0 if word == "yes" else 0.0')],
     "guardian: risk not selected": [(JUDGE, '{"role": "system", "content": "groundedness"},', '{"role": "system", "content": "harm"},')],
@@ -518,6 +590,9 @@ def copy_project(folder):
     """A copy with what the unit and API tests need, like a clean CI checkout."""
     work = folder / "project"
     shutil.copytree(ROOT, work, ignore=LEFT_OUT)
+    # The CI gate tests check the committed run, which a CI checkout has too.
+    (work / "reports").mkdir()
+    shutil.copy2(ROOT / "reports" / "latest.json", work / "reports" / "latest.json")
     return work
 
 
@@ -577,7 +652,7 @@ def main():
     parser.add_argument("--only", default="", help="run only breaks whose name contains this text")
     args = parser.parse_args()
     selected = {name: edits for name, edits in BREAKS.items() if args.only in name}
-    files = (CHUNKER, EMBEDDER, INDEX, SETTINGS, RETRIEVER, GENERATOR, API, SCORING, VALIDATOR, METRICS, SYSTEMS_FILE, RUN_EVALS, RENDER, JUDGE, CALIBRATE)
+    files = (CHUNKER, EMBEDDER, INDEX, SETTINGS, RETRIEVER, GENERATOR, API, CHECKER, KEYWORD, QUESTIONS, LANGUAGE, GATES, SCORING, VALIDATOR, METRICS, SYSTEMS_FILE, RUN_EVALS, RENDER, JUDGE, CALIBRATE)
     originals = {path: path.read_bytes() for path in files}
     check_breaks_apply(selected, originals)
 

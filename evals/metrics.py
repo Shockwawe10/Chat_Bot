@@ -47,6 +47,10 @@ def score_case(case, response, store, has_retrieval, has_generation):
     }
     scored["question"] = case["question"]
     scored["retrieved"] = list(response.get("retrieved", []))
+    # The cited chunks' text is saved too, so the citation check in CI needs no index.
+    scored["citations"] = list(response.get("citations", []))
+    if has_retrieval:
+        scored["cited_texts"] = [_text(store, chunk_id) for chunk_id in scored["citations"]]
     scored["status"] = response.get("status", 200)
     scored["latency_ms"] = response.get("latency_ms")
 

@@ -20,6 +20,7 @@ from fastapi.exception_handlers import request_validation_exception_handler
 from fastapi.exceptions import RequestValidationError
 from pydantic import BaseModel, StringConstraints
 
+from app.checker import CheckUnavailable, MiniCheck
 from app.embedder import EmbeddingError, OllamaBackend
 from app.generator import (
     GenerationError,
@@ -29,6 +30,7 @@ from app.generator import (
     generate,
 )
 from app.index import INDEX_DIR
+from app.language import ENGLISH_ONLY, is_english
 from app.retriever import GuardError, IndexUnavailable, Retriever
 from app.settings import ROOT, read_env
 
@@ -42,6 +44,7 @@ UNAVAILABLE = (
     LlmUnavailable,
     EmbeddingError,
     ChromaError,
+    CheckUnavailable,
 )
 
 logger = logging.getLogger(__name__)
@@ -106,8 +109,11 @@ def _ms(start, end):
     return round((end - start) * 1000, 1)
 
 
-def create_app(make_retriever, llm, prompt, trace_dir=TRACE_DIR):
-    """`make_retriever` opens the index. It may raise, so it can be tried again later."""
+def create_app(make_retriever, llm, prompt, trace_dir=TRACE_DIR, checker=None):
+    """`make_retriever` opens the index. It may raise, so it can be tried again later.
+
+    `checker`, when given, reads every answer before it is returned (app/checker.py).
+    """
     traces = TraceLog(trace_dir)
     state = {"retriever": None}
 
@@ -115,6 +121,8 @@ def create_app(make_retriever, llm, prompt, trace_dir=TRACE_DIR):
         if state["retriever"] is None:
             retriever = make_retriever()
             llm.check_pinned()
+            if checker is not None:
+                checker.check_pinned()
             state["retriever"] = retriever
         return state["retriever"]
 
@@ -135,6 +143,25 @@ def create_app(make_retriever, llm, prompt, trace_dir=TRACE_DIR):
         traces.write({"status": 422, "errors": json.loads(json.dumps(error.errors(), default=str))})
         return await request_validation_exception_handler(request, error)
 
+    def english_only(retriever, record, started):
+        """The fixed English reply for a question in another language: no retrieval, no model."""
+        total = _ms(started, time.perf_counter())
+        response = AskResponse(
+            answer=ENGLISH_ONLY,
+            abstained=False,
+            citations=[],
+            retrieved=[],
+            flags=["not_english"],
+            timings_ms=Timings(embed=0.0, retrieve=0.0, generate=0.0, total=total),
+            versions=Versions(
+                index_fingerprint=retriever.fingerprint, prompt=prompt.version, llm_digest=llm.cfg.digest
+            ),
+        )
+        traces.write(
+            {**record, "status": 200, "flags": response.flags, "parsed": {"answer": ENGLISH_ONLY, "abstained": False}}
+        )
+        return response
+
     @app.post("/ask", response_model=AskResponse)
     def ask(request: AskRequest):
         question = request.question
@@ -142,12 +169,18 @@ def create_app(make_retriever, llm, prompt, trace_dir=TRACE_DIR):
         started = time.perf_counter()
         try:
             retriever = connect()
+            if not is_english(question):
+                return english_only(retriever, record, started)
             vector = retriever.embed_question(question)
             embedded = time.perf_counter()
-            hits = retriever.search(vector)
+            hits = retriever.search(vector, question)
             retrieved = time.perf_counter()
             record["hits"] = [asdict(hit) for hit in hits]
             result = generate(llm, prompt.render(hits, question), len(hits))
+            generated = time.perf_counter()
+            if checker is not None:
+                result, verdicts = checker.review(result, hits)
+                record["answer_check"] = {"model": checker.model, "verdicts": verdicts}
         except GenerationError as error:
             traces.write({**record, "status": 502, "raw_outputs": error.raw_outputs})
             raise HTTPException(502, "the model output could not be parsed") from error
@@ -156,6 +189,8 @@ def create_app(make_retriever, llm, prompt, trace_dir=TRACE_DIR):
             raise HTTPException(503, f"service unavailable: {error}") from error
         finished = time.perf_counter()
 
+        if checker is not None:
+            record["answer_check"]["ms"] = _ms(generated, finished)
         cited = {hits[number - 1].chunk_id for number in result.citations}
         response = AskResponse(
             answer=result.answer,
@@ -176,7 +211,7 @@ def create_app(make_retriever, llm, prompt, trace_dir=TRACE_DIR):
             timings_ms=Timings(
                 embed=_ms(started, embedded),
                 retrieve=_ms(embedded, retrieved),
-                generate=_ms(retrieved, finished),
+                generate=_ms(retrieved, generated),
                 total=_ms(started, finished),
             ),
             versions=Versions(
@@ -209,8 +244,10 @@ def create_default_app():
     env = read_env()
     backend = OllamaBackend.from_env(env)
     top_k = int(env.get("TOP_K") or DEFAULT_TOP_K)
+    mode = env.get("RETRIEVAL") or "dense"
     return create_app(
-        lambda: Retriever(INDEX_DIR, backend, top_k),
+        lambda: Retriever(INDEX_DIR, backend, top_k, mode),
         OllamaLlm.from_env(env),
         PromptTemplate.load(env.get("PROMPT_VERSION") or "v2"),
+        checker=MiniCheck.from_env(env),
     )

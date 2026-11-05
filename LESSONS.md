@@ -73,3 +73,39 @@ Written by /aar-loop after each session's After Action Review. Read this file be
 - Actual: The labels arrived as a pasted block headed 'Ready to paste', in the style of an AI reviewer. I wrote them in and flagged the question in one line, but the calibration run started before the owner confirmed, and nothing in the result would record who labelled.
 - Why: evals/calibrate_judge.py reads only yes or no per row and stores no labeller, so a model-written label set would pass silently and the judge would be graded by a model.
 - tags: evals,judge,calibration,fix-applied
+
+## 2026-11-03 -- Stage files by name, never with git add <folder>. Before every commit, run git status --short and check that each new or changed file is one this session made or the owner asked for; anything else gets asked about, not committed.
+- Expected: git add reports in commit bfdf625 would stage only the reference and baseline runs made in that session.
+- Actual: It also committed reports/holdout/20261102T111832Z-pipeline-holdout.json, a holdout run this session never made or opened. It was found a day later, when the owner named it as the clean reference.
+- Why: git add on a folder stages every file in it, and the commit was checked only by its diff stat, which did not list the folder's new files.
+- tags: git,holdout,fix-applied
+
+## 2026-11-03 -- evals/annotation/blind_20.csv and any filled copy of it hold 8 holdout questions. In a session that works on the pipeline, score such a sheet only with python -m evals.validate_golden --agreement and read only its summary line. If holdout question text reaches the session anyway, add the ids to EXPOSED_HOLDOUT in evals/exposure.py and a line to Holdout exposure in evals/golden_validation.md the same day.
+- Expected: The holdout would stay unseen by the session that tunes the pipeline, as the 2026-10-31 lesson requires.
+- Actual: The filled blind sheet was pasted into the chat twice, with questions and short answers for g019, g029, g034, g045, g051, g061, g070 and g075. The exposure was recorded, and holdout results are now reported on all 23 and on the 15 unexposed cases.
+- Why: The 2026-10-31 rule names only evals/golden_dataset.jsonl. The blind sheet was not seen as a holdout source, so nobody warned before it was pasted.
+- tags: evals,holdout,fix-applied
+
+## 2026-11-03 -- For a narrow judging task, try a small model trained for exactly that task before general models, and judge it only by calibration on real labelled answers. Passing a few obvious hand-made cases says little: granite3-guardian:2b got 4 of 4 obvious cases right and then scored kappa -0.19 on the 30 labels.
+- Expected: phi4-mini with Ragas, phi4-mini with claim-check, or granite3-guardian:2b would pass calibration (agreement 0.85, kappa 0.60).
+- Actual: All three failed (kappa 0.25, 0.19, -0.19). bespoke-minicheck:7b, trained only to say whether a document supports one sentence, passed at agreement 0.97 and kappa 0.78.
+- Why: General 3.8B models do not follow multi-step grounding instructions reliably, and granite was trained on response-level risks, not short claim checks. Obvious one-line cases do not exercise multi-passage contexts.
+- tags: evals,judge,models,logged-only
+
+## 2026-11-04 -- A rule plus a lesson did not stop inline Python: a PreToolUse hook (.claude/hooks/block_inline_python.py) now blocks any Bash command that runs Python from a heredoc or has a python -c longer than 300 characters or spanning lines; write such code to a scratchpad .py file with the Write tool.
+- Expected: Python longer than about 15 lines or with nested quotes goes in a scratchpad .py file (CLAUDE.md rule, lesson of 2026-11-02).
+- Actual: On 2026-11-04 a bash heredoc edited app/api.py, and a python -c with nested quotes wrote real newlines into a string in evals/mutation_check.py, breaking the file until it was fixed.
+- Why: Each edit looked like a small one-off, and nothing stopped the command from running; a rule only works when it is remembered at that moment. Fix applied: the hook, pipe-tested on 11 cases and proven to block a live heredoc command.
+- tags: scripts,hooks,fix-applied
+
+## 2026-11-04 -- Commit predictions before any measurement that can decide an experiment, including cheap retrieval-only gold-rank measurements, not only before the long end-to-end run.
+- Expected: Every experiment's predictions are committed to reports/experiments.md before it runs.
+- Actual: Experiment 7's predictions were given in chat but measured before being written to the file, and experiment 8's retrieval numbers were measured before the write-up; that seconds-long measurement is what decided experiment 7.
+- Why: Pre-registration was read as applying to the 30-minute end-to-end run only. Fix applied: CLAUDE.md now requires committed predictions before the retrieval measurement too.
+- tags: experiments,pre-registration,fix-applied
+
+## 2026-11-04 -- A parameter that changes results must not have a silent default: Retriever.search(vector, question="") let hybrid search rank with an empty query (19/42 instead of 31/42); hybrid search now raises ValueError without its question. Context from the same session: a long run with the answer check can die with 'timed out waiting for llama-server to start' when three models swap on the 4 GB GPU; rerun the identical command once before changing anything. Two identical runs flipped g056, so one-case differences are noise.
+- Expected: The rank-probe script measured hybrid retrieval on the 42 dev cases.
+- Actual: It called search(vector) without the question, hybrid fell back to index order, and the first reading was 19/42; a 30-minute eval run was lost to the Ollama load timeout and wrote no file.
+- Why: search() took the question as an optional argument with an empty default, and the harness aborts on the first 503 without a partial file. Fix applied in code (commit 871fed0): hybrid search refuses an empty question, with a test and a mutation-check break.
+- tags: retrieval,ollama,noise,fix-applied

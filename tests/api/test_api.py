@@ -9,9 +9,11 @@ from fastapi.testclient import TestClient
 
 from app import api
 from app.api import AskResponse, TraceLog, create_app, create_default_app
+from app.checker import CheckUnavailable, MiniCheck
 from app.chunker import ChunkConfig
 from app.generator import ABSTAIN_SENTENCE, LlmUnavailable, PromptTemplate
 from app.index import KB_DIR, build, read_manifest
+from app.language import ENGLISH_ONLY
 from app.retriever import GuardError, IndexUnavailable, Retriever
 
 PROMPT = PromptTemplate.load("v2")
@@ -29,9 +31,9 @@ def index_dir(tmp_path_factory):
 def make_client(index_dir, tmp_path):
     clients = []
 
-    def make(llm=None, backend=None, top_k=5):
-        make_retriever = lambda: Retriever(index_dir, backend or TopicalBackend(), top_k)
-        app = create_app(make_retriever, llm or FakeLlm(), PROMPT, tmp_path / "traces")
+    def make(llm=None, backend=None, top_k=5, checker=None, mode="dense"):
+        make_retriever = lambda: Retriever(index_dir, backend or TopicalBackend(), top_k, mode)
+        app = create_app(make_retriever, llm or FakeLlm(), PROMPT, tmp_path / "traces", checker)
         client = TestClient(app)
         client.__enter__()
         clients.append(client)
@@ -73,6 +75,12 @@ def test_response_has_exactly_the_agreed_fields(make_client):
     assert set(body["retrieved"][0]) == {"chunk_id", "doc_id", "heading_path", "rank", "score", "cited"}
     assert set(body["timings_ms"]) == {"embed", "retrieve", "generate", "total"}
     assert set(body["versions"]) == {"index_fingerprint", "prompt", "llm_digest"}
+
+
+def test_hybrid_retrieval_gets_the_question_text(make_client, index_dir):
+    body = make_client(mode="hybrid").post("/ask", json={"question": QUESTION}).json()
+    expected = Retriever(index_dir, TopicalBackend(), 5, "hybrid").retrieve(QUESTION)
+    assert [item["chunk_id"] for item in body["retrieved"]] == [hit.chunk_id for hit in expected]
 
 
 def test_citation_number_maps_to_the_chunk_at_that_rank(make_client):
@@ -292,18 +300,83 @@ def test_unavailable_service_is_traced(make_client, tmp_path):
     assert (record["status"], record["error"]) == (503, "down")
 
 
+def test_question_in_another_language_gets_the_english_only_reply_without_search_or_model(make_client, tmp_path):
+    llm, backend = FakeLlm(), TopicalBackend()
+    body = make_client(llm, backend).post("/ask", json={"question": "Wie lange gilt die Produktgarantie?"}).json()
+    assert (body["answer"], body["abstained"], body["citations"], body["retrieved"]) == (ENGLISH_ONLY, False, [], [])
+    assert body["flags"] == ["not_english"]
+    assert llm.calls == [] and backend.inputs == []
+    record = traces(tmp_path)[0]
+    assert (record["status"], record["flags"], record["parsed"]["answer"]) == (200, ["not_english"], ENGLISH_ONLY)
+
+
+def test_english_question_still_goes_through_search_and_model(make_client):
+    llm = FakeLlm()
+    body = make_client(llm).post("/ask", json={"question": QUESTION}).json()
+    assert body["answer"] == "The answer." and len(llm.calls) == 1 and "not_english" not in body["flags"]
+
+
+class FakeChecker(MiniCheck):
+    """The real review, with the sentences in `unsupported` judged unsupported instead of asking Ollama."""
+
+    def __init__(self, unsupported=(), error=None):
+        super().__init__("fake-check:1", "fake-check-digest", client=object())
+        self.unsupported = set(unsupported)
+        self.error = error
+        self.pinned = 0
+
+    def check_pinned(self):
+        self.pinned += 1
+
+    def verdict(self, sentence, passages):
+        if self.error:
+            raise self.error
+        supported = sentence not in self.unsupported
+        return {"sentence": sentence, "supported": supported, "reply": "Yes" if supported else "No"}
+
+
+def test_answer_the_check_rejects_goes_out_as_the_abstention(make_client, tmp_path):
+    llm = FakeLlm(outputs=[output("The warranty is 15 years. It ends on March 2, 2031.")])
+    checker = FakeChecker(unsupported=["It ends on March 2, 2031."])
+    body = make_client(llm, checker=checker).post("/ask", json={"question": QUESTION}).json()
+    assert (body["answer"], body["abstained"], body["citations"]) == (ABSTAIN_SENTENCE, True, [])
+    assert "answer_check_failed" in body["flags"]
+    assert not any(item["cited"] for item in body["retrieved"])
+    record = traces(tmp_path)[0]
+    assert "March 2, 2031" in record["raw_outputs"][0]
+    assert [item["supported"] for item in record["answer_check"]["verdicts"]] == [True, False]
+    assert record["answer_check"]["model"] == "fake-check:1" and record["answer_check"]["ms"] >= 0
+
+
+def test_answer_the_check_supports_goes_out_unchanged(make_client):
+    checker = FakeChecker()
+    body = make_client(checker=checker).post("/ask", json={"question": QUESTION}).json()
+    assert (body["answer"], body["abstained"]) == ("The answer.", False)
+    assert checker.pinned == 1
+
+
+def test_no_check_means_no_check_in_the_trace(make_client, tmp_path):
+    make_client().post("/ask", json={"question": QUESTION})
+    assert "answer_check" not in traces(tmp_path)[0]
+
+
+def test_check_down_is_a_503_not_an_unchecked_answer(make_client):
+    client = make_client(checker=FakeChecker(error=CheckUnavailable("minicheck down")))
+    assert client.post("/ask", json={"question": QUESTION}).status_code == 503
+
+
 def test_trace_keeps_non_ascii_text_readable(tmp_path):
     TraceLog(tmp_path).write({"question": "load in kN/m²"})
     text = next(tmp_path.glob("*.jsonl")).read_text(encoding="utf-8")
     assert "kN/m²" in text
 
 
-def test_default_app_reads_top_k_and_prompt_version(monkeypatch, tmp_path):
+def test_default_app_reads_top_k_retrieval_and_prompt_version(monkeypatch, tmp_path):
     seen = {}
 
     class FakeRetriever:
-        def __init__(self, index_dir, backend, top_k):
-            seen["top_k"] = top_k
+        def __init__(self, index_dir, backend, top_k, mode):
+            seen["top_k"], seen["mode"] = top_k, mode
             raise IndexUnavailable("not needed here")
 
     def fake_prompt(version):
@@ -313,6 +386,7 @@ def test_default_app_reads_top_k_and_prompt_version(monkeypatch, tmp_path):
     monkeypatch.setattr(api, "Retriever", FakeRetriever)
     monkeypatch.setattr(PromptTemplate, "load", staticmethod(fake_prompt))
     monkeypatch.setenv("TOP_K", "3")
+    monkeypatch.setenv("RETRIEVAL", "hybrid")
     monkeypatch.setenv("PROMPT_VERSION", "v9")
     # CI has no .env file, so the pinned models have to come from here.
     monkeypatch.setenv("EMBEDDING_MODEL", "fake:1")
@@ -321,4 +395,4 @@ def test_default_app_reads_top_k_and_prompt_version(monkeypatch, tmp_path):
     monkeypatch.setenv("LLM_DIGEST", "fake-llm-digest")
     with TestClient(create_default_app()):
         pass
-    assert seen == {"top_k": 3, "prompt": "v9"}
+    assert seen == {"top_k": 3, "mode": "hybrid", "prompt": "v9"}

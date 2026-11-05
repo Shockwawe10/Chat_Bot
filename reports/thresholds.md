@@ -79,6 +79,19 @@ The minicheck judge passed with agreement 29/30 and κ 0.78. That result is weak
 - When `dataset_version` changes, a model or prompt changes on purpose, or the reference labels are replaced. Rerun the baseline and update this file and the README's Results table in the same PR.
 - At the end of each stage, after the holdout run. The holdout is compared with the targets once and never used to move them.
 
+## Added in Stage 3 (2026-11-05)
+
+Written by Claude Code when the hallucination suite was built. `evals/gates.py` checks the nightly gates above on the committed full dev run, in CI on every push, and adds the gates below. Like the others, they start at what the system does today (principle 2), measured on run `20261105T103326Z-pipeline-dev`.
+
+| Metric | Gate (dev, 52 cases) | Today | Target | Reasoning |
+| --- | --- | --- | --- | --- |
+| Language refusal | Every case | 3/3 | 5/5 | Built in Stage 3 (`app/language.py`), so it becomes the zero-tolerance gate the table above planned |
+| False-premise cases refused | ≤ 4/6 | 4/6 | 0/6 | Code cannot tell whether an answer accepts a false premise: `forbidden_claims` are sentences that a correct answer repeats when it corrects them ("not 15 years"). So the gate stops more refusals, and the claims themselves are left to reading |
+| False-premise cases answered without their required facts | 0 | 0 | 0 | An answer to a false premise must still state the facts that correct it |
+| Answered cases whose required facts are in no cited passage | 0 | 0/15 | 0 | The citation check. Two facts have to be calculated, so no passage holds them: g035's 1,000 m² (200 m² per MWp times 5) and g060's 2031 (5 years from March 2026). For those, the cited passages must hold the input (200 m², 5 years) |
+
+The hit-rate gate (≥ 35/42) was set at top-k 5. The default is now top-k 8 (40/42), so the gate is looser than it was. It is kept until the next review, because it is a floor against regressions, not a target.
+
 ## Found while writing this
 
 - **`evals/history.csv` has more values than columns.** The header has 19 columns, but the 2026-11-03 row has 25 values: the judge fields were added to the rows but not to the header. Anything that reads the file by column name will shift those values.
