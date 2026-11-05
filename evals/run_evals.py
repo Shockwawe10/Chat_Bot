@@ -109,6 +109,17 @@ def prompt_sha(version):
         return None
 
 
+def ollama_version(env, client=None):
+    """The Ollama server's version, or None. It can update itself between or during runs."""
+    import httpx
+
+    try:
+        client = client or httpx.Client(base_url=env.get("OLLAMA_URL") or "http://localhost:11434", timeout=5)
+        return client.get("/api/version").raise_for_status().json().get("version")
+    except (httpx.HTTPError, ValueError):
+        return None
+
+
 def build_manifest(run_id, system, args, env, cases_run, drafts, dataset_version, metrics, store):
     sha, dirty = git_state()
     served = getattr(system, "versions", None) or {}
@@ -132,6 +143,7 @@ def build_manifest(run_id, system, args, env, cases_run, drafts, dataset_version
         "llm_provider": env.get("LLM_PROVIDER"),
         "llm_model": env.get("LLM_MODEL"),
         "llm_digest": served.get("llm_digest") or env.get("LLM_DIGEST"),
+        "ollama_version": ollama_version(env),
         "judge_provider": env.get("JUDGE_PROVIDER"),
         "judge_model": env.get("JUDGE_MODEL"),
         "embedding_model": env.get("EMBEDDING_MODEL"),

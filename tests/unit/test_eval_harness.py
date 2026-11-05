@@ -76,6 +76,19 @@ def test_citations_and_their_text_are_saved_and_kept_by_a_rescore():
     assert (again[0]["citations"], again[0]["cited_texts"]) == (scored["citations"], scored["cited_texts"])
 
 
+def test_the_ollama_version_is_read_and_missing_ollama_is_none():
+    import httpx
+
+    def handler(request):
+        assert request.url.path == "/api/version"
+        return httpx.Response(200, json={"version": "0.40.14"})
+
+    up = httpx.Client(base_url="http://test", transport=httpx.MockTransport(handler))
+    down = httpx.Client(base_url="http://test", transport=httpx.MockTransport(lambda request: httpx.Response(500)))
+    assert run_evals.ollama_version({}, up) == "0.40.14"
+    assert run_evals.ollama_version({}, down) is None
+
+
 def run_evals_report(scored):
     return {"split": "dev", "cases": scored, "metrics": {}}
 
