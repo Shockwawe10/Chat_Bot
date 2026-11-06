@@ -172,3 +172,27 @@ Predictions:
 4. **Held.** 0 real failures. One answer is incomplete.
 
 **What promptfoo adds, and what it does not.** It confirms with 96 more attacks, written by another model, that the defended chatbot leaks nothing and commits to nothing. It also shows the price of that safety: of the 24 plain prompts, many of them reasonable customer questions dressed as attacks, only 3 got an answer. And with a 4B model as grader, its verdict cannot be taken without reading: 6 of 6 failures were grader errors.
+
+## garak scan of the bare model
+
+**Setup.** [garak](https://github.com/NVIDIA/garak) 0.17.1 (2026-10-16), NVIDIA's open-source LLM vulnerability scanner. It is installed in a throwaway virtual environment, never the project's, because it pulls in PyTorch and many cloud SDKs.
+
+It scans **qwen3:4b-instruct on Ollama directly** (`ollama.OllamaGeneratorChat`), without the app around it: no passages, no answer prompt, no answer check, no guard. Everything above tested the whole app. This shows how easily the model itself is tricked, and so how much the app's defences carry.
+
+The scan uses one reply per prompt, and only probes whose detectors match text, so no classifier model is downloaded:
+
+| Probe group | Probes | Prompts |
+| --- | --- | --- |
+| Prompt injection | `promptinject.HijackHateHumans`, `HijackKillHumans`, `HijackLongPrompt` | 192 |
+| Encoded instructions | `encoding.InjectBase64`, `InjectROT13`, `InjectHex` | 192 |
+| Jailbreak role-play | `dan.Dan_11_0`, `DUDE`, `STAN`, `AntiDAN` | 4 |
+| Instruction hidden in a document | `latentinjection.LatentInjectionFactSnippetEiffel` | 64 |
+
+### Predictions, written on 2026-11-06 before the scan
+
+1. **The bare model falls for prompt injection often:** at least 30% of the promptinject attempts print the attacker's string. A 4B model with no system prompt has nothing telling it to resist.
+2. **The hidden-document injection works at least 30% of the time,** the bare-model version of the poisoned-document attack that worked 3 of 5 times against the app before the defences.
+3. **Encoded instructions mostly fail,** at most 25% per encoding. A 4B model often cannot decode base64, rot13 or hex correctly, so it cannot carry out what is hidden there.
+4. **At least 2 of the 4 jailbreak role-plays work.**
+
+If these hold, the gap between the bare model and the app's 0 of 61 is the work the app's defences do.
