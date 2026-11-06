@@ -22,6 +22,7 @@ import re
 import shutil
 import sys
 import tempfile
+import time
 from datetime import UTC, datetime
 from pathlib import Path
 
@@ -34,6 +35,10 @@ REPORTS = ROOT / "reports" / "security"
 CATEGORIES = ("LLM01", "LLM01-indirect", "LLM07", "LLM08", "jailbreak")
 SUCCESS_KEYS = {"canary", "patterns", "leak", "answered"}
 LEAK_WORDS = 6
+# Ollama's model server can crash and restart on a 4 GB GPU (exit 0xc0000409). A 503 is
+# asked again after a pause; one that still fails is an error, never a failed attack.
+RETRIES = 2
+RETRY_PAUSE_S = 20
 WORD = re.compile(r"[a-z0-9]+")
 
 
@@ -90,12 +95,28 @@ def succeeded(attack, answer, refused, flags, ngrams):
 
 
 def summarise(results):
-    """Attack success rate per category: (successes, attempts)."""
+    """Attack success rate per category: (successes, attempts that ran). Errors are left out."""
     table = {}
     for result in results:
+        if result["status"] != 200:
+            continue
         hits, total = table.get(result["owasp"], (0, 0))
         table[result["owasp"]] = (hits + result["success"], total + 1)
     return dict(sorted(table.items()))
+
+
+def errors(results):
+    return [(result["id"], result["status"]) for result in results if result["status"] != 200]
+
+
+def ask(client, question, retries=RETRIES, pause=RETRY_PAUSE_S):
+    response = client.post("/ask", json={"question": question})
+    for _ in range(retries):
+        if response.status_code != 503:
+            break
+        time.sleep(pause)
+        response = client.post("/ask", json={"question": question})
+    return response
 
 
 def file_sha(*paths):
@@ -187,7 +208,7 @@ def run(attacks, env, index_choice, ngrams, stack):
     selected = [a for a in attacks if a["index"] in clients]
     attempts = [(attack, pair) for attack in selected for pair in expand(attack, dataset)]
     for number, (attack, (attempt_id, question)) in enumerate(attempts, start=1):
-        response = clients[attack["index"]].post("/ask", json={"question": question})
+        response = ask(clients[attack["index"]], question)
         body = response.json() if response.status_code == 200 else {}
         answer, refused, flags = body.get("answer", ""), bool(body.get("abstained")), body.get("flags", [])
         docs = [hit["doc_id"] for hit in body.get("retrieved", [])]
@@ -249,6 +270,7 @@ def main(argv=None):
         "attacks_sha256": file_sha(ATTACKS),
         "attack_kb_sha256": file_sha(*sorted(ATTACK_KB.glob("*.md"))),
         "summary": {category: {"successes": hits, "attempts": total} for category, (hits, total) in summary.items()},
+        "errors": [{"id": attempt, "status": status} for attempt, status in errors(results)],
         "results": results,
     }
     REPORTS.mkdir(parents=True, exist_ok=True)
@@ -257,6 +279,9 @@ def main(argv=None):
     print(f"{run_id}:")
     for category, (hits, total) in summary.items():
         print(f"  {category}: {hits}/{total} attacks succeeded")
+    failed = errors(results)
+    if failed:
+        print(f"  ERRORS, not counted: {', '.join(f'{attempt} ({status})' for attempt, status in failed)}")
     for attack in attacks:
         reach = [r for r in results if r["attack"] == attack["id"] and attack.get("poison_doc")]
         if reach:

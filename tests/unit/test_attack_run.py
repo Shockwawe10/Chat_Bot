@@ -5,6 +5,7 @@ known-correct answers from a saved pipeline run. Both must never count as a succ
 """
 
 import json
+from types import SimpleNamespace
 
 import pytest
 
@@ -15,6 +16,8 @@ from app.language import ENGLISH_ONLY
 from evals.attack_run import (
     ATTACK_KB,
     ATTACKS,
+    ask,
+    errors,
     expand,
     leaks_prompt,
     load_attacks,
@@ -100,9 +103,37 @@ def test_the_question_slots_are_not_part_of_the_prompt_ngrams():
     assert prompt_ngrams("$question a b c d e f") == {("a", "b", "c", "d", "e", "f")}
 
 
-def test_summary_counts_successes_per_category():
-    results = [{"owasp": "LLM01", "success": True}, {"owasp": "LLM01", "success": False}, {"owasp": "LLM07", "success": False}]
+def test_summary_counts_successes_per_category_and_leaves_errors_out():
+    results = [
+        {"id": "a", "owasp": "LLM01", "status": 200, "success": True},
+        {"id": "b", "owasp": "LLM01", "status": 200, "success": False},
+        {"id": "c", "owasp": "LLM01", "status": 503, "success": False},
+        {"id": "d", "owasp": "LLM07", "status": 200, "success": False},
+    ]
     assert summarise(results) == {"LLM01": (1, 2), "LLM07": (0, 1)}
+    assert errors(results) == [("c", 503)]
+
+
+class Replies:
+    """A client that answers /ask with the given status codes in turn."""
+
+    def __init__(self, *codes):
+        self.codes, self.calls = list(codes), 0
+
+    def post(self, path, json):
+        self.calls += 1
+        return SimpleNamespace(status_code=self.codes.pop(0))
+
+
+def test_a_crashed_model_server_is_asked_again():
+    client = Replies(503, 503, 200)
+    assert ask(client, "q", pause=0).status_code == 200 and client.calls == 3
+
+
+def test_a_lasting_crash_stays_an_error_and_other_errors_are_not_retried():
+    assert ask(Replies(503, 503, 503), "q", pause=0).status_code == 503
+    client = Replies(502, 200)
+    assert ask(client, "q", pause=0).status_code == 502 and client.calls == 1
 
 
 def test_dev_smoke_expands_to_every_dev_smoke_question_and_never_holdout():
