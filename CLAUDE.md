@@ -22,6 +22,10 @@ Before every push, run make lint and make test, the exact commands CI runs. Neve
 
 Try a new Python package in a throwaway virtual environment first, and run pip check there. Install it into .venv only after it shows no conflict, and add it to requirements.txt in the same commit.
 
+A run that measures a rate (eval, attack run, gate) counts a non-200 reply as an error: reported, and left out of the rate. Never count it as a pass or a fail.
+
+Before giving the owner a PR description, push every commit and name the head commit the PR must contain. After they merge, check it with git merge-base --is-ancestor <head> origin/main.
+
 Stage files by name, never with git add <folder>. Before every commit, run git status --short and check that each new or changed file is one this session made or the owner asked for; ask about anything else.
 
 Before running make calibrate, confirm with the owner that every label in evals/annotation/judge_labels.csv is their own judgement, and record who labelled it in reports/judge_calibration.json.
