@@ -1,4 +1,7 @@
 {
+  "permissions": {
+    "blockWritesOutsideWorkingDirectories": true
+  },
   "hooks": {
     "PreToolUse": [
       {

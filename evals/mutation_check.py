@@ -32,6 +32,8 @@ KEYWORD = ROOT / "app" / "keyword.py"
 QUESTIONS = ROOT / "app" / "questions.py"
 LANGUAGE = ROOT / "app" / "language.py"
 GATES = ROOT / "evals" / "gates.py"
+GUARDS = ROOT / "app" / "guards.py"
+ATTACK_RUN = ROOT / "evals" / "attack_run.py"
 SCORING = ROOT / "evals" / "scoring.py"
 VALIDATOR = ROOT / "evals" / "validate_golden.py"
 METRICS = ROOT / "evals" / "metrics.py"
@@ -500,6 +502,25 @@ BREAKS = {
     "gates: hit rate has no floor": [(GATES, "HIT_RATE_MIN = 35", "HIT_RATE_MIN = 0")],
     "gates: run without citations accepted": [(GATES, '    if any(answered(case) and "cited_texts" not in case for case in report.get("cases", [])):\n', "    if False:\n")],
     "gates: experiment run accepted": [(GATES, ' or report.get("experiment"):', ":")],
+    # Stage 4 defences (app/guards.py, the scan in app/index.py, the guard in app/api.py)
+    "guards: scan finds nothing": [(GUARDS, "    return [name for name, pattern in INSTRUCTION_PATTERNS.items() if pattern.search(text)]", "    return []")],
+    "guards: HTML comments allowed": [(GUARDS, '    "hidden HTML comment": r"<!--",\n', "")],
+    "guards: ignore-the-rest allowed": [(GUARDS, "|\\bignore\\s+them\\b", "")],
+    "guards: flagged chunks still indexed": [(INDEX, "            if reasons:\n", "            if False:\n")],
+    "guards: any contact allowed": [(GUARDS, "        if emails - self.emails or hosts - self.hosts:\n", "        if False:\n")],
+    "guards: foreign host allowed": [(GUARDS, "        if emails - self.emails or hosts - self.hosts:\n", "        if emails - self.emails:\n")],
+    "guards: prices allowed": [(GUARDS, "        if PRICE.search(answer):\n", "        if False:\n")],
+    "guards: prompt leaks allowed": [(GUARDS, "        if leaks_prompt(answer, self.ngrams):\n", "        if False:\n")],
+    "guards: guard off by default": [(GUARDS, '        setting = env.get("OUTPUT_GUARD") or "on"\n', '        setting = env.get("OUTPUT_GUARD") or "off"\n')],
+    "guards: guard not wired": [(API, "            if guard is not None:\n                result, problems = guard.review(result)\n", "            if guard is not None:\n                problems = guard.review(result)[1]\n")],
+    "guards: default app without a guard": [(API, "        guard=OutputGuard.from_env(env, prompt),\n", "")],
+    "guards: scan not in the fingerprint": [(INDEX, "    if corpus.quarantined:\n", "    if False:\n")],
+    # Security gates on the committed attack run (evals/attack_run.py)
+    "security: working attacks pass": [(ATTACK_RUN, 'Gate(f"{category} attacks that worked", hits == 0,', 'Gate(f"{category} attacks that worked", True,')],
+    "security: stale run accepted": [(ATTACK_RUN, 'gates.append(Gate("run uses the current attacks", current,', 'gates.append(Gate("run uses the current attacks", True,')],
+    "security: errors unlimited": [(ATTACK_RUN, 'gates.append(Gate("errors", len(failed) <= MAX_ERRORS,', 'gates.append(Gate("errors", True,')],
+    "security: any quarantine accepted": [(ATTACK_RUN, "            left_out == EXPECTED_QUARANTINE,\n", "            True,\n")],
+    "security: crashes counted as failed attacks": [(ATTACK_RUN, '        if result["status"] != 200:\n            continue\n', "")],
     # Answer check (app/checker.py)
     "check: unsupported answer goes out": [
         (CHECKER, '        if verdicts and all(item["supported"] for item in verdicts):\n', "        if True:\n")
@@ -590,9 +611,10 @@ def copy_project(folder):
     """A copy with what the unit and API tests need, like a clean CI checkout."""
     work = folder / "project"
     shutil.copytree(ROOT, work, ignore=LEFT_OUT)
-    # The CI gate tests check the committed run, which a CI checkout has too.
+    # The CI gate and guard tests read committed runs, which a CI checkout has too.
     (work / "reports").mkdir()
     shutil.copy2(ROOT / "reports" / "latest.json", work / "reports" / "latest.json")
+    shutil.copytree(ROOT / "reports" / "security", work / "reports" / "security")
     return work
 
 
@@ -652,7 +674,7 @@ def main():
     parser.add_argument("--only", default="", help="run only breaks whose name contains this text")
     args = parser.parse_args()
     selected = {name: edits for name, edits in BREAKS.items() if args.only in name}
-    files = (CHUNKER, EMBEDDER, INDEX, SETTINGS, RETRIEVER, GENERATOR, API, CHECKER, KEYWORD, QUESTIONS, LANGUAGE, GATES, SCORING, VALIDATOR, METRICS, SYSTEMS_FILE, RUN_EVALS, RENDER, JUDGE, CALIBRATE)
+    files = (CHUNKER, EMBEDDER, INDEX, SETTINGS, RETRIEVER, GENERATOR, API, CHECKER, KEYWORD, QUESTIONS, LANGUAGE, GATES, GUARDS, ATTACK_RUN, SCORING, VALIDATOR, METRICS, SYSTEMS_FILE, RUN_EVALS, RENDER, JUDGE, CALIBRATE)
     originals = {path: path.read_bytes() for path in files}
     check_breaks_apply(selected, originals)
 

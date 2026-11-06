@@ -15,7 +15,7 @@ import json
 import logging
 import os
 import sys
-from dataclasses import asdict, dataclass
+from dataclasses import asdict, dataclass, field
 from datetime import UTC, datetime
 
 import chromadb
@@ -31,6 +31,7 @@ from app.embedder import (
     OllamaBackend,
     check_vector,
 )
+from app.guards import suspicious
 from app.settings import ROOT
 
 KB_DIR = ROOT / "data" / "kb"
@@ -53,6 +54,8 @@ class Corpus:
     chunks: list
     file_hashes: dict  # file name -> sha256 of its bytes
     last_reviewed: dict  # doc_id -> date string or None
+    # Chunks left out because they speak to the assistant (app/guards.py): chunk id, doc id, reasons
+    quarantined: list = field(default_factory=list)
 
 
 @dataclass(frozen=True)
@@ -64,6 +67,7 @@ class BuildResult:
 
 def read_corpus(kb_dir, cfg):
     chunks = []
+    quarantined = []
     file_hashes = {}
     last_reviewed = {}
     for path in sorted(kb_dir.glob("*.md")):
@@ -72,12 +76,18 @@ def read_corpus(kb_dir, cfg):
         meta, _ = parse_document(text, path.name)
         file_hashes[path.name] = hashlib.sha256(data).hexdigest()
         last_reviewed[meta.doc_id] = meta.last_reviewed
-        chunks.extend(chunk(text, meta.doc_id, cfg))
-    return Corpus(chunks, file_hashes, last_reviewed)
+        for item in chunk(text, meta.doc_id, cfg):
+            reasons = suspicious(item.text)
+            if reasons:
+                quarantined.append({"chunk_id": item.id, "doc_id": item.doc_id, "reasons": reasons})
+                logging.getLogger(__name__).warning("%s: left out of the index: %s", item.id, ", ".join(reasons))
+            else:
+                chunks.append(item)
+    return Corpus(chunks, file_hashes, last_reviewed, quarantined)
 
 
 def fingerprint_inputs(corpus, cfg, backend):
-    return {
+    inputs = {
         "corpus": corpus.file_hashes,
         "chunker_version": CHUNKER_VERSION,
         "chunk_config": asdict(cfg),
@@ -85,6 +95,11 @@ def fingerprint_inputs(corpus, cfg, backend):
         "embedding_digest": backend.digest,
         "document_prefix": DOCUMENT_PREFIX,
     }
+    # The scan changes which chunks are indexed, so the same files with chunks left out are
+    # another index. Only added when something is left out, so a clean corpus keeps its fingerprint.
+    if corpus.quarantined:
+        inputs["quarantined"] = sorted(item["chunk_id"] for item in corpus.quarantined)
+    return inputs
 
 
 def fingerprint(inputs):

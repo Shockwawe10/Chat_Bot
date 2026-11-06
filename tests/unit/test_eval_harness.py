@@ -76,6 +76,19 @@ def test_citations_and_their_text_are_saved_and_kept_by_a_rescore():
     assert (again[0]["citations"], again[0]["cited_texts"]) == (scored["citations"], scored["cited_texts"])
 
 
+def test_the_ollama_version_is_read_and_missing_ollama_is_none():
+    import httpx
+
+    def handler(request):
+        assert request.url.path == "/api/version"
+        return httpx.Response(200, json={"version": "0.40.14"})
+
+    up = httpx.Client(base_url="http://test", transport=httpx.MockTransport(handler))
+    down = httpx.Client(base_url="http://test", transport=httpx.MockTransport(lambda request: httpx.Response(500)))
+    assert run_evals.ollama_version({}, up) == "0.40.14"
+    assert run_evals.ollama_version({}, down) is None
+
+
 def run_evals_report(scored):
     return {"split": "dev", "cases": scored, "metrics": {}}
 
@@ -334,6 +347,13 @@ def test_render_is_idempotent_and_works_without_runs():
 
 def test_render_shows_a_dash_not_zero_for_a_metric_with_no_value():
     assert f"| Hit rate@k | {DASH} | {DASH} |" in render(TABLE, report(hit_rate=None), report(hit_rate=None))
+
+
+def test_render_fills_the_attack_rate_from_the_attack_run_only():
+    security = {"summary": {"LLM01": {"successes": 0, "attempts": 18}, "LLM01-indirect": {"successes": 3, "attempts": 5}}}
+    new = render(TABLE, report(), report(), None, security)
+    assert f"| Attack success rate | {DASH} | 0.13 (3/23) | ≤ 0.05 | nightly |" in new
+    assert f"| Attack success rate | {DASH} | {DASH} |" in render(TABLE, report(), report())
 
 
 def test_render_names_each_run_s_k():

@@ -29,6 +29,7 @@ from app.generator import (
     PromptTemplate,
     generate,
 )
+from app.guards import OutputGuard
 from app.index import INDEX_DIR
 from app.language import ENGLISH_ONLY, is_english
 from app.retriever import GuardError, IndexUnavailable, Retriever
@@ -109,10 +110,11 @@ def _ms(start, end):
     return round((end - start) * 1000, 1)
 
 
-def create_app(make_retriever, llm, prompt, trace_dir=TRACE_DIR, checker=None):
+def create_app(make_retriever, llm, prompt, trace_dir=TRACE_DIR, checker=None, guard=None):
     """`make_retriever` opens the index. It may raise, so it can be tried again later.
 
     `checker`, when given, reads every answer before it is returned (app/checker.py).
+    `guard`, when given, blocks foreign contacts, prices and prompt leaks after that (app/guards.py).
     """
     traces = TraceLog(trace_dir)
     state = {"retriever": None}
@@ -181,6 +183,9 @@ def create_app(make_retriever, llm, prompt, trace_dir=TRACE_DIR, checker=None):
             if checker is not None:
                 result, verdicts = checker.review(result, hits)
                 record["answer_check"] = {"model": checker.model, "verdicts": verdicts}
+            if guard is not None:
+                result, problems = guard.review(result)
+                record["output_guard"] = problems
         except GenerationError as error:
             traces.write({**record, "status": 502, "raw_outputs": error.raw_outputs})
             raise HTTPException(502, "the model output could not be parsed") from error
@@ -245,9 +250,11 @@ def create_default_app():
     backend = OllamaBackend.from_env(env)
     top_k = int(env.get("TOP_K") or DEFAULT_TOP_K)
     mode = env.get("RETRIEVAL") or "dense"
+    prompt = PromptTemplate.load(env.get("PROMPT_VERSION") or "v2")
     return create_app(
         lambda: Retriever(INDEX_DIR, backend, top_k, mode),
         OllamaLlm.from_env(env),
-        PromptTemplate.load(env.get("PROMPT_VERSION") or "v2"),
+        prompt,
         checker=MiniCheck.from_env(env),
+        guard=OutputGuard.from_env(env, prompt),
     )

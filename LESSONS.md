@@ -109,3 +109,39 @@ Written by /aar-loop after each session's After Action Review. Read this file be
 - Actual: It called search(vector) without the question, hybrid fell back to index order, and the first reading was 19/42; a 30-minute eval run was lost to the Ollama load timeout and wrote no file.
 - Why: search() took the question as an optional argument with an empty default, and the harness aborts on the first 503 without a partial file. Fix applied in code (commit 871fed0): hybrid search refuses an empty question, with a test and a mutation-check break.
 - tags: retrieval,ollama,noise,fix-applied
+
+## 2026-11-05 -- CI's make lint runs ruff check . over the whole repo, including .claude/; before every push run make lint and make test, never a narrower path such as ruff check app evals tests.
+- Expected: Every pushed commit passes CI.
+- Actual: The hook script .claude/hooks/block_inline_python.py was committed in 1c789af with a ruff error (re.S instead of re.DOTALL), so CI's lint most likely failed from then until 1e38f31; it was found only when ruff check . was run near the end of Stage 3.
+- Why: By habit the session ran ruff check app evals tests, which skips the new .claude/ folder. Fix applied: CLAUDE.md now requires make lint and make test before every push.
+- tags: ci,lint,fix-applied
+
+## 2026-11-05 -- pip install into the project .venv resolves only the new package's needs and can silently downgrade a shared dependency: deepeval 4.3.1 pulled click down to 8.3.3, below huggingface-hub's click>=8.4.2. Try new packages in a throwaway virtual environment with pip check first.
+- Expected: DeepEval could be added for the CI hallucination suite.
+- Actual: Installing it into .venv broke huggingface-hub (used by Ragas through datasets and tokenizers); it was uninstalled, requirements.txt reinstalled, and pip check came back clean. The owner chose plain pytest instead.
+- Why: DeepEval 4.3.x requires click<8.4.0 and huggingface-hub 2.4.0 requires click>=8.4.2, so they cannot share an environment; the earlier dry run listed click-8.3.3 but did not flag the conflict. Fix applied: CLAUDE.md rule on throwaway environments and pip check.
+- tags: dependencies,pip,fix-applied
+
+## 2026-11-05 -- Ollama can update itself during a session (0.40.12 to 0.40.14 on 2026-11-05) and crash a running eval with a CUDA error; every run manifest now records ollama_version from GET /api/version, so a runner change shows up in the results.
+- Expected: A full dev run finishes, and its answers can be compared with earlier runs on the same models.
+- Actual: One run died with 'llama-server process has terminated ... CUDA error: shared object initialization failed'; the rerun on 0.40.14 gave the same 52 answers as before, but no saved run said which Ollama version produced it.
+- Why: The manifest pinned model digests but not the Ollama version. Fix applied: evals/run_evals.py records ollama_version, with a unit test.
+- tags: ollama,reproducibility,fix-applied
+
+## 2026-11-06 -- Before giving the owner a PR description, push every commit and name the head commit the PR must contain; after they merge, check it with git merge-base --is-ancestor <head> origin/main.
+- Expected: The Stage 3 PR would carry every Stage 3 commit into main.
+- Actual: The owner merged PR #5 at 82671db while the AAR fix commit bfc03a4 (CI lint rule, throwaway-venv rule, ollama_version) was still being made, so main lacked it; it was cherry-picked onto stage-4/security as 3152051.
+- Why: The PR text was handed over while work on the branch continued, and nothing named the commit the PR had to include. Fix applied: CLAUDE.md rule.
+- tags: git,pr,fix-applied
+
+## 2026-11-06 -- A run that measures a rate counts a non-200 reply as an error, reported and left out of the rate, never as a pass or a fail. Likewise, every input that changes the indexed chunks (such as the Stage 4 document scan) must be in fingerprint_inputs.
+- Expected: The first attack run would measure every attack; the after run would use a test index built with the scan.
+- Actual: evals/attack_run.py counted 8 Ollama 503s as failed attacks, which looked like defended attacks; and the poisoned test index from the before run (97 chunks) was reused after the scan because the fingerprint ignored it, until verify() refused it (expected 92).
+- Why: The runner mapped every reply to success or not, so an error fell into not; the fingerprint listed files and settings, not which chunks the scan left out. Fixes applied: retries and an errors list in attack_run, quarantined chunk ids in the fingerprint (d6dae19), and a CLAUDE.md rule on errors.
+- tags: measurement,errors,index,fix-applied
+
+## 2026-11-06 -- File tools must write only inside the project or the session scratchpad: .claude/settings.json now sets permissions.blockWritesOutsideWorkingDirectories. Size a tool's workload with the run's own settings before quoting a time: garak sends up to 256 prompts per probe in a run, not the 64 its probe classes show when loaded bare.
+- Expected: Scratch files stay in the scratchpad, and the garak scan takes about 452 prompts.
+- Actual: A stray Write call created C:\DA27~1\placeholder.txt at the root of C:, which the safety check would not let Claude remove, so the owner deleted it; the first garak scan was about 1,800 prompts and was stopped after 230.
+- Why: Nothing stopped a file tool writing outside the working directories; the size check instantiated probes without garak's run config (soft_probe_prompt_cap 256). Fix applied for the writes: the setting, which takes effect from the next session or after /hooks.
+- tags: files,tools,garak,fix-applied
