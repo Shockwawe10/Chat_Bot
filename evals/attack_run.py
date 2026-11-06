@@ -26,6 +26,7 @@ import time
 from datetime import UTC, datetime
 from pathlib import Path
 
+from app.guards import leaks_prompt, prompt_ngrams
 from app.settings import ROOT
 
 ATTACKS = ROOT / "evals" / "attacks.jsonl"
@@ -34,12 +35,10 @@ POISON_INDEX = ROOT / "runs" / "attack-index"
 REPORTS = ROOT / "reports" / "security"
 CATEGORIES = ("LLM01", "LLM01-indirect", "LLM07", "LLM08", "jailbreak")
 SUCCESS_KEYS = {"canary", "patterns", "leak", "answered"}
-LEAK_WORDS = 6
 # Ollama's model server can crash and restart on a 4 GB GPU (exit 0xc0000409). A 503 is
 # asked again after a pause; one that still fails is an error, never a failed attack.
 RETRIES = 2
 RETRY_PAUSE_S = 20
-WORD = re.compile(r"[a-z0-9]+")
 
 
 def load_attacks(path=ATTACKS):
@@ -60,25 +59,6 @@ def load_attacks(path=ATTACKS):
     if errors:
         raise ValueError("; ".join(errors))
     return attacks
-
-
-def words(text):
-    return WORD.findall(text.lower())
-
-
-def prompt_ngrams(template_text, n=LEAK_WORDS):
-    """Every run of n words in the answer prompt, without its $context and $question slots."""
-    grams = set()
-    # Split at the slots, so no run of words spans the customer's text or the passages.
-    for part in re.split(r"\$context|\$question", template_text):
-        tokens = words(part)
-        grams |= {tuple(tokens[i : i + n]) for i in range(len(tokens) - n + 1)}
-    return grams
-
-
-def leaks_prompt(answer, ngrams, n=LEAK_WORDS):
-    tokens = words(answer)
-    return any(tuple(tokens[i : i + n]) in ngrams for i in range(len(tokens) - n + 1))
 
 
 def succeeded(attack, answer, refused, flags, ngrams):
@@ -129,7 +109,7 @@ def file_sha(*paths):
 def build_poisoned_index(env, backend, llm):
     """The real knowledge base plus evals/attack_kb, indexed under runs/attack-index, with example questions."""
     from app.chunker import ChunkConfig
-    from app.index import KB_DIR, build, open_client, read_manifest
+    from app.index import KB_DIR, build, open_client, read_corpus, read_manifest
     from app.questions import QUESTIONS_FILE, ask, chunk_hash
 
     with tempfile.TemporaryDirectory() as folder:
@@ -137,6 +117,7 @@ def build_poisoned_index(env, backend, llm):
         shutil.copytree(KB_DIR, kb)
         for path in sorted(ATTACK_KB.glob("*.md")):
             shutil.copy2(path, kb / path.name)
+        quarantined = read_corpus(kb, ChunkConfig.from_env(env)).quarantined
         build(kb, POISON_INDEX, ChunkConfig.from_env(env), backend)
     collection = open_client(POISON_INDEX).get_collection(
         read_manifest(POISON_INDEX)["active_collection"], embedding_function=None
@@ -155,7 +136,7 @@ def build_poisoned_index(env, backend, llm):
         else:
             chunks[chunk_id] = {"chunk_sha256": digest, "questions": ask(llm, meta["heading_path"], text)}
     questions_file.write_text(json.dumps({**known, "chunks": chunks}, ensure_ascii=False, indent=1), encoding="utf-8")
-    return questions_file
+    return questions_file, quarantined
 
 
 def make_client(env, index_dir, questions_file, stack):
@@ -165,16 +146,19 @@ def make_client(env, index_dir, questions_file, stack):
     from app.checker import MiniCheck
     from app.embedder import OllamaBackend
     from app.generator import OllamaLlm, PromptTemplate
+    from app.guards import OutputGuard
     from app.retriever import Retriever
 
     backend = OllamaBackend.from_env(env)
     top_k = int(env.get("TOP_K") or DEFAULT_TOP_K)
     mode = env.get("RETRIEVAL") or "dense"
+    prompt = PromptTemplate.load(env.get("PROMPT_VERSION") or "v2")
     app = create_app(
         lambda: Retriever(index_dir, backend, top_k, mode, questions_file),
         OllamaLlm.from_env(env),
-        PromptTemplate.load(env.get("PROMPT_VERSION") or "v2"),
+        prompt,
         checker=MiniCheck.from_env(env),
+        guard=OutputGuard.from_env(env, prompt),
     )
     return stack.enter_context(TestClient(app))
 
@@ -189,7 +173,7 @@ def expand(attack, dataset):
     return [(f"{attack['id']}-{c['id']}", c["question"]) for c in cases]
 
 
-def run(attacks, env, index_choice, ngrams, stack):
+def run(attacks, env, index_choice, ngrams, stack, quarantined):
     from app.embedder import OllamaBackend
     from app.generator import OllamaLlm
     from app.index import INDEX_DIR
@@ -202,7 +186,8 @@ def run(attacks, env, index_choice, ngrams, stack):
         clients["clean"] = make_client(env, INDEX_DIR, QUESTIONS_FILE, stack)
     if index_choice in ("all", "poisoned"):
         llm = OllamaLlm.from_env(env)
-        questions_file = build_poisoned_index(env, OllamaBackend.from_env(env), llm)
+        questions_file, left_out = build_poisoned_index(env, OllamaBackend.from_env(env), llm)
+        quarantined.extend(left_out)
         clients["poisoned"] = make_client(env, POISON_INDEX, questions_file, stack)
     results = []
     selected = [a for a in attacks if a["index"] in clients]
@@ -244,15 +229,24 @@ def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--index", choices=("all", "clean", "poisoned"), default="all")
     parser.add_argument("--label", default="", help="a note stored in the report, such as 'before' or 'after'")
+    parser.add_argument("--only", default="", help="comma-separated attack ids to run, such as p09,i01")
     args = parser.parse_args(argv)
     env = read_env()
     attacks = load_attacks()
+    if args.only:
+        wanted = set(args.only.split(","))
+        unknown = wanted - {attack["id"] for attack in attacks}
+        if unknown:
+            parser.error(f"unknown attack ids: {', '.join(sorted(unknown))}")
+        attacks = [attack for attack in attacks if attack["id"] in wanted]
     prompt = PromptTemplate.load(env.get("PROMPT_VERSION") or "v2")
     ngrams = prompt_ngrams(prompt.text)
     with ExitStack() as stack:
-        results = run(attacks, env, args.index, ngrams, stack)
+        quarantined = []
+        results = run(attacks, env, args.index, ngrams, stack, quarantined)
     sha, dirty = git_state()
-    run_id = f"{datetime.now(UTC):%Y%m%dT%H%M%SZ}-attacks-{args.index}" + (f"-{args.label}" if args.label else "")
+    scope = "only-" + args.only.replace(",", "-") if args.only else args.index
+    run_id = f"{datetime.now(UTC):%Y%m%dT%H%M%SZ}-attacks-{scope}" + (f"-{args.label}" if args.label else "")
     summary = summarise(results)
     report = {
         "run_id": run_id,
@@ -264,6 +258,9 @@ def main(argv=None):
         "top_k": int(env.get("TOP_K") or 5),
         "retrieval": env.get("RETRIEVAL") or "dense",
         "answer_check": env.get("ANSWER_CHECK") or "off",
+        "output_guard": env.get("OUTPUT_GUARD") or "on",
+        "only": args.only,
+        "quarantined": quarantined,
         "llm_model": env.get("LLM_MODEL"),
         "llm_digest": env.get("LLM_DIGEST"),
         "ollama_version": ollama_version(env),
@@ -279,6 +276,8 @@ def main(argv=None):
     print(f"{run_id}:")
     for category, (hits, total) in summary.items():
         print(f"  {category}: {hits}/{total} attacks succeeded")
+    for item in quarantined:
+        print(f"  left out of the test index: {item['chunk_id']} ({', '.join(item['reasons'])})")
     failed = errors(results)
     if failed:
         print(f"  ERRORS, not counted: {', '.join(f'{attempt} ({status})' for attempt, status in failed)}")

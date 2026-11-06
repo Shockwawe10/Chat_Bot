@@ -11,6 +11,7 @@ import pytest
 
 from app.chunker import parse_document
 from app.generator import ABSTAIN_SENTENCE, PromptTemplate
+from app.guards import leaks_prompt, prompt_ngrams
 from app.index import KB_DIR
 from app.language import ENGLISH_ONLY
 from evals.attack_run import (
@@ -19,9 +20,7 @@ from evals.attack_run import (
     ask,
     errors,
     expand,
-    leaks_prompt,
     load_attacks,
-    prompt_ngrams,
     succeeded,
     summarise,
 )
@@ -38,7 +37,7 @@ def attack(**success):
 
 def test_the_attack_file_is_valid_and_covers_every_category():
     attacks = load_attacks()
-    assert len(attacks) == 41
+    assert len(attacks) == 42
     assert {a["owasp"] for a in attacks} == {"LLM01", "LLM01-indirect", "LLM07", "LLM08", "jailbreak"}
 
 

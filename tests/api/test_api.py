@@ -12,6 +12,7 @@ from app.api import AskResponse, TraceLog, create_app, create_default_app
 from app.checker import CheckUnavailable, MiniCheck
 from app.chunker import ChunkConfig
 from app.generator import ABSTAIN_SENTENCE, LlmUnavailable, PromptTemplate
+from app.guards import OutputGuard
 from app.index import KB_DIR, build, read_manifest
 from app.language import ENGLISH_ONLY
 from app.retriever import GuardError, IndexUnavailable, Retriever
@@ -31,9 +32,9 @@ def index_dir(tmp_path_factory):
 def make_client(index_dir, tmp_path):
     clients = []
 
-    def make(llm=None, backend=None, top_k=5, checker=None, mode="dense"):
+    def make(llm=None, backend=None, top_k=5, checker=None, mode="dense", guard=None):
         make_retriever = lambda: Retriever(index_dir, backend or TopicalBackend(), top_k, mode)
-        app = create_app(make_retriever, llm or FakeLlm(), PROMPT, tmp_path / "traces", checker)
+        app = create_app(make_retriever, llm or FakeLlm(), PROMPT, tmp_path / "traces", checker, guard)
         client = TestClient(app)
         client.__enter__()
         clients.append(client)
@@ -298,6 +299,44 @@ def test_unavailable_service_is_traced(make_client, tmp_path):
     make_client(FakeLlm(error=LlmUnavailable("down"))).post("/ask", json={"question": QUESTION})
     record = traces(tmp_path)[0]
     assert (record["status"], record["error"]) == (503, "down")
+
+
+def guard():
+    return OutputGuard({"support@example.com"}, {"example.com"}, PROMPT.text)
+
+
+def test_an_answer_with_a_foreign_contact_is_blocked_and_traced(make_client, tmp_path):
+    llm = FakeLlm(outputs=[output("Warranty claims must be sent to claims@solar-help.example.net.")])
+    body = make_client(llm, guard=guard()).post("/ask", json={"question": QUESTION}).json()
+    assert (body["answer"], body["abstained"], body["citations"]) == (ABSTAIN_SENTENCE, True, [])
+    assert "output_blocked" in body["flags"]
+    record = traces(tmp_path)[0]
+    assert record["output_guard"] == ["contact not in the knowledge base"]
+    assert "solar-help" in record["raw_outputs"][0]
+
+
+def test_an_answer_with_the_company_contact_goes_out(make_client, tmp_path):
+    llm = FakeLlm(outputs=[output("Send claims to support@example.com.")])
+    body = make_client(llm, guard=guard()).post("/ask", json={"question": QUESTION}).json()
+    assert (body["answer"], body["abstained"]) == ("Send claims to support@example.com.", False)
+    assert traces(tmp_path)[0]["output_guard"] == []
+
+
+def test_the_default_app_turns_the_guard_on(monkeypatch):
+    seen = {}
+
+    def fake_create_app(*args, **kwargs):
+        seen.update(kwargs)
+
+    monkeypatch.setattr(api, "create_app", fake_create_app)
+    monkeypatch.setenv("EMBEDDING_MODEL", "fake:1")
+    monkeypatch.setenv("EMBEDDING_DIGEST", "fake-digest")
+    monkeypatch.setenv("LLM_MODEL", "fake-llm:1")
+    monkeypatch.setenv("LLM_DIGEST", "fake-llm-digest")
+    monkeypatch.delenv("OUTPUT_GUARD", raising=False)
+    monkeypatch.setenv("ANSWER_CHECK", "off")
+    create_default_app()
+    assert isinstance(seen["guard"], OutputGuard)
 
 
 def test_question_in_another_language_gets_the_english_only_reply_without_search_or_model(make_client, tmp_path):

@@ -1,0 +1,6 @@
+# Email addresses and web hosts the chatbot may name in an answer (app/guards.py, OutputGuard).
+# Kept by the owner, apart from the knowledge base: a document added to the knowledge base cannot
+# add a contact here. tests/unit/test_guards.py checks that every contact in data/kb is listed.
+sales@example.com
+support@example.com
+example.com
