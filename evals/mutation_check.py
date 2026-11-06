@@ -513,6 +513,7 @@ BREAKS = {
     "guards: guard off by default": [(GUARDS, '        setting = env.get("OUTPUT_GUARD") or "on"\n', '        setting = env.get("OUTPUT_GUARD") or "off"\n')],
     "guards: guard not wired": [(API, "            if guard is not None:\n                result, problems = guard.review(result)\n", "            if guard is not None:\n                problems = guard.review(result)[1]\n")],
     "guards: default app without a guard": [(API, "        guard=OutputGuard.from_env(env, prompt),\n", "")],
+    "guards: scan not in the fingerprint": [(INDEX, "    if corpus.quarantined:\n", "    if False:\n")],
     # Answer check (app/checker.py)
     "check: unsupported answer goes out": [
         (CHECKER, '        if verdicts and all(item["supported"] for item in verdicts):\n', "        if True:\n")

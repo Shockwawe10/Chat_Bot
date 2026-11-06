@@ -38,6 +38,22 @@ def test_the_poisoned_documents_with_instructions_are_left_out(tmp_path):
     assert not any(item.doc_id in left_out for item in corpus.chunks)
 
 
+def test_left_out_chunks_change_the_index_fingerprint_and_a_clean_corpus_keeps_it(tmp_path):
+    from fake_backend import FakeBackend
+
+    from app.index import fingerprint, fingerprint_inputs
+
+    clean = read_corpus(KB_DIR, ChunkConfig())
+    assert "quarantined" not in fingerprint_inputs(clean, ChunkConfig(), FakeBackend())
+    kb = tmp_path / "kb"
+    shutil.copytree(KB_DIR, kb)
+    shutil.copy2(ATTACK_KB / "poison-warranty-update.md", kb / "poison-warranty-update.md")
+    poisoned = read_corpus(kb, ChunkConfig())
+    scanned = fingerprint_inputs(poisoned, ChunkConfig(), FakeBackend())
+    unscanned = {key: value for key, value in scanned.items() if key != "quarantined"}
+    assert scanned["quarantined"] and fingerprint(scanned) != fingerprint(unscanned)
+
+
 @pytest.mark.parametrize(
     "text, reason",
     [

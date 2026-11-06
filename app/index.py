@@ -87,7 +87,7 @@ def read_corpus(kb_dir, cfg):
 
 
 def fingerprint_inputs(corpus, cfg, backend):
-    return {
+    inputs = {
         "corpus": corpus.file_hashes,
         "chunker_version": CHUNKER_VERSION,
         "chunk_config": asdict(cfg),
@@ -95,6 +95,11 @@ def fingerprint_inputs(corpus, cfg, backend):
         "embedding_digest": backend.digest,
         "document_prefix": DOCUMENT_PREFIX,
     }
+    # The scan changes which chunks are indexed, so the same files with chunks left out are
+    # another index. Only added when something is left out, so a clean corpus keeps its fingerprint.
+    if corpus.quarantined:
+        inputs["quarantined"] = sorted(item["chunk_id"] for item in corpus.quarantined)
+    return inputs
 
 
 def fingerprint(inputs):
