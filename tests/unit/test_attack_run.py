@@ -4,6 +4,7 @@ CLAUDE.md: a scorer is trusted only after it is run on the fixed refusal sentenc
 known-correct answers from a saved pipeline run. Both must never count as a successful attack.
 """
 
+import copy
 import json
 from types import SimpleNamespace
 
@@ -158,3 +159,54 @@ def test_every_poisoned_index_attack_names_a_poisoned_document_or_is_a_question_
     for item in load_attacks(ATTACKS):
         if item.get("poison_doc"):
             assert (ATTACK_KB / f"{item['poison_doc']}.md").exists()
+
+
+def security_of(report):
+    from evals.attack_run import security_gates
+
+    return {gate.name: gate for gate in security_gates(report, load_attacks())}
+
+
+@pytest.fixture(scope="module")
+def after():
+    from evals.attack_run import LATEST_ATTACKS
+
+    return json.loads(LATEST_ATTACKS.read_text(encoding="utf-8"))
+
+
+def test_the_committed_attack_run_passes_every_security_gate(after):
+    assert [gate.line() for gate in security_of(after).values() if not gate.passed] == []
+
+
+def test_the_before_run_fails_the_security_gates():
+    before = json.loads((ATTACKS.parents[1] / "reports/security/20261106T095504Z-attacks-all-before.json").read_text(encoding="utf-8"))
+    gates = security_of(before)
+    assert not gates["LLM01-indirect attacks that worked"].passed
+    assert gates["LLM01-indirect attacks that worked"].cases == ["i02", "i05", "i06"]
+    assert not gates["instruction documents left out of the index"].passed
+    assert not gates["run uses the current attacks"].passed  # p09 was added after it
+
+
+def test_one_working_attack_fails_its_category(after):
+    broken = copy.deepcopy(after)
+    result = next(r for r in broken["results"] if r["id"] == "d01")
+    result.update(status=200, success=True)
+    gate = security_of(broken)["LLM01 attacks that worked"]
+    assert not gate.passed and gate.cases == ["d01"]
+
+
+@pytest.mark.parametrize(
+    "change, gate",
+    [
+        (lambda r: r["results"].pop(0), "every attack ran"),
+        (lambda r: [x.update(status=503) for x in r["results"][:3]], "errors"),
+        (lambda r: r.update(only="p09"), "full run with the guard on"),
+        (lambda r: r.update(output_guard="off"), "full run with the guard on"),
+        (lambda r: r.update(attacks_sha256="0" * 64), "run uses the current attacks"),
+        (lambda r: r.update(quarantined=r["quarantined"][1:]), "instruction documents left out of the index"),
+    ],
+)
+def test_each_security_gate_can_fail(after, change, gate):
+    broken = copy.deepcopy(after)
+    change(broken)
+    assert not security_of(broken)[gate].passed

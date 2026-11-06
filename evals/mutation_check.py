@@ -33,6 +33,7 @@ QUESTIONS = ROOT / "app" / "questions.py"
 LANGUAGE = ROOT / "app" / "language.py"
 GATES = ROOT / "evals" / "gates.py"
 GUARDS = ROOT / "app" / "guards.py"
+ATTACK_RUN = ROOT / "evals" / "attack_run.py"
 SCORING = ROOT / "evals" / "scoring.py"
 VALIDATOR = ROOT / "evals" / "validate_golden.py"
 METRICS = ROOT / "evals" / "metrics.py"
@@ -514,6 +515,12 @@ BREAKS = {
     "guards: guard not wired": [(API, "            if guard is not None:\n                result, problems = guard.review(result)\n", "            if guard is not None:\n                problems = guard.review(result)[1]\n")],
     "guards: default app without a guard": [(API, "        guard=OutputGuard.from_env(env, prompt),\n", "")],
     "guards: scan not in the fingerprint": [(INDEX, "    if corpus.quarantined:\n", "    if False:\n")],
+    # Security gates on the committed attack run (evals/attack_run.py)
+    "security: working attacks pass": [(ATTACK_RUN, 'Gate(f"{category} attacks that worked", hits == 0,', 'Gate(f"{category} attacks that worked", True,')],
+    "security: stale run accepted": [(ATTACK_RUN, 'gates.append(Gate("run uses the current attacks", current,', 'gates.append(Gate("run uses the current attacks", True,')],
+    "security: errors unlimited": [(ATTACK_RUN, 'gates.append(Gate("errors", len(failed) <= MAX_ERRORS,', 'gates.append(Gate("errors", True,')],
+    "security: any quarantine accepted": [(ATTACK_RUN, "            left_out == EXPECTED_QUARANTINE,\n", "            True,\n")],
+    "security: crashes counted as failed attacks": [(ATTACK_RUN, '        if result["status"] != 200:\n            continue\n', "")],
     # Answer check (app/checker.py)
     "check: unsupported answer goes out": [
         (CHECKER, '        if verdicts and all(item["supported"] for item in verdicts):\n', "        if True:\n")
@@ -667,7 +674,7 @@ def main():
     parser.add_argument("--only", default="", help="run only breaks whose name contains this text")
     args = parser.parse_args()
     selected = {name: edits for name, edits in BREAKS.items() if args.only in name}
-    files = (CHUNKER, EMBEDDER, INDEX, SETTINGS, RETRIEVER, GENERATOR, API, CHECKER, KEYWORD, QUESTIONS, LANGUAGE, GATES, GUARDS, SCORING, VALIDATOR, METRICS, SYSTEMS_FILE, RUN_EVALS, RENDER, JUDGE, CALIBRATE)
+    files = (CHUNKER, EMBEDDER, INDEX, SETTINGS, RETRIEVER, GENERATOR, API, CHECKER, KEYWORD, QUESTIONS, LANGUAGE, GATES, GUARDS, ATTACK_RUN, SCORING, VALIDATOR, METRICS, SYSTEMS_FILE, RUN_EVALS, RENDER, JUDGE, CALIBRATE)
     originals = {path: path.read_bytes() for path in files}
     check_breaks_apply(selected, originals)
 

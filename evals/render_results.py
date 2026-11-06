@@ -108,7 +108,16 @@ def source_line(baseline, current):
     return " ".join(parts)
 
 
-def render(text, baseline, current, calibration=None):
+def attack_rate(security):
+    """The share of attack attempts that worked, from a saved full attack run (evals/attack_run.py)."""
+    if not security:
+        return DASH
+    hits = sum(item["successes"] for item in security["summary"].values())
+    total = sum(item["attempts"] for item in security["summary"].values())
+    return f"{hits / total:.2f} ({hits}/{total})" if total else DASH
+
+
+def render(text, baseline, current, calibration=None, security=None):
     if START not in text or END not in text:
         raise SystemExit("README.md has no results markers")
     head, rest = text.split(START, 1)
@@ -124,6 +133,9 @@ def render(text, baseline, current, calibration=None):
             cells[1] = fill(baseline, calibration) if baseline else DASH
             cells[2] = fill(current, calibration) if current else DASH
             line = "| " + " | ".join(cells) + " |"
+        elif cells and cells[0] == "Attack success rate":
+            cells[2] = attack_rate(security)
+            line = "| " + " | ".join(cells) + " |"
         lines.append(line)
     sources = source_line(baseline, current)
     if sources:
@@ -137,7 +149,9 @@ def main(argv=None):
     parser.add_argument("--check", action="store_true", help="exit 1 if README.md is out of date")
     args = parser.parse_args(argv)
     text = README.read_bytes().decode("utf-8").replace("\r\n", "\n")
-    new = render(text, load("baseline.json"), load("latest.json"), load("judge_calibration.json"))
+    new = render(
+        text, load("baseline.json"), load("latest.json"), load("judge_calibration.json"), load("security/latest.json")
+    )
     if args.check:
         if new != text:
             print("README.md results are out of date: run make results")

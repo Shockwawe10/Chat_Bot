@@ -349,6 +349,13 @@ def test_render_shows_a_dash_not_zero_for_a_metric_with_no_value():
     assert f"| Hit rate@k | {DASH} | {DASH} |" in render(TABLE, report(hit_rate=None), report(hit_rate=None))
 
 
+def test_render_fills_the_attack_rate_from_the_attack_run_only():
+    security = {"summary": {"LLM01": {"successes": 0, "attempts": 18}, "LLM01-indirect": {"successes": 3, "attempts": 5}}}
+    new = render(TABLE, report(), report(), None, security)
+    assert f"| Attack success rate | {DASH} | 0.13 (3/23) | ≤ 0.05 | nightly |" in new
+    assert f"| Attack success rate | {DASH} | {DASH} |" in render(TABLE, report(), report())
+
+
 def test_render_names_each_run_s_k():
     new = render(TABLE, report(hit_rate=0.83), {**report(hit_rate=0.93), "top_k": 8})
     assert "| Hit rate@k | 0.83 (k=5) | 0.93 (k=8) |" in new
