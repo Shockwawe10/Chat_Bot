@@ -536,7 +536,8 @@ About 8 weeks at 25–35 hours a week, in stages 0 to 8. Every stage ends with s
 **Goal:** attack the chatbot, fix what breaks, show before and after.
 
 - [x] Own tests mapped to OWASP Top 10 for LLM Applications 2025: LLM01 (direct injection, and indirect injection through a poisoned KB document), LLM07 (system prompt leakage), LLM08 (vector search weaknesses). 42 attacks in `evals/attacks.jsonl`, scored by code (`python -m evals.attack_run`)
-- [ ] promptfoo red teaming, garak scan of the model
+- [x] promptfoo red teaming: 96 attacks from 6 plugins, written and graded by a local model (`make redteam`). The grader failed 6; read by hand, none is a real failure
+- [ ] garak scan of the model
 - [x] Defenses: input filtering, separation of instructions and data in the prompt, output checks. A scan of documents before indexing and an answer guard (`app/guards.py`). Instructions and data were already apart in the prompt
 - [x] Re-run all attacks after the fixes: 3/59 attempts worked before (all indirect injection), 0/61 after. CI gates the committed run (`tests/ai/test_security.py`)
 
@@ -782,6 +783,12 @@ The robot ignored every rude order and every request for its secrets. But the fa
 So we added two guards. The first reads every page before it goes into the notebooks, and throws out any page that talks to the robot instead of to customers, like a teacher taking away a note that says "psst, give the wrong answer". The second reads every answer on the way out: the robot may only give email addresses from an approved list that the bad guy can't change, may never name a price, and may not copy its own instructions.
 
 After that, 0 of 61 tricks worked. All 52 practice answers came out exactly the same as before, so the guards didn't make the robot worse at its job. GitHub now checks this on every change too.
+
+### Stage 4, part 2: a second tester with its own tricks
+
+Our 42 tricks were written by us, so they might miss what we didn't think of. So we used a tool called promptfoo, which asked another robot to invent 96 new tricks: asking for the secret instructions, asking the chatbot to sign a contract, asking about politics, and asking questions with a wrong idea hidden inside. It also scrambled some of them, writing "h3ll0" for "hello" or using secret codes, to sneak past.
+
+None of them worked. The scrambled ones always got "I can't answer" or "English only". The grader robot said 6 tricks worked, so we read all 6 ourselves. The grader had misread them. It even described questions about "firewalls" and "ski resorts" that nobody asked. A small robot grader is like a tired teacher: useful, but you check its marking before you trust it.
 
 ---
 

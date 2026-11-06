@@ -48,4 +48,5 @@ PROMPTFOO = PROMPTFOO_DISABLE_TELEMETRY=1 PROMPTFOO_DISABLE_REMOTE_GENERATION=tr
 
 redteam:
 	$(PROMPTFOO) redteam generate -c promptfooconfig.yaml -o runs/redteam.yaml --force
-	$(PROMPTFOO) redteam eval -c runs/redteam.yaml -o reports/security/promptfoo-latest.json --no-cache
+	$(PROMPTFOO) redteam eval -c runs/redteam.yaml -o reports/security/promptfoo-latest.json --no-cache -j 1
+	$(PYTHON) -m evals.promptfoo_clean reports/security/promptfoo-latest.json
