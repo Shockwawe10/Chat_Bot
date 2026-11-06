@@ -5,7 +5,7 @@ else
 PYTHON ?= .venv/bin/python
 endif
 
-.PHONY: ingest run test test-real lint mutation eval eval-smoke results judge-labels calibrate
+.PHONY: ingest run test test-real lint mutation eval eval-smoke results judge-labels calibrate attacks redteam
 
 ingest:
 	$(PYTHON) -m app.index build
@@ -39,3 +39,13 @@ judge-labels:
 
 calibrate:
 	$(PYTHON) -m evals.calibrate_judge --labelled-by "$(LABELLED_BY)"
+
+attacks:
+	$(PYTHON) -m evals.attack_run
+
+# promptfoo red teaming with local models only; needs the API running (make run) and Node.js >= 22.22.
+PROMPTFOO = PROMPTFOO_DISABLE_TELEMETRY=1 PROMPTFOO_DISABLE_REMOTE_GENERATION=true PROMPTFOO_DISABLE_SHARING=1 PROMPTFOO_DISABLE_UPDATE=1 npx -y promptfoo@0.124.1
+
+redteam:
+	$(PROMPTFOO) redteam generate -c promptfooconfig.yaml -o runs/redteam.yaml --force
+	$(PROMPTFOO) redteam eval -c runs/redteam.yaml -o reports/security/promptfoo-latest.json --no-cache
