@@ -135,9 +135,11 @@ def test_a_run_without_citations_is_refused(latest):
 
 @pytest.fixture(scope="module")
 def smoke():
-    from evals.gates import SMOKE_LATEST
+    """The accepted reference, a known-good smoke run. Not the latest run: these tests check the
+    gate logic, and a bad latest run (the canary PR) must fail tests/ai/test_smoke.py, not these."""
+    from evals.gates import SMOKE_REFERENCE
 
-    return json.loads(SMOKE_LATEST.read_text(encoding="utf-8"))
+    return json.loads(SMOKE_REFERENCE.read_text(encoding="utf-8"))
 
 
 def smoke_gates_of(report, reference):
@@ -146,12 +148,11 @@ def smoke_gates_of(report, reference):
     return {gate.name: gate for gate in smoke_check(report, reference, DATASET)}
 
 
-def test_the_committed_smoke_run_passes_against_its_reference(smoke):
-    from evals.gates import SMOKE_REFERENCE, smoke_problems
+def test_the_reference_is_a_smoke_run_that_passes_against_itself(smoke):
+    from evals.gates import smoke_problems
 
-    reference = json.loads(SMOKE_REFERENCE.read_text(encoding="utf-8"))
     assert smoke_problems(smoke) == []
-    assert [g.line() for g in smoke_gates_of(smoke, reference).values() if not g.passed] == []
+    assert [g.line() for g in smoke_gates_of(smoke, smoke).values() if not g.passed] == []
 
 
 def test_an_answered_case_turned_into_a_refusal_fails(smoke):

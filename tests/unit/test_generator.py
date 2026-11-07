@@ -96,6 +96,22 @@ def test_prompt_shows_each_form_in_the_order_the_model_writes_it(version):
     assert all(list(form) == sorted(form) for form in forms)
 
 
+@pytest.mark.parametrize("path", sorted((ROOT / "prompts").glob("answer_*.txt")), ids=lambda p: p.stem)
+def test_every_answer_prompt_puts_the_passages_and_the_question_in(path):
+    """string.Template ignores a placeholder it cannot find, so "{context}" for "$context" sends no passages.
+
+    The canary PR (README, CI gates) broke prompt v5 that way: nothing crashed, and only the smoke
+    gates, after a model run, noticed. This catches it without a model.
+    """
+    from string import Template
+
+    prompt = PromptTemplate.load(path.stem.removeprefix("answer_"))
+    assert set(Template(prompt.text).get_identifiers()) == {"context", "question"}
+    rendered = prompt.render([Hit("id-1", "doc", "PASSAGE-MARKER", "Heading", 1, 0.5)], "QUESTION-MARKER")
+    assert "PASSAGE-MARKER" in rendered and "QUESTION-MARKER" in rendered
+    assert rendered.index("PASSAGE-MARKER") < rendered.index("QUESTION-MARKER")
+
+
 def test_prompt_version_loads_its_own_file_and_has_a_stable_hash():
     assert PROMPT.version == "v2"
     assert PROMPT.sha256 == PromptTemplate.load("v2").sha256

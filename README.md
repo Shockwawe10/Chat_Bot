@@ -431,6 +431,23 @@ Every committed run is stamped with a digest of what shapes an answer (app code,
 
 No model runs in CI, so CI needs no API keys. Any keys a later stage needs go in GitHub Secrets.
 
+### Canary: a broken prompt fails CI
+
+The branch [`canary/broken-prompt`](https://github.com/Shockwawe10/Chat_Bot/tree/canary/broken-prompt) breaks prompt v5 on purpose, never to be merged. It writes `{context}` for `$context`, so the model gets the question with no passages, and nothing crashes. The branch also commits the smoke run made with that prompt, so the freshness check passes and the quality gates decide. Its CI runs are [here](https://github.com/Shockwawe10/Chat_Bot/actions?query=branch%3Acanary%2Fbroken-prompt).
+
+The predictions were written in the commit before the run, and all six held:
+
+| Smoke gate | Predicted | Result |
+| --- | --- | --- |
+| No hit lost | pass | pass |
+| Out-of-scope answered | pass | pass |
+| English-only reply | pass | pass |
+| Every reference case ran | pass | pass |
+| No answered case refused | fail | **fail**: 10 cases (g003, g026, g028, g032, g036, g042, g062, g064, g065, g066) |
+| No required fact lost | fail | **fail**: 6 cases (g003, g026, g028, g032, g036, g062) |
+
+`make test` on that branch failed 6 tests, not 2. The other 4 exposed two weaknesses, now fixed: F5 and F6 in [Findings](#findings). One prompt test failed only by accident: it reads every prompt line that starts with `{` as JSON, and `{context}` is not JSON. With F5, the same break now fails a test written for it, before any model runs.
+
 ### Tracing with Arize Phoenix
 
 Every `/ask` request already writes one JSON line to `runs/traces/` (`app/api.py`). `evals/phoenix_export.py` sends the requests of a saved dev run to Phoenix as one tree per question: **ask**, then **embed**, **retrieve** (each passage with its score), **generate** (the model's raw output) and **answer check** (its verdict on every sentence). Each tree carries the eval's verdict for its case. A failed case is tagged `failed` and gets an error status, so Phoenix can list only the failures.
@@ -877,6 +894,14 @@ Here's one wrong question we looked at. A customer asked if a flat-roof system f
 
 While building this we found two mistakes of our own. A few answers from the very last second of a test were being missed. And the X-ray showed the checker reading the "I can't answer" sentence instead of the robot's real answer. We fixed both and added a test for each.
 
+### Stage 5, part 7: the fire drill
+
+A school has fire drills to check that the alarm really rings, before there's a real fire. We did the same with GitHub's checks. We broke the chatbot on purpose, in a sneaky way: one tiny change in its instructions meant the robot never got its notebook cards. Nothing crashed. The robot just kept saying "I can't answer".
+
+Before the drill, we wrote down which alarms should ring and which should stay quiet. Every guess was right. GitHub stopped the change: 10 questions it used to answer became "I can't answer", and 6 lost the facts they needed. The alarms that should stay quiet did: it still never answered a question it shouldn't, and still replied "English only" to other languages.
+
+The drill also showed two loose wires. One alarm rang only by luck, and some tests rang for the wrong reason. We fixed both, so now a quick test catches this kind of mistake straight away, before the robot even takes its test. The broken version lives on its own branch and is never merged.
+
 ---
 
 ## Findings
@@ -889,6 +914,8 @@ Filled in as defects are found. Each finding has a test that guards it.
 | F2 | Going back to earlier settings could delete a good collection | A cached Chroma system failed to read it ("Nothing found on disk", about 1 run in 100 when one process reopened collections), and the build deleted the collection on any error | The build deletes only what this run created or what failed verification, and each open starts a fresh Chroma system. The same sequence then ran 500 times with no error | `test_outside_error_on_a_kept_collection_does_not_delete_it` |
 | F3 | Correct answers reached the customer as refusals | Spec bug: a separate `abstained` boolean let the model answer and abstain at once, and the server replaced the answer with a fixed sentence | The output is one of two forms, an answer or an abstention, and the schema rules out both together. Over-abstention itself is still open: see the Stage 1 sanity runs in `LEARNING_LOG.md` | `test_answer_and_abstention_cannot_both_come_back` |
 | F4 | A refusal came back as an answer with citations: `{"answer": "abstain", "citations": [1, 2], "status": "answer"}` | Ollama writes keys alphabetically, so `status` comes last and the model had already chosen the `answer` form before reaching it | The prompt shows each form in the order the model writes it | `test_prompt_shows_each_form_in_the_order_the_model_writes_it` |
+| F5 | A prompt that sends the model no passages passed every check that runs without a model | `string.Template` leaves a placeholder it cannot find as text, so `{context}` for `$context` drops the passages without an error. Found by the canary PR | Every answer prompt must have exactly the `$context` and `$question` placeholders, and a rendered prompt must hold the passage before the question | `test_every_answer_prompt_puts_the_passages_and_the_question_in` |
+| F6 | A bad smoke run failed the unit tests of the gate logic as well as the smoke gates | Those unit tests built their cases from the committed smoke run, not from a known-good one. Found by the canary PR | They use the accepted reference, `reports/smoke/reference.json` | `test_the_reference_is_a_smoke_run_that_passes_against_itself` |
 
 ---
 

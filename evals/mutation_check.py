@@ -46,6 +46,7 @@ CALIBRATE = ROOT / "evals" / "calibrate_judge.py"
 CHART = ROOT / "evals" / "history_chart.py"
 HOLDOUT = ROOT / "evals" / "holdout.py"
 PHOENIX = ROOT / "evals" / "phoenix_export.py"
+PROMPT_V5 = ROOT / "prompts" / "answer_v5.txt"
 
 PACK = "if joined > cfg.max or (joined > cfg.target and can_stop):"
 MERGE = "if fits and (_size(group) < cfg.min or _only_headings(group)):"
@@ -532,6 +533,9 @@ BREAKS = {
     "phoenix: the run's last second missed": [(PHOENIX, "+ timedelta(seconds=1)\n", "\n")],
     "phoenix: check shows the refusal, not the answer": [(PHOENIX, '                    "input.value": model_answer(record),\n', '                    "input.value": parsed.get("answer", ""),\n')],
     "phoenix: children not under their request": [(PHOENIX, "        spans.append(span(name, kind, clock, stop, attributes, parent=0))\n", "        spans.append(span(name, kind, clock, stop, attributes))\n")],
+    # The canary PR's break (README, CI gates): the prompt loses its passages, nothing crashes
+    "prompt: passages dropped ({context} for $context)": [(PROMPT_V5, "\n$context", "\n{context}")],
+    "prompt: question dropped": [(PROMPT_V5, "\n$question", "\nthe question")],
     # CI gates (evals/gates.py)
     "gates: out-of-scope answers ignored": [(GATES, 'Gate("out-of-scope answered", not answered_oos,', 'Gate("out-of-scope answered", True,')],
     "gates: any reply counts as English-only": [(GATES, "if not (answered(c) and language_reply(c.get(\"answer\", \"\")))]", "if not answered(c)]")],
@@ -642,7 +646,7 @@ BREAKS = {
 
 
 LEFT_OUT = shutil.ignore_patterns(
-    ".git", ".venv", ".chroma", ".env", "runs", "reports", "__pycache__", ".hypothesis", ".pytest_cache", ".ruff_cache"
+    ".git", ".venv", ".venv-phoenix", ".phoenix", ".chroma", ".env", "runs", "reports", "__pycache__", ".hypothesis", ".pytest_cache", ".ruff_cache"
 )
 
 
@@ -715,7 +719,7 @@ def main():
     parser.add_argument("--only", default="", help="run only breaks whose name contains this text")
     args = parser.parse_args()
     selected = {name: edits for name, edits in BREAKS.items() if args.only in name}
-    files = (CHUNKER, EMBEDDER, INDEX, SETTINGS, RETRIEVER, GENERATOR, API, CHECKER, KEYWORD, QUESTIONS, LANGUAGE, GATES, FRESHNESS, CHART, HOLDOUT, PHOENIX, GUARDS, ATTACK_RUN, SCORING, VALIDATOR, METRICS, SYSTEMS_FILE, RUN_EVALS, RENDER, JUDGE, CALIBRATE)
+    files = (CHUNKER, EMBEDDER, INDEX, SETTINGS, RETRIEVER, GENERATOR, API, CHECKER, KEYWORD, QUESTIONS, LANGUAGE, GATES, FRESHNESS, CHART, HOLDOUT, PHOENIX, PROMPT_V5, GUARDS, ATTACK_RUN, SCORING, VALIDATOR, METRICS, SYSTEMS_FILE, RUN_EVALS, RENDER, JUDGE, CALIBRATE)
     originals = {path: path.read_bytes() for path in files}
     check_breaks_apply(selected, originals)
 
