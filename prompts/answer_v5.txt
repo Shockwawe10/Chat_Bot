@@ -46,7 +46,7 @@ If the context does not contain the answer:
 {"reason": "what is missing from the context", "status": "abstain"}
 
 <context>
-$context
+{context}
 </context>
 
 <question>
