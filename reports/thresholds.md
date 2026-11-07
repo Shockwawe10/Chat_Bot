@@ -107,7 +107,7 @@ Written by Claude Code with the attack set. `tests/ai/test_security.py` checks t
 
 Written by Claude Code. The owner chose to keep model runs on the local GPU, with CI checking the committed results, because GitHub's machines have no GPU.
 
-**Freshness (`evals/freshness.py`).** Every run records a digest of what shapes an answer (app code, answer prompt, knowledge base, example questions, allowed contacts, with line endings normalised) and the answer-shaping settings. A committed run must match the commit, and its settings must be the defaults in `.env.example`.
+**Freshness (`evals/freshness.py`).** Every run records a digest of what shapes an answer (app code, answer prompt, knowledge base, example questions, allowed contacts, with line endings normalised) and the answer-shaping settings. A committed run must match the commit, and its settings must be the defaults in `.env.example`. It must also record the Ollama version pinned there (`OLLAMA_VERSION`), because an Ollama update changed an answer while every gate passed (`reports/drift.md`). A run CI will check refuses to start on another version; an experiment may run on any.
 
 **Two kinds of run:**
 

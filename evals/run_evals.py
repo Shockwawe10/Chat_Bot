@@ -121,6 +121,18 @@ def ollama_version(env, client=None):
         return None
 
 
+def require_pinned_ollama(env, client=None):
+    """Stop before a run CI will check if Ollama is not the pinned version (reports/drift.md)."""
+    from evals.freshness import ollama_problem, pinned_ollama
+
+    problem = ollama_problem(ollama_version(env, client), pinned_ollama())
+    if problem:
+        raise SystemExit(
+            f"{problem}. Install the pinned version, or pin the new one in .env.example and make new runs. "
+            "An experiment (--experiment) may run on any version."
+        )
+
+
 def build_manifest(run_id, system, args, env, cases_run, drafts, dataset_version, metrics, store):
     sha, dirty = git_state()
     served = getattr(system, "versions", None) or {}
@@ -414,6 +426,9 @@ def main(argv=None, store=None):
         raise SystemExit("no reviewed cases to run")
 
     env = read_env()
+    if args.system in ("pipeline", "http") and not args.experiment:
+        # Its result becomes a file CI checks (reports/latest.json, reports/smoke/latest.json).
+        require_pinned_ollama(env)
     run_id = f"{datetime.now(UTC):%Y%m%dT%H%M%SZ}-{args.system}-{args.split}{'-smoke' if args.smoke else ''}"
     if args.experiment:
         run_id += f"-{args.experiment}"

@@ -29,3 +29,5 @@ The knowledge base says the opposite of g066's new answer: "The company does not
 3. **The gates measure rates and facts, not every sentence.** A false claim in an answer with no required fact is invisible to them.
 
 What to do about each is part of the drift work in this stage.
+
+**Done about point 1 (2026-11-07):** the Ollama version is pinned. `.env.example` sets `OLLAMA_VERSION=0.40.15`. A run whose result CI checks (`make smoke`, `make nightly`) stops before it starts if Ollama is another version, and CI refuses a committed run that records another version (`evals/freshness.py`). An experiment (`--experiment`) may still run on any version, so the next update can be measured before it is adopted. Ollama has an "Auto-download updates" switch in its settings. Turn it off, so an update is a decision: install it, run the evals as an experiment, compare, then pin the new version and make new runs.

@@ -500,6 +500,10 @@ BREAKS = {
     "freshness: app code not an input": [(FRESHNESS, '    files = sorted((root / "app").glob("*.py"))\n', "    files = []\n")],
     "freshness: line endings change the digest": [(FRESHNESS, '        digest.update(path.read_bytes().replace(b"\\r\\n", b"\\n"))\n', "        digest.update(path.read_bytes())\n")],
     "freshness: runs not stamped": [(RUN_EVALS, "        **stamp(env),\n", "")],
+    "freshness: another Ollama version accepted": [(FRESHNESS, "    if pinned and version != pinned:\n", "    if False:\n")],
+    "pin: eval run starts on any Ollama": [(RUN_EVALS, "        require_pinned_ollama(env)\n", "        pass\n")],
+    "pin: experiment refused on another Ollama": [(RUN_EVALS, ' and not args.experiment:\n', ":\n")],
+    "pin: attack run starts on any Ollama": [(ATTACK_RUN, "        require_pinned_ollama(env)\n", "        pass\n")],
     # Smoke gates, per case against the accepted reference (evals/gates.py)
     "smoke: lost hit accepted": [(GATES, '    lost_hit = [cid for cid in shared if before[cid].get("hit") and not cases[cid].get("hit")]\n', "    lost_hit = []\n")],
     "smoke: new refusals accepted": [(GATES, "    newly_refused = [cid for cid in answerable if answered(before[cid]) and not answered(cases[cid])]\n", "    newly_refused = []\n")],

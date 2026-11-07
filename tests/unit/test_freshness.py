@@ -91,3 +91,23 @@ def test_an_old_run_without_a_stamp_is_refused(tmp_path):
     assert problems({"prompt_version": "v5"}, tmp_path, env_example) == [
         "the run records no inputs digest or settings; make a new run"
     ]
+
+
+def test_a_run_on_another_ollama_version_than_the_pin_is_refused(tmp_path):
+    env_example = project(tmp_path)
+    with env_example.open("a", encoding="utf-8") as file:
+        file.write("OLLAMA_VERSION=0.40.15\n")
+    report = stamp(ENV, tmp_path)
+    assert problems({**report, "ollama_version": "0.40.15"}, tmp_path, env_example) == []
+    assert problems({**report, "ollama_version": "0.40.14"}, tmp_path, env_example) == [
+        "Ollama 0.40.14 is not the pinned 0.40.15 (OLLAMA_VERSION in .env.example)"
+    ]
+    assert problems(report, tmp_path, env_example) == [
+        "Ollama unknown is not the pinned 0.40.15 (OLLAMA_VERSION in .env.example)"
+    ]
+
+
+def test_the_project_pins_an_ollama_version():
+    from evals.freshness import pinned_ollama
+
+    assert pinned_ollama()

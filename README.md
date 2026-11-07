@@ -422,7 +422,7 @@ Rate metrics such as refusal accuracy and tool selection accuracy are gated on t
 
 GitHub's CI has no Ollama, so it cannot run the pipeline. The hallucination suite checks the answers of the last committed full dev run instead, scoring each answer again with the current code. A change that makes the chatbot worse fails CI once its new run is committed. `tests/unit/test_gates.py` shows each gate failing on the always-abstain and always-answer systems, on the fixed refusal sentence, on near-value wrong numbers and on a citation that lacks its fact.
 
-Every committed run is stamped with a digest of what shapes an answer (app code, answer prompt, knowledge base, example questions, allowed contacts) and its settings (`evals/freshness.py`). CI refuses a smoke run whose stamp doesn't match the commit, so a change to the prompt or code needs a new `make smoke` (about 5 minutes) before it can pass. The full runs take about 30 minutes, so their staleness is a warning, not a failure. A pull request that makes a smoke case worse on purpose accepts a new reference with `make smoke-accept` and says why.
+Every committed run is stamped with a digest of what shapes an answer (app code, answer prompt, knowledge base, example questions, allowed contacts) and its settings (`evals/freshness.py`). A run must also be made on the Ollama version pinned in `.env.example`, because Ollama updates itself and one update changed an answer (`reports/drift.md`). CI refuses a smoke run whose stamp doesn't match the commit, so a change to the prompt or code needs a new `make smoke` (about 5 minutes) before it can pass. The full runs take about 30 minutes, so their staleness is a warning, not a failure. A pull request that makes a smoke case worse on purpose accepts a new reference with `make smoke-accept` and says why.
 
 No model runs in CI, so CI needs no API keys. Any keys a later stage needs go in GitHub Secrets.
 
@@ -814,7 +814,11 @@ There are two tests. A short one with 21 questions takes about 5 minutes, so it 
 
 The short test is marked question by question against a paper we agreed was good. If any question that was right becomes wrong, GitHub stops the change. We checked the checker too: we broke a copy of a good paper on purpose (a right answer turned into "I can't answer", "3 to 6 weeks" turned into "13 to 16 weeks", a question taken away) and GitHub caught every one.
 
-We also found something by accident. The program that runs the robot brain updated itself, and one answer of 52 became wrong: it said a system is rated for a kind of salty air that it isn't rated for. Every check still passed. That's written down in `reports/drift.md`, and it's why the next step is to pin that program to one version.
+We also found something by accident. The program that runs the robot brain updated itself, and one answer of 52 became wrong: it said a system is rated for a kind of salty air that it isn't rated for. Every check still passed. That's written down in `reports/drift.md`.
+
+### Stage 5, part 2: no surprise updates
+
+That program updating itself is like a referee swapping the ball in the middle of a match. So now we write down which version we use, 0.40.15, the way a recipe says "bake at 180 degrees". If the version on the computer is different, the test won't even start, and GitHub won't accept a paper marked with another version. We tested this by pretending the version was different: the test stopped every time. When a new version comes out, we try it first as a separate practice test, compare the answers, and only then switch.
 
 ---
 

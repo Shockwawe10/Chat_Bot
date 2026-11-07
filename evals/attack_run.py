@@ -264,7 +264,7 @@ def main(argv=None):
     from app.generator import PromptTemplate
     from app.settings import read_env
     from evals.freshness import stamp
-    from evals.run_evals import git_state, ollama_version
+    from evals.run_evals import git_state, ollama_version, require_pinned_ollama
 
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--index", choices=("all", "clean", "poisoned"), default="all")
@@ -272,6 +272,9 @@ def main(argv=None):
     parser.add_argument("--only", default="", help="comma-separated attack ids to run, such as p09,i01")
     args = parser.parse_args(argv)
     env = read_env()
+    if args.index == "all" and not args.only:
+        # A full run becomes reports/security/latest.json, which CI checks.
+        require_pinned_ollama(env)
     attacks = load_attacks()
     if args.only:
         wanted = set(args.only.split(","))

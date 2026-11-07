@@ -12,6 +12,9 @@ the commit. Every run records:
 
 A run is fresh when both match the commit, and its settings are the documented defaults in
 .env.example. Change a prompt, a document or a setting, and CI fails until a new run is committed.
+
+The run must also be made on the Ollama version pinned in .env.example (OLLAMA_VERSION). Ollama
+updates itself, and one update changed an answer while every gate still passed (reports/drift.md).
 """
 
 import hashlib
@@ -75,6 +78,18 @@ def stamp(env, root=ROOT):
     return {"inputs_sha256": inputs_digest(current["PROMPT_VERSION"], root), "settings": current}
 
 
+def pinned_ollama(env_example=None):
+    """The Ollama version committed runs are made on (OLLAMA_VERSION in .env.example), or None."""
+    return dotenv_values(env_example or ENV_EXAMPLE).get("OLLAMA_VERSION") or None
+
+
+def ollama_problem(version, pinned):
+    """Why an Ollama version is not the pinned one, or None. No pin, no problem."""
+    if pinned and version != pinned:
+        return f"Ollama {version or 'unknown'} is not the pinned {pinned} (OLLAMA_VERSION in .env.example)"
+    return None
+
+
 def problems(report, root=ROOT, env_example=None):
     """Why a saved run is not about this commit, or an empty list."""
     if "inputs_sha256" not in report or "settings" not in report:
@@ -84,6 +99,9 @@ def problems(report, root=ROOT, env_example=None):
     changed = sorted(key for key in SETTINGS if report["settings"].get(key) != documented[key])
     if changed:
         found.append(f"settings differ from .env.example: {', '.join(changed)}")
+    version = ollama_problem(report.get("ollama_version"), pinned_ollama(env_example))
+    if version:
+        found.append(version)
     version = report["settings"].get("PROMPT_VERSION", "v2")
     if not (root / "prompts" / f"answer_{version}.txt").exists():
         found.append(f"prompt {version} is not in the commit")
