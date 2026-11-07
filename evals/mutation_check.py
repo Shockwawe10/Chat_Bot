@@ -32,6 +32,7 @@ KEYWORD = ROOT / "app" / "keyword.py"
 QUESTIONS = ROOT / "app" / "questions.py"
 LANGUAGE = ROOT / "app" / "language.py"
 GATES = ROOT / "evals" / "gates.py"
+FRESHNESS = ROOT / "evals" / "freshness.py"
 GUARDS = ROOT / "app" / "guards.py"
 ATTACK_RUN = ROOT / "evals" / "attack_run.py"
 SCORING = ROOT / "evals" / "scoring.py"
@@ -493,6 +494,12 @@ BREAKS = {
     "language: one foreign word is enough": [(LANGUAGE, "return not (other >= 2 and other > english)", "return not (other >= 1 and other > english)")],
     "language: accented words not counted": [(LANGUAGE, "word in OTHER or not word.isascii()", "word in OTHER")],
     "language: English words not counted": [(LANGUAGE, "english = sum(word in ENGLISH for word in words)", "english = 0")],
+    # Freshness gate (evals/freshness.py)
+    "freshness: stale inputs accepted": [(FRESHNESS, '    elif report["inputs_sha256"] != inputs_digest(version, root):\n', "    elif False:\n")],
+    "freshness: other settings accepted": [(FRESHNESS, "    if changed:\n", "    if False:\n")],
+    "freshness: app code not an input": [(FRESHNESS, '    files = sorted((root / "app").glob("*.py"))\n', "    files = []\n")],
+    "freshness: line endings change the digest": [(FRESHNESS, '        digest.update(path.read_bytes().replace(b"\\r\\n", b"\\n"))\n', "        digest.update(path.read_bytes())\n")],
+    "freshness: runs not stamped": [(RUN_EVALS, "        **stamp(env),\n", "")],
     # CI gates (evals/gates.py)
     "gates: out-of-scope answers ignored": [(GATES, 'Gate("out-of-scope answered", not answered_oos,', 'Gate("out-of-scope answered", True,')],
     "gates: any reply counts as English-only": [(GATES, "if not (answered(c) and language_reply(c.get(\"answer\", \"\")))]", "if not answered(c)]")],
@@ -674,7 +681,7 @@ def main():
     parser.add_argument("--only", default="", help="run only breaks whose name contains this text")
     args = parser.parse_args()
     selected = {name: edits for name, edits in BREAKS.items() if args.only in name}
-    files = (CHUNKER, EMBEDDER, INDEX, SETTINGS, RETRIEVER, GENERATOR, API, CHECKER, KEYWORD, QUESTIONS, LANGUAGE, GATES, GUARDS, ATTACK_RUN, SCORING, VALIDATOR, METRICS, SYSTEMS_FILE, RUN_EVALS, RENDER, JUDGE, CALIBRATE)
+    files = (CHUNKER, EMBEDDER, INDEX, SETTINGS, RETRIEVER, GENERATOR, API, CHECKER, KEYWORD, QUESTIONS, LANGUAGE, GATES, FRESHNESS, GUARDS, ATTACK_RUN, SCORING, VALIDATOR, METRICS, SYSTEMS_FILE, RUN_EVALS, RENDER, JUDGE, CALIBRATE)
     originals = {path: path.read_bytes() for path in files}
     check_breaks_apply(selected, originals)
 

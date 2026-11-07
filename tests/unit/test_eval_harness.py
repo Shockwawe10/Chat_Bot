@@ -370,3 +370,14 @@ def test_judged_score_is_hidden_when_the_answer_check_uses_the_judge_model():
     assert f"| Faithfulness | {DASH} (judge = answer check) |" in render(TABLE, own, None, calibration)
     assert "| Faithfulness | 0.95 |" in render(TABLE, other, None, calibration)
     assert "| Faithfulness | 0.90 |" in render(TABLE, off, None, calibration)
+
+
+def test_every_run_records_the_freshness_stamp():
+    from types import SimpleNamespace
+
+    from evals.freshness import stamp
+
+    args = SimpleNamespace(label="", experiment="", split="dev", smoke=False, commit="abc", judge=False, judge_passes=1)
+    env = {"PROMPT_VERSION": "v5", "TOP_K": "8", "OLLAMA_URL": "http://127.0.0.1:9"}
+    manifest = run_evals.build_manifest("r", AlwaysAbstain(), args, env, 52, 0, "1.2", {"latency_p95_ms": 1.0}, None)
+    assert {key: manifest[key] for key in ("inputs_sha256", "settings")} == stamp(env)
