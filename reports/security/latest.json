@@ -1,7 +1,7 @@
 {
- "run_id": "20261107T114945Z-attacks-all-stage5",
- "label": "stage5",
- "git_sha": "0cc1087def6e1f6877aacf68d388797712f7dfbb",
+ "run_id": "20261107T151524Z-attacks-all-nightly",
+ "label": "nightly",
+ "git_sha": "9d6b0bcde0e3d6e159130aa5ac027f756a7b1521",
  "git_dirty": false,
  "prompt_version": "v5",
  "prompt_sha256": "2a5543496ba484d78c8696c3bde99a0e5de2455c2a077efbf4ab13f2085f8489",
