@@ -5,7 +5,7 @@ else
 PYTHON ?= .venv/bin/python
 endif
 
-.PHONY: ingest run test test-real lint mutation eval eval-smoke results judge-labels calibrate attacks redteam
+.PHONY: ingest run test test-real lint mutation eval eval-smoke smoke smoke-accept nightly results judge-labels calibrate attacks redteam
 
 ingest:
 	$(PYTHON) -m app.index build
@@ -30,6 +30,19 @@ eval:
 
 eval-smoke:
 	$(PYTHON) -m evals.run_evals --smoke
+
+# The run CI checks on every push: 21 smoke cases, about 10 minutes (reports/smoke/latest.json).
+smoke:
+	$(PYTHON) -m evals.run_evals --smoke
+
+# Accept the latest smoke run as the per-case reference. Only on purpose, with the reason in the PR.
+smoke-accept:
+	$(PYTHON) -c "import shutil; shutil.copyfile('reports/smoke/latest.json', 'reports/smoke/reference.json')"
+
+# The full dev eval and the attack set, about 50 minutes (reports/latest.json, reports/security/latest.json).
+nightly:
+	$(PYTHON) -m evals.run_evals
+	$(PYTHON) -m evals.attack_run --label nightly
 
 results:
 	$(PYTHON) -m evals.render_results

@@ -214,6 +214,13 @@ def write_outputs(report, scored, reports_dir, history_path, record_baseline=Fal
     if full_dev:
         shutil.copyfile(path, reports_dir / "latest.json")
         append_history(report, history_path, folder)
+    smoke_dev = (
+        report["system"] == "pipeline" and report["split"] == "dev" and report["smoke"] and not report.get("experiment")
+    )
+    if smoke_dev:
+        # What CI checks on every push (tests/ai/test_smoke.py).
+        (reports_dir / "smoke").mkdir(exist_ok=True)
+        shutil.copyfile(path, reports_dir / "smoke" / "latest.json")
     if record_baseline:
         if not full_dev:
             raise SystemExit("only a full dev run of the pipeline can be the recorded baseline")

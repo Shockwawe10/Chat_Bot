@@ -20,3 +20,8 @@ jobs:
       - run: pip install -r requirements.txt
       - run: make lint PYTHON=python
       - run: make test PYTHON=python
+      # The full dev and attack runs come from make nightly. A stale one is a warning, not a
+      # failure: the smoke run, checked in make test, is what every change must refresh.
+      - name: Nightly runs are fresh (warning only)
+        continue-on-error: true
+        run: python -m pytest -m nightly

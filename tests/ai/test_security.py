@@ -19,6 +19,7 @@ def test_security_gate(gate):
     assert gate.passed, gate.line()
 
 
+@pytest.mark.nightly
 def test_the_committed_attack_run_is_about_this_commit():
     """Changed code, prompt, documents or settings need a new committed attack run (evals/freshness.py)."""
     from evals.freshness import problems
