@@ -45,6 +45,7 @@ JUDGE = ROOT / "evals" / "judge.py"
 CALIBRATE = ROOT / "evals" / "calibrate_judge.py"
 CHART = ROOT / "evals" / "history_chart.py"
 HOLDOUT = ROOT / "evals" / "holdout.py"
+PHOENIX = ROOT / "evals" / "phoenix_export.py"
 
 PACK = "if joined > cfg.max or (joined > cfg.target and can_stop):"
 MERGE = "if fits and (_size(group) < cfg.min or _only_headings(group)):"
@@ -525,6 +526,12 @@ BREAKS = {
     "holdout: stale run accepted": [(HOLDOUT, "    found += freshness_problems(report, root, env_example)\n", "")],
     "holdout: exposed cases not marked": [(HOLDOUT, '        return case_id + ("*" if case_id in EXPOSED_HOLDOUT else "")\n', "        return case_id\n")],
     "holdout: run not kept as holdout latest": [(RUN_EVALS, '        shutil.copyfile(path, reports_dir / "holdout" / "latest.json")\n', "        pass\n")],
+    # Phoenix export (evals/phoenix_export.py)
+    "phoenix: holdout runs exported": [(PHOENIX, '    if report.get("split") != "dev":\n', "    if False:\n")],
+    "phoenix: failed cases not marked": [(PHOENIX, "        error=f\"case {case['id']} failed its eval\" if is_failed else None,\n", "        error=None,\n")],
+    "phoenix: the run's last second missed": [(PHOENIX, "+ timedelta(seconds=1)\n", "\n")],
+    "phoenix: check shows the refusal, not the answer": [(PHOENIX, '                    "input.value": model_answer(record),\n', '                    "input.value": parsed.get("answer", ""),\n')],
+    "phoenix: children not under their request": [(PHOENIX, "        spans.append(span(name, kind, clock, stop, attributes, parent=0))\n", "        spans.append(span(name, kind, clock, stop, attributes))\n")],
     # CI gates (evals/gates.py)
     "gates: out-of-scope answers ignored": [(GATES, 'Gate("out-of-scope answered", not answered_oos,', 'Gate("out-of-scope answered", True,')],
     "gates: any reply counts as English-only": [(GATES, "if not (answered(c) and language_reply(c.get(\"answer\", \"\")))]", "if not answered(c)]")],
@@ -708,7 +715,7 @@ def main():
     parser.add_argument("--only", default="", help="run only breaks whose name contains this text")
     args = parser.parse_args()
     selected = {name: edits for name, edits in BREAKS.items() if args.only in name}
-    files = (CHUNKER, EMBEDDER, INDEX, SETTINGS, RETRIEVER, GENERATOR, API, CHECKER, KEYWORD, QUESTIONS, LANGUAGE, GATES, FRESHNESS, CHART, HOLDOUT, GUARDS, ATTACK_RUN, SCORING, VALIDATOR, METRICS, SYSTEMS_FILE, RUN_EVALS, RENDER, JUDGE, CALIBRATE)
+    files = (CHUNKER, EMBEDDER, INDEX, SETTINGS, RETRIEVER, GENERATOR, API, CHECKER, KEYWORD, QUESTIONS, LANGUAGE, GATES, FRESHNESS, CHART, HOLDOUT, PHOENIX, GUARDS, ATTACK_RUN, SCORING, VALIDATOR, METRICS, SYSTEMS_FILE, RUN_EVALS, RENDER, JUDGE, CALIBRATE)
     originals = {path: path.read_bytes() for path in files}
     check_breaks_apply(selected, originals)
 

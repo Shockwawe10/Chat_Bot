@@ -72,7 +72,7 @@ Ollama 0.40.15, commit clean (`git_dirty` false). `ollama ps` after the first ca
 | Gates | all pass | over-refusal, numeric fidelity and false-premise refused fail | | |
 | Latency p95 | 27.7 s | 13.0 s | | not comparable: a refusal skips the answer check |
 
-**Who refused.** Of B's 39 refusals, 38 have a trace, and in all 38 the model itself chose to abstain ("The context does not specify…"). The answer check blocked none. For A's 12: the model 10, the answer check 2. B refused with the answer in its passages: the gold passage was retrieved in 37 of the 39 cases, and at rank 1 in 21. Example: g003, where the passage at rank 1 says "3 to 6 weeks" and B said the context does not specify the time.
+**Who refused.** In all 39 of B's refusals, the model itself chose to abstain ("The context does not specify…"). (Corrected the same day: this first said 38 of 39 had a trace. g068's trace was written in the run's last second, after the run's timestamp, which is cut to whole seconds; the lookup now ends one second later, `evals/phoenix_export.py`.) The answer check blocked none. For A's 12: the model 10, the answer check 2. B refused with the answer in its passages: the gold passage was retrieved in 37 of the 39 cases, and at rank 1 in 21. Example: g003, where the passage at rank 1 says "3 to 6 weeks" and B said the context does not specify the time.
 
 **What B answered.** 3 of the 42 answerable cases (g014, g028, g036), all also answered by A. All three were read against the knowledge base: every claim in them is in it. No case was answered by B and refused by A, so the planned reading had nothing else to read.
 

@@ -431,6 +431,26 @@ Every committed run is stamped with a digest of what shapes an answer (app code,
 
 No model runs in CI, so CI needs no API keys. Any keys a later stage needs go in GitHub Secrets.
 
+### Tracing with Arize Phoenix
+
+Every `/ask` request already writes one JSON line to `runs/traces/` (`app/api.py`). `evals/phoenix_export.py` sends the requests of a saved dev run to Phoenix as one tree per question: **ask**, then **embed**, **retrieve** (each passage with its score), **generate** (the model's raw output) and **answer check** (its verdict on every sentence). Each tree carries the eval's verdict for its case. A failed case is tagged `failed` and gets an error status, so Phoenix can list only the failures.
+
+```bash
+make phoenix                                          # Phoenix at http://127.0.0.1:6006, its own venv
+python -m evals.phoenix_export reports/latest.json    # in a second terminal
+```
+
+The latest dev run gave 52 requests, 248 spans, and 13 failed cases. One of them, g043:
+
+![Phoenix trace of failed case g043: the answer check rejected a sentence, so the customer got the refusal](reports/phoenix-failed-case-g043.png)
+
+The customer asked whether a ballasted flat-roof system fits a 7° roof. The model got the conclusion right: neither RF-1 nor RF-2 fits, because both allow at most 5°. But it wrote "7 degrees, which is within the maximum roof slope of 5°". The answer check found that sentence unsupported, so the customer got "I can't answer that from the available documents", and the case failed: it should have been answered. The trace shows where the time went too: 15.2 s generating and 9.5 s checking, out of 27.6 s.
+
+Choices made:
+- **Export, not live tracing.** The app is not changed, so every committed run stays fresh.
+- **Pinned and safe.** Phoenix 20.26.0 runs in its own virtual environment, pinned, chosen as the newest release at least two weeks old. Its web UI listens on this machine only, and its usage telemetry and built-in AI agent are off. Its gRPC receiver on port 4317 always listens on every network interface, and Phoenix has no setting to change that, so stop it when done.
+- **Dev only.** A holdout run is refused, so holdout questions never appear in Phoenix.
+
 ---
 
 ## Development workflow
@@ -564,7 +584,7 @@ Personal data leakage (LLM02) needs the agent and its customer data, so it is te
 - [x] Nightly or manual full dev eval and red teaming (`make nightly`: full dev eval and the attack set; promptfoo and garak by hand)
 - [x] Manual end-of-stage workflow for the holdout eval (`make holdout` and the "Holdout" GitHub workflow)
 - [x] Drift: same evals on two models or two prompt versions, metric history chart (Ollama pinned; qwen3 against phi4-mini in `reports/drift.md`; `reports/history.svg`)
-- [ ] Tracing with Arize Phoenix
+- [x] Tracing with Arize Phoenix (`make phoenix`, `evals/phoenix_export.py`; a failed case in [Tracing with Arize Phoenix](#tracing-with-arize-phoenix))
 
 **Exit criteria:** a **canary PR** with a deliberately broken prompt fails CI, and the failure is linked in the README; `reports/drift.md` compares two models; a trace screenshot of one failed case.
 
@@ -848,6 +868,14 @@ We keep some questions locked away, like a sealed exam the robot has never pract
 Now there's a fixed way to sit that exam: one command runs it, and a button on GitHub checks the result. The check makes sure it was a fair exam. Was it the same robot that took the long practice test, with the same instructions, and the same version of the program that runs it? Did it answer every sealed question? If not, the result doesn't count. Even then, the check only shows scores and question numbers, never the questions, so they stay sealed.
 
 We tested the checker with pretend exams whose questions were all one secret word. It rejected every unfair one, and the secret word never came out.
+
+### Stage 5, part 6: an X-ray of every answer
+
+When a question goes wrong, a score only says "wrong". We wanted to see why. So now every question can be opened like an X-ray in a tool called Phoenix. You see each step the chatbot took: which cards it picked, what the robot wrote, what the checker said, and how long each step took.
+
+Here's one wrong question we looked at. A customer asked if a flat-roof system fits a roof that slopes 7 degrees. The robot knew the answer was no, because those systems allow at most 5 degrees. But it explained it badly: it said 7 degrees is "within" 5 degrees. The checker caught that mistake and threw the whole answer away, so the customer only heard "I can't answer". The X-ray shows the robot wasn't stuck. It just explained badly.
+
+While building this we found two mistakes of our own. A few answers from the very last second of a test were being missed. And the X-ray showed the checker reading the "I can't answer" sentence instead of the robot's real answer. We fixed both and added a test for each.
 
 ---
 
