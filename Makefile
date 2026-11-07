@@ -31,7 +31,7 @@ eval:
 eval-smoke:
 	$(PYTHON) -m evals.run_evals --smoke
 
-# The run CI checks on every push: 21 smoke cases, about 10 minutes (reports/smoke/latest.json).
+# The run CI checks on every push: 21 smoke cases, about 5 minutes (reports/smoke/latest.json).
 smoke:
 	$(PYTHON) -m evals.run_evals --smoke
 
@@ -39,7 +39,7 @@ smoke:
 smoke-accept:
 	$(PYTHON) -c "import shutil; shutil.copyfile('reports/smoke/latest.json', 'reports/smoke/reference.json')"
 
-# The full dev eval and the attack set, about 50 minutes (reports/latest.json, reports/security/latest.json).
+# The full dev eval and the attack set, about 30 minutes (reports/latest.json, reports/security/latest.json).
 nightly:
 	$(PYTHON) -m evals.run_evals
 	$(PYTHON) -m evals.attack_run --label nightly

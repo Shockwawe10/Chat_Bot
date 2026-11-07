@@ -128,3 +128,83 @@ def test_a_run_without_citations_is_refused(latest):
     for case in old["cases"]:
         case.pop("cited_texts", None)
     assert any("citations" in text for text in run_problems(old))
+
+
+# Smoke gates (per case, against the accepted reference)
+
+
+@pytest.fixture(scope="module")
+def smoke():
+    from evals.gates import SMOKE_LATEST
+
+    return json.loads(SMOKE_LATEST.read_text(encoding="utf-8"))
+
+
+def smoke_gates_of(report, reference):
+    from evals.gates import smoke_check
+
+    return {gate.name: gate for gate in smoke_check(report, reference, DATASET)}
+
+
+def test_the_committed_smoke_run_passes_against_its_reference(smoke):
+    from evals.gates import SMOKE_REFERENCE, smoke_problems
+
+    reference = json.loads(SMOKE_REFERENCE.read_text(encoding="utf-8"))
+    assert smoke_problems(smoke) == []
+    assert [g.line() for g in smoke_gates_of(smoke, reference).values() if not g.passed] == []
+
+
+def test_an_answered_case_turned_into_a_refusal_fails(smoke):
+    broken = copy.deepcopy(smoke)
+    case = next(c for c in broken["cases"] if c["id"] == "g003")
+    case.update(answer=ABSTAIN_SENTENCE, refused=True)
+    gates = smoke_gates_of(broken, smoke)
+    assert gates["no answered case refused"].cases == ["g003"]
+    assert not gates["no required fact lost"].passed and gates["no required fact lost"].cases == ["g003"]
+
+
+def test_a_near_value_wrong_number_loses_its_fact(smoke):
+    broken = copy.deepcopy(smoke)
+    case = next(c for c in broken["cases"] if c["id"] == "g003")
+    case["answer"] = case["answer"].replace("3 to 6 weeks", "13 to 16 weeks")
+    gate = smoke_gates_of(broken, smoke)["no required fact lost"]
+    assert not gate.passed and gate.cases == ["g003"]
+
+
+def test_a_lost_hit_fails(smoke):
+    broken = copy.deepcopy(smoke)
+    next(c for c in broken["cases"] if c["id"] == "g026")["hit"] = False
+    assert smoke_gates_of(broken, smoke)["no hit lost"].cases == ["g026"]
+
+
+def test_an_out_of_scope_answer_and_a_wrong_language_reply_fail(smoke):
+    broken = copy.deepcopy(smoke)
+    next(c for c in broken["cases"] if c["id"] == "g046").update(answer="Yes, we do.", refused=False)
+    next(c for c in broken["cases"] if c["id"] == "g071").update(answer="Die Garantie gilt 15 Jahre.")
+    gates = smoke_gates_of(broken, smoke)
+    assert gates["out-of-scope answered"].cases == ["g046"]
+    assert gates["English-only reply"].cases == ["g071"]
+
+
+def test_a_missing_case_fails_and_a_case_better_than_the_reference_passes(smoke):
+    fewer = copy.deepcopy(smoke)
+    fewer["cases"] = [c for c in fewer["cases"] if c["id"] != "g062"]
+    gate = smoke_gates_of(fewer, smoke)["every reference case ran"]
+    assert not gate.passed and gate.cases == ["g062"]
+    worse_reference = copy.deepcopy(smoke)
+    next(c for c in worse_reference["cases"] if c["id"] == "g003").update(answer=ABSTAIN_SENTENCE, refused=True)
+    assert all(g.passed for g in smoke_gates_of(smoke, worse_reference).values())
+
+
+@pytest.mark.parametrize(
+    "change, problem",
+    [
+        ({"smoke": False}, "not a dev smoke run"),
+        ({"experiment": "x"}, "not a dev smoke run"),
+        ({"system": "always-answer"}, "not the pipeline"),
+    ],
+)
+def test_a_run_that_is_not_a_smoke_run_is_refused(smoke, change, problem):
+    from evals.gates import smoke_problems
+
+    assert any(problem in text for text in smoke_problems({**smoke, **change}))

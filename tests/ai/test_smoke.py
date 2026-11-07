@@ -1,6 +1,6 @@
 """Smoke suite: the per-case PR gates on the committed smoke run, checked on every push.
 
-The smoke run (make smoke, 21 cases, about 10 minutes) must be about this commit (evals/freshness.py),
+The smoke run (make smoke, 21 cases, about 5 minutes) must be about this commit (evals/freshness.py),
 and no smoke case may get worse than in the accepted reference (reports/smoke/reference.json):
 no hit lost, no answered case refused, no required fact lost, no out-of-scope answer, and the
 English-only reply on every language case. tests/unit/test_gates.py shows each gate failing.

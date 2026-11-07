@@ -381,3 +381,11 @@ def test_every_run_records_the_freshness_stamp():
     env = {"PROMPT_VERSION": "v5", "TOP_K": "8", "OLLAMA_URL": "http://127.0.0.1:9"}
     manifest = run_evals.build_manifest("r", AlwaysAbstain(), args, env, 52, 0, "1.2", {"latency_p95_ms": 1.0}, None)
     assert {key: manifest[key] for key in ("inputs_sha256", "settings")} == stamp(env)
+
+
+def test_a_smoke_run_becomes_the_smoke_latest_and_never_the_full_latest(tmp_path):
+    write_outputs(report(smoke=True), [], tmp_path, tmp_path / "history.csv")
+    assert (tmp_path / "smoke" / "latest.json").exists()
+    assert not (tmp_path / "latest.json").exists() and not (tmp_path / "history.csv").exists()
+    write_outputs(report(smoke=True, experiment="x"), [], tmp_path / "other", tmp_path / "h.csv")
+    assert not (tmp_path / "other" / "smoke").exists()

@@ -500,6 +500,12 @@ BREAKS = {
     "freshness: app code not an input": [(FRESHNESS, '    files = sorted((root / "app").glob("*.py"))\n', "    files = []\n")],
     "freshness: line endings change the digest": [(FRESHNESS, '        digest.update(path.read_bytes().replace(b"\\r\\n", b"\\n"))\n', "        digest.update(path.read_bytes())\n")],
     "freshness: runs not stamped": [(RUN_EVALS, "        **stamp(env),\n", "")],
+    # Smoke gates, per case against the accepted reference (evals/gates.py)
+    "smoke: lost hit accepted": [(GATES, '    lost_hit = [cid for cid in shared if before[cid].get("hit") and not cases[cid].get("hit")]\n', "    lost_hit = []\n")],
+    "smoke: new refusals accepted": [(GATES, "    newly_refused = [cid for cid in answerable if answered(before[cid]) and not answered(cases[cid])]\n", "    newly_refused = []\n")],
+    "smoke: lost facts accepted": [(GATES, 'gates.append(Gate("no required fact lost", not facts_lost,', 'gates.append(Gate("no required fact lost", True,')],
+    "smoke: missing cases accepted": [(GATES, 'gates = [Gate("every reference case ran", not missing,', 'gates = [Gate("every reference case ran", True,')],
+    "smoke: run not kept as smoke latest": [(RUN_EVALS, '        shutil.copyfile(path, reports_dir / "smoke" / "latest.json")\n', "        pass\n")],
     # CI gates (evals/gates.py)
     "gates: out-of-scope answers ignored": [(GATES, 'Gate("out-of-scope answered", not answered_oos,', 'Gate("out-of-scope answered", True,')],
     "gates: any reply counts as English-only": [(GATES, "if not (answered(c) and language_reply(c.get(\"answer\", \"\")))]", "if not answered(c)]")],
@@ -622,6 +628,7 @@ def copy_project(folder):
     (work / "reports").mkdir()
     shutil.copy2(ROOT / "reports" / "latest.json", work / "reports" / "latest.json")
     shutil.copytree(ROOT / "reports" / "security", work / "reports" / "security")
+    shutil.copytree(ROOT / "reports" / "smoke", work / "reports" / "smoke")
     return work
 
 
