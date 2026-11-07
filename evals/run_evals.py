@@ -33,6 +33,7 @@ from pathlib import Path
 from app.chunker import CHUNKER_VERSION, ChunkConfig
 from app.generator import PromptTemplate
 from app.settings import ROOT, read_env
+from evals import history_chart
 from evals.chunk_report import KB_DIR
 from evals.exposure import check_exposed, exposure_report, format_report
 from evals.freshness import stamp
@@ -226,6 +227,8 @@ def write_outputs(report, scored, reports_dir, history_path, record_baseline=Fal
     if full_dev:
         shutil.copyfile(path, reports_dir / "latest.json")
         append_history(report, history_path, folder)
+        # The chart is a picture of the history, so the two are always committed together.
+        history_chart.write(history_path, reports_dir / "history.svg")
     smoke_dev = (
         report["system"] == "pipeline" and report["split"] == "dev" and report["smoke"] and not report.get("experiment")
     )

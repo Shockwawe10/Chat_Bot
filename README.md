@@ -88,6 +88,10 @@ Runs: Baseline: `20261102T103932Z-pipeline-dev` at `3b5e4cb`, dataset 1.2. Curre
 
 <!-- results:end -->
 
+![Metrics of every full dev run: hit rate, over-refusal, numeric fidelity, refusal accuracy, behaviour accuracy and latency, one panel each](reports/history.svg)
+
+Every full dev run so far, drawn from `evals/history.csv`, which is the table behind the chart. The dashed line is where the setup changed. Before run 3, prompt v2 became v5 and top-k 5 became 8. Question retrieval and the answer check came in at the same run; `history.csv` has no column for those two. The latency jump came with those changes: the answer check swaps models on the 4 GB GPU (about 10 s per answer, per `.env.example`), and the model reads 8 passages instead of 5. How much each adds was not measured separately. `run_evals` redraws the chart with each new row, and CI fails if the committed chart doesn't match the history.
+
 Thresholds are starting values. After the baseline run they are reviewed, and the reasoning is written down in `reports/thresholds.md`. The gates are explained in [CI gates](#ci-gates).
 
 ---
@@ -189,6 +193,7 @@ Chat_Bot/
 │   ├── runs/                # one manifest per dev run
 │   ├── holdout/             # holdout runs, end of stage only
 │   ├── latest.json          # copy of the newest full dev run
+│   ├── history.svg          # chart of evals/history.csv (python -m evals.history_chart)
 │   ├── thresholds.md
 │   ├── experiments.md
 │   ├── SECURITY_REPORT.md
@@ -377,7 +382,7 @@ Calibration is repeated at the end of every stage that changes the judge prompt 
 
 ### Run manifest
 
-Every full dev run writes `reports/runs/<run_id>.json`, copies it to `reports/latest.json` and appends one row to `evals/history.csv`:
+Every full dev run writes `reports/runs/<run_id>.json`, copies it to `reports/latest.json`, appends one row to `evals/history.csv` and redraws `reports/history.svg`:
 
 - git commit SHA, dataset version, prompt version
 - provider, model, judge provider, judge model, embedding model, temperature
@@ -827,6 +832,14 @@ What if we gave the chatbot a different robot brain? We tried another small one,
 The new brain was safe but almost useless. It never answered a question it shouldn't, never answered in the wrong language, and never said anything false. But it said "I can't answer" to 39 of the 42 questions it should have answered. In 21 of those, the answer was on the very first card it was given. Our usual brain says that to 12.
 
 So the rules and checkers are what keep the chatbot honest, and the brain is what makes it helpful. It's like a careful new cashier who follows every shop rule but is too scared to sell anything. GitHub would have stopped this brain too: 3 of its checks failed. Our usual brain stays.
+
+### Stage 5, part 4: a growth chart
+
+Parents mark a child's height on the door frame every birthday, so they can see the growing, not just today's height. We now do that for the chatbot. Every time it takes the long test, its scores go on a chart: how often it finds the right card, how often it wrongly says "I can't answer", and how often it gets the numbers right.
+
+The chart shows 7 tests so far. After test 2 we changed its instructions and how many cards it reads, and a dashed line marks that spot, so nobody mistakes a jump for luck. Wrongly saying "I can't answer" went down from 0.52 to 0.29, and finding the right card went up from 0.83 to 0.95. Answers also got slower, from 4.6 to 27.7 seconds for the slow ones, partly because a checker now reads every answer before it goes out.
+
+The chart draws itself after every long test. GitHub checks that it matches the score list, so nobody can forget to update it.
 
 ---
 

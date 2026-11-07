@@ -43,6 +43,7 @@ RUN_EVALS = ROOT / "evals" / "run_evals.py"
 RENDER = ROOT / "evals" / "render_results.py"
 JUDGE = ROOT / "evals" / "judge.py"
 CALIBRATE = ROOT / "evals" / "calibrate_judge.py"
+CHART = ROOT / "evals" / "history_chart.py"
 
 PACK = "if joined > cfg.max or (joined > cfg.target and can_stop):"
 MERGE = "if fits and (_size(group) < cfg.min or _only_headings(group)):"
@@ -510,6 +511,12 @@ BREAKS = {
     "smoke: lost facts accepted": [(GATES, 'gates.append(Gate("no required fact lost", not facts_lost,', 'gates.append(Gate("no required fact lost", True,')],
     "smoke: missing cases accepted": [(GATES, 'gates = [Gate("every reference case ran", not missing,', 'gates = [Gate("every reference case ran", True,')],
     "smoke: run not kept as smoke latest": [(RUN_EVALS, '        shutil.copyfile(path, reports_dir / "smoke" / "latest.json")\n', "        pass\n")],
+    # Metric history chart (evals/history_chart.py)
+    "chart: not redrawn after a full dev run": [(RUN_EVALS, '        history_chart.write(history_path, reports_dir / "history.svg")\n', "        pass\n")],
+    "chart: missing value drawn as zero": [(CHART, "    if not text:\n        return None\n", "    if not text:\n        return 0.0\n")],
+    "chart: latency not in seconds": [(CHART, '    return number / 1000 if column == "latency_p95_ms" else number\n', "    return number\n")],
+    "chart: setup changes not marked": [(CHART, "        if parts:\n", "        if False:\n")],
+    "chart: rates on their own scale": [(CHART, '    top = 1.0 if scale == "rate" else', "    top = max(known) if scale == \"rate\" else")],
     # CI gates (evals/gates.py)
     "gates: out-of-scope answers ignored": [(GATES, 'Gate("out-of-scope answered", not answered_oos,', 'Gate("out-of-scope answered", True,')],
     "gates: any reply counts as English-only": [(GATES, "if not (answered(c) and language_reply(c.get(\"answer\", \"\")))]", "if not answered(c)]")],
@@ -633,6 +640,7 @@ def copy_project(folder):
     shutil.copy2(ROOT / "reports" / "latest.json", work / "reports" / "latest.json")
     shutil.copytree(ROOT / "reports" / "security", work / "reports" / "security")
     shutil.copytree(ROOT / "reports" / "smoke", work / "reports" / "smoke")
+    shutil.copy2(ROOT / "reports" / "history.svg", work / "reports" / "history.svg")
     return work
 
 
@@ -692,7 +700,7 @@ def main():
     parser.add_argument("--only", default="", help="run only breaks whose name contains this text")
     args = parser.parse_args()
     selected = {name: edits for name, edits in BREAKS.items() if args.only in name}
-    files = (CHUNKER, EMBEDDER, INDEX, SETTINGS, RETRIEVER, GENERATOR, API, CHECKER, KEYWORD, QUESTIONS, LANGUAGE, GATES, FRESHNESS, GUARDS, ATTACK_RUN, SCORING, VALIDATOR, METRICS, SYSTEMS_FILE, RUN_EVALS, RENDER, JUDGE, CALIBRATE)
+    files = (CHUNKER, EMBEDDER, INDEX, SETTINGS, RETRIEVER, GENERATOR, API, CHECKER, KEYWORD, QUESTIONS, LANGUAGE, GATES, FRESHNESS, CHART, GUARDS, ATTACK_RUN, SCORING, VALIDATOR, METRICS, SYSTEMS_FILE, RUN_EVALS, RENDER, JUDGE, CALIBRATE)
     originals = {path: path.read_bytes() for path in files}
     check_breaks_apply(selected, originals)
 

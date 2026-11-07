@@ -5,7 +5,7 @@ else
 PYTHON ?= .venv/bin/python
 endif
 
-.PHONY: ingest run test test-real lint mutation eval eval-smoke smoke smoke-accept nightly results judge-labels calibrate attacks redteam
+.PHONY: ingest run test test-real lint mutation eval eval-smoke smoke smoke-accept nightly results chart judge-labels calibrate attacks redteam
 
 ingest:
 	$(PYTHON) -m app.index build
@@ -46,6 +46,10 @@ nightly:
 
 results:
 	$(PYTHON) -m evals.render_results
+
+# Redraw reports/history.svg from evals/history.csv (run_evals does it after every full dev run).
+chart:
+	$(PYTHON) -m evals.history_chart
 
 judge-labels:
 	$(PYTHON) -m evals.calibrate_judge --make-labels

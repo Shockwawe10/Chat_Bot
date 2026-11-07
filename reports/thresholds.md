@@ -129,5 +129,5 @@ Written by Claude Code. The owner chose to keep model runs on the local GPU, wit
 
 ## Found while writing this
 
-- **`evals/history.csv` has more values than columns.** The header has 19 columns, but the 2026-11-03 row has 25 values: the judge fields were added to the rows but not to the header. Anything that reads the file by column name will shift those values.
+- **`evals/history.csv` has more values than columns.** The header has 19 columns, but the 2026-11-03 row has 25 values: the judge fields were added to the rows but not to the header. Anything that reads the file by column name will shift those values. **Fixed:** a new column now rebuilds the file from the saved runs (`append_history`). On 2026-11-07 the header and all 7 rows had 26 fields each, and `reports/history.svg` reads the file by column name.
 - **The README's Results table needs the same fix as the calibration report.** It says the calibration was "vs my labels", and the labelling issue above applies there too.
