@@ -35,6 +35,7 @@ from app.generator import PromptTemplate
 from app.settings import ROOT, read_env
 from evals.chunk_report import KB_DIR
 from evals.exposure import check_exposed, exposure_report, format_report
+from evals.freshness import stamp
 from evals.judge import JUDGED, aggregate_judged, judge_cases, make_judge
 from evals.metrics import aggregate, score_case
 from evals.systems import (
@@ -140,6 +141,7 @@ def build_manifest(run_id, system, args, env, cases_run, drafts, dataset_version
         "drafts_skipped": drafts,
         "prompt_version": prompt,
         "prompt_sha256": prompt_sha(prompt),
+        **stamp(env),
         "llm_provider": env.get("LLM_PROVIDER"),
         "llm_model": env.get("LLM_MODEL"),
         "llm_digest": served.get("llm_digest") or env.get("LLM_DIGEST"),

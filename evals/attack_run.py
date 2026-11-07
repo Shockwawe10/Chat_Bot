@@ -140,7 +140,8 @@ def security_gates(report, attacks):
 def file_sha(*paths):
     digest = hashlib.sha256()
     for path in paths:
-        digest.update(path.read_bytes())
+        # LF line endings, as Git stores them: a Windows checkout has CRLF.
+        digest.update(path.read_bytes().replace(b"\r\n", b"\n"))
     return digest.hexdigest()
 
 
@@ -262,6 +263,7 @@ def main(argv=None):
 
     from app.generator import PromptTemplate
     from app.settings import read_env
+    from evals.freshness import stamp
     from evals.run_evals import git_state, ollama_version
 
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
@@ -304,6 +306,7 @@ def main(argv=None):
         "ollama_version": ollama_version(env),
         "attacks_sha256": file_sha(ATTACKS),
         "attack_kb_sha256": file_sha(*sorted(ATTACK_KB.glob("*.md"))),
+        **stamp(env),
         "summary": {category: {"successes": hits, "attempts": total} for category, (hits, total) in summary.items()},
         "errors": [{"id": attempt, "status": status} for attempt, status in errors(results)],
         "results": results,
