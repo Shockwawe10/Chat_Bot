@@ -145,3 +145,21 @@ Written by /aar-loop after each session's After Action Review. Read this file be
 - Actual: A stray Write call created C:\DA27~1\placeholder.txt at the root of C:, which the safety check would not let Claude remove, so the owner deleted it; the first garak scan was about 1,800 prompts and was stopped after 230.
 - Why: Nothing stopped a file tool writing outside the working directories; the size check instantiated probes without garak's run config (soft_probe_prompt_cap 256). Fix applied for the writes: the setting, which takes effect from the next session or after /hooks.
 - tags: files,tools,garak,fix-applied
+
+## 2026-11-07 -- Durations and causes are claims too: compute a run's duration from its run id (start) and timestamp (end), and write a cause that was not measured separately as not measured. Smoke is about 5 minutes and make nightly about 30 on this machine (2026-11-07 runs).
+- Expected: Run times and the cause of the latency rise in the docs would come from saved runs.
+- Actual: I wrote smoke 'about 10 minutes' and nightly 'about 50 minutes' into the Makefile, README, thresholds.md and a test docstring; the runs said 5 and about 30. I also wrote that latency rose 'mostly' because of the answer check, which was never measured on its own. All corrected before the push.
+- Why: The CLAUDE.md rule covered only count and chunk claims, so durations and causes went unchecked. Fix applied: the rule now covers count, chunk, duration and cause claims, in docstrings too.
+- tags: claims,durations,fix-applied
+
+## 2026-11-07 -- A run's timestamp is cut to whole seconds and trace times are not: match a run to runs/traces with evals.phoenix_export.records_for, whose window ends 1 s later, and find the unmatched ids before writing any claim when fewer cases match than the run has.
+- Expected: A count of who refused phi4-mini's 39 cases, from the traces of that run.
+- Actual: My lookup matched 48 traces for 52 cases; I wrote '38 of 39 refusals have a trace' into reports/drift.md and pushed it. The missing traces (g068, g071, g072, g074) were written in the run's last second. Corrected in drift.md the same day: all 39 have one.
+- Why: The window ended at the run's timestamp, which is cut to whole seconds, and I accepted a partial match without asking which cases were missing. Fix applied: a CLAUDE.md rule, plus records_for and its test test_a_request_in_the_run_s_last_second_is_inside_the_window.
+- tags: traces,claims,fix-applied
+
+## 2026-11-07 -- A server-type tool gets its own venv, the newest release at least 14 days old, and a netstat -ano check after its first start. Phoenix 20.26.0 by default served its UI on 0.0.0.0, always binds gRPC 4317 to every interface, and had telemetry and a bash-capable AI agent on; set PHOENIX_HOST=127.0.0.1, PHOENIX_TELEMETRY_ENABLED=false, PHOENIX_DISABLE_AGENT_ASSISTANT=true, PHOENIX_AGENTS_DISABLE_BASH=true (make phoenix) and stop it when done.
+- Expected: Phoenix would run locally and privately for viewing traces.
+- Actual: Its first start listened on 0.0.0.0:6006 and [::]:4317 with telemetry and its AI agent on; I found this only from its startup log and netstat, then restarted it local-only with the agent off. The gRPC bind is hardcoded ([::]:{port} in phoenix/server/grpc_server.py), so it remains, documented in the README.
+- Why: The package rule checked only dependency conflicts (pip check), not what a tool does when it runs, nor how new a release is (Phoenix 21.0.0 was 8 days old). Fix applied: the CLAUDE.md package rule now covers release age, a separate venv for servers, the netstat check, and telemetry and agents off.
+- tags: dependencies,security,phoenix,fix-applied

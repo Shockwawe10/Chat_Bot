@@ -4,7 +4,9 @@ Read LESSONS.md before starting work.
 
 Before recommending an Ollama model tag, compare its ID on ollama.com/library/<model>/tags with the -thinking and -instruct tags. After the first call, run `ollama ps` and report the CPU/GPU split.
 
-Compute every count or chunk claim in LEARNING_LOG.md, the README or a report from the saved JSON or trace before writing it.
+Compute every count, chunk, duration or cause claim in LEARNING_LOG.md, the README, a report or a docstring from the saved JSON or trace before writing it. A duration comes from the run id and timestamp; a cause that was not measured separately is written as not measured.
+
+To match a run's cases to runs/traces, use evals.phoenix_export.records_for (its window ends one second after the run's timestamp, which is cut to whole seconds). If fewer cases match than the run has, find the unmatched ids before writing any claim from the match.
 
 Before trusting an eval scorer or CI gate, run it on the fixed refusal sentence, a near-value wrong answer (such as 15 years for 5 years), known-correct answers from a saved pipeline run, and the always-abstain and always-answer reference systems.
 
@@ -20,7 +22,7 @@ evals/annotation/blind_20.csv and any filled copy hold 8 holdout questions: scor
 
 Before every push, run make lint and make test, the exact commands CI runs. Never a narrower path such as ruff check app evals tests.
 
-Try a new Python package in a throwaway virtual environment first, and run pip check there. Install it into .venv only after it shows no conflict, and add it to requirements.txt in the same commit.
+Try a new Python package in a throwaway virtual environment first, and run pip check there. Install it into .venv only after it shows no conflict, and add it to requirements.txt in the same commit. Pick the newest release at least 14 days old. A tool that runs a server (such as Phoenix) gets its own venv, never .venv. After its first start, run netstat -ano, check every port it listens on, and turn off its telemetry and any built-in agent.
 
 A run that measures a rate (eval, attack run, gate) counts a non-200 reply as an error: reported, and left out of the rate. Never count it as a pass or a fail.
 
