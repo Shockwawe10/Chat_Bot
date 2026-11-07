@@ -605,6 +605,13 @@ Personal data leakage (LLM02) needs the agent and its customer data, so it is te
 
 **Exit criteria:** a **canary PR** with a deliberately broken prompt fails CI, and the failure is linked in the README ([#7](https://github.com/Shockwawe10/Chat_Bot/pull/7), see [Canary](#canary-a-broken-prompt-fails-ci)); `reports/drift.md` compares two models; a trace screenshot of one failed case.
 
+**Status: done (2026-11-07).**
+- **CI:** CI checks committed runs, since the models run on the local GPU. Every run is stamped and must match its commit. The smoke run is gated per case against an accepted reference.
+- **Drift:** Ollama is pinned after an update silently made one answer false. phi4-mini kept every safety result but refused 39 of 42 answerable questions.
+- **Tooling:** a metric history chart, Phoenix traces of failed cases, and a manual holdout workflow.
+- **Canary:** the canary PR fails CI exactly as predicted, and exposed two test weaknesses (F5, F6), now fixed.
+- **Final runs:** the dev answers are identical to the previous run in 52/52 cases, and 0/62 attacks worked. The holdout run (`20261107T151637Z-pipeline-holdout`, 23 cases) has 8 behaviour failures against 10 in the Stage 3 holdout run, 0/3 out-of-scope answered and no errors.
+
 ### Stage 6. MCP agent with tools (weeks 6–7)
 
 **Goal:** an agent that also takes requests and works with company data. The tools imitate a CRM and a project tracking system.
