@@ -416,7 +416,7 @@ These breaks were written by hand. [mutmut](https://github.com/boxed/mutmut) can
 | Every pull request | lint; unit, data and API tests; agent tests (from Stage 6) | any test fails; any unconfirmed action or PII leak |
 | Nightly or manual, on the local GPU | `make nightly`: full dev eval and the attack set, one pass each; red teaming and the garak scan by hand | once committed, any nightly gate fails on every push |
 | Manual, end of stage | holdout eval, judge calibration | — (results written to `reports/holdout/` and reviewed once) |
-| Manual | drift comparison on a second model | — (report only) |
+| Manual | drift comparison on a second model: the full dev eval as an experiment with `LLM_MODEL` and `LLM_DIGEST` set for that run only (first done: qwen3:4b-instruct against phi4-mini:3.8b, `reports/drift.md`) | — (report only) |
 
 Rate metrics such as refusal accuracy and tool selection accuracy are gated on the full nightly run, where there are enough cases for a rate to mean something. On a PR, the same behaviour is checked case by case.
 
@@ -819,6 +819,14 @@ We also found something by accident. The program that runs the robot brain updat
 ### Stage 5, part 2: no surprise updates
 
 That program updating itself is like a referee swapping the ball in the middle of a match. So now we write down which version we use, 0.40.15, the way a recipe says "bake at 180 degrees". If the version on the computer is different, the test won't even start, and GitHub won't accept a paper marked with another version. We tested this by pretending the version was different: the test stopped every time. When a new version comes out, we try it first as a separate practice test, compare the answers, and only then switch.
+
+### Stage 5, part 3: swapping the brain
+
+What if we gave the chatbot a different robot brain? We tried another small one, called phi4-mini, and changed nothing else: same notebooks, same instructions, same checker, same 52 practice questions. Before the test, we wrote down what we expected.
+
+The new brain was safe but almost useless. It never answered a question it shouldn't, never answered in the wrong language, and never said anything false. But it said "I can't answer" to 39 of the 42 questions it should have answered. In 21 of those, the answer was on the very first card it was given. Our usual brain says that to 12.
+
+So the rules and checkers are what keep the chatbot honest, and the brain is what makes it helpful. It's like a careful new cashier who follows every shop rule but is too scared to sell anything. GitHub would have stopped this brain too: 3 of its checks failed. Our usual brain stays.
 
 ---
 
