@@ -32,6 +32,7 @@ KEYWORD = ROOT / "app" / "keyword.py"
 QUESTIONS = ROOT / "app" / "questions.py"
 LANGUAGE = ROOT / "app" / "language.py"
 GATES = ROOT / "evals" / "gates.py"
+FRESHNESS = ROOT / "evals" / "freshness.py"
 GUARDS = ROOT / "app" / "guards.py"
 ATTACK_RUN = ROOT / "evals" / "attack_run.py"
 SCORING = ROOT / "evals" / "scoring.py"
@@ -42,6 +43,10 @@ RUN_EVALS = ROOT / "evals" / "run_evals.py"
 RENDER = ROOT / "evals" / "render_results.py"
 JUDGE = ROOT / "evals" / "judge.py"
 CALIBRATE = ROOT / "evals" / "calibrate_judge.py"
+CHART = ROOT / "evals" / "history_chart.py"
+HOLDOUT = ROOT / "evals" / "holdout.py"
+PHOENIX = ROOT / "evals" / "phoenix_export.py"
+PROMPT_V5 = ROOT / "prompts" / "answer_v5.txt"
 
 PACK = "if joined > cfg.max or (joined > cfg.target and can_stop):"
 MERGE = "if fits and (_size(group) < cfg.min or _only_headings(group)):"
@@ -493,6 +498,44 @@ BREAKS = {
     "language: one foreign word is enough": [(LANGUAGE, "return not (other >= 2 and other > english)", "return not (other >= 1 and other > english)")],
     "language: accented words not counted": [(LANGUAGE, "word in OTHER or not word.isascii()", "word in OTHER")],
     "language: English words not counted": [(LANGUAGE, "english = sum(word in ENGLISH for word in words)", "english = 0")],
+    # Freshness gate (evals/freshness.py)
+    "freshness: stale inputs accepted": [(FRESHNESS, '    elif report["inputs_sha256"] != inputs_digest(version, root):\n', "    elif False:\n")],
+    "freshness: other settings accepted": [(FRESHNESS, "    if changed:\n", "    if False:\n")],
+    "freshness: app code not an input": [(FRESHNESS, '    files = sorted((root / "app").glob("*.py"))\n', "    files = []\n")],
+    "freshness: line endings change the digest": [(FRESHNESS, '        digest.update(path.read_bytes().replace(b"\\r\\n", b"\\n"))\n', "        digest.update(path.read_bytes())\n")],
+    "freshness: runs not stamped": [(RUN_EVALS, "        **stamp(env),\n", "")],
+    "freshness: another Ollama version accepted": [(FRESHNESS, "    if pinned and version != pinned:\n", "    if False:\n")],
+    "pin: eval run starts on any Ollama": [(RUN_EVALS, "        require_pinned_ollama(env)\n", "        pass\n")],
+    "pin: experiment refused on another Ollama": [(RUN_EVALS, ' and not args.experiment:\n', ":\n")],
+    "pin: attack run starts on any Ollama": [(ATTACK_RUN, "        require_pinned_ollama(env)\n", "        pass\n")],
+    # Smoke gates, per case against the accepted reference (evals/gates.py)
+    "smoke: lost hit accepted": [(GATES, '    lost_hit = [cid for cid in shared if before[cid].get("hit") and not cases[cid].get("hit")]\n', "    lost_hit = []\n")],
+    "smoke: new refusals accepted": [(GATES, "    newly_refused = [cid for cid in answerable if answered(before[cid]) and not answered(cases[cid])]\n", "    newly_refused = []\n")],
+    "smoke: lost facts accepted": [(GATES, 'gates.append(Gate("no required fact lost", not facts_lost,', 'gates.append(Gate("no required fact lost", True,')],
+    "smoke: missing cases accepted": [(GATES, 'gates = [Gate("every reference case ran", not missing,', 'gates = [Gate("every reference case ran", True,')],
+    "smoke: run not kept as smoke latest": [(RUN_EVALS, '        shutil.copyfile(path, reports_dir / "smoke" / "latest.json")\n', "        pass\n")],
+    # Metric history chart (evals/history_chart.py)
+    "chart: not redrawn after a full dev run": [(RUN_EVALS, '        history_chart.write(history_path, reports_dir / "history.svg")\n', "        pass\n")],
+    "chart: missing value drawn as zero": [(CHART, "    if not text:\n        return None\n", "    if not text:\n        return 0.0\n")],
+    "chart: latency not in seconds": [(CHART, '    return number / 1000 if column == "latency_p95_ms" else number\n', "    return number\n")],
+    "chart: setup changes not marked": [(CHART, "        if parts:\n", "        if False:\n")],
+    "chart: rates on their own scale": [(CHART, '    top = 1.0 if scale == "rate" else', "    top = max(known) if scale == \"rate\" else")],
+    # End-of-stage holdout check (evals/holdout.py)
+    "holdout: another setup accepted": [(HOLDOUT, '    if report.get("inputs_sha256") != dev.get("inputs_sha256") or report.get("settings") != dev.get("settings"):\n', "    if False:\n")],
+    "holdout: missing cases accepted": [(HOLDOUT, "    if ran != ids:\n", "    if False:\n")],
+    "holdout: an experiment confirms a setup": [(HOLDOUT, ' or report.get("smoke") or report.get("experiment"):\n', ' or report.get("smoke"):\n')],
+    "holdout: stale run accepted": [(HOLDOUT, "    found += freshness_problems(report, root, env_example)\n", "")],
+    "holdout: exposed cases not marked": [(HOLDOUT, '        return case_id + ("*" if case_id in EXPOSED_HOLDOUT else "")\n', "        return case_id\n")],
+    "holdout: run not kept as holdout latest": [(RUN_EVALS, '        shutil.copyfile(path, reports_dir / "holdout" / "latest.json")\n', "        pass\n")],
+    # Phoenix export (evals/phoenix_export.py)
+    "phoenix: holdout runs exported": [(PHOENIX, '    if report.get("split") != "dev":\n', "    if False:\n")],
+    "phoenix: failed cases not marked": [(PHOENIX, "        error=f\"case {case['id']} failed its eval\" if is_failed else None,\n", "        error=None,\n")],
+    "phoenix: the run's last second missed": [(PHOENIX, "+ timedelta(seconds=1)\n", "\n")],
+    "phoenix: check shows the refusal, not the answer": [(PHOENIX, '                    "input.value": model_answer(record),\n', '                    "input.value": parsed.get("answer", ""),\n')],
+    "phoenix: children not under their request": [(PHOENIX, "        spans.append(span(name, kind, clock, stop, attributes, parent=0))\n", "        spans.append(span(name, kind, clock, stop, attributes))\n")],
+    # The canary PR's break (README, CI gates): the prompt loses its passages, nothing crashes
+    "prompt: passages dropped ({context} for $context)": [(PROMPT_V5, "\n$context", "\n{context}")],
+    "prompt: question dropped": [(PROMPT_V5, "\n$question", "\nthe question")],
     # CI gates (evals/gates.py)
     "gates: out-of-scope answers ignored": [(GATES, 'Gate("out-of-scope answered", not answered_oos,', 'Gate("out-of-scope answered", True,')],
     "gates: any reply counts as English-only": [(GATES, "if not (answered(c) and language_reply(c.get(\"answer\", \"\")))]", "if not answered(c)]")],
@@ -603,7 +646,7 @@ BREAKS = {
 
 
 LEFT_OUT = shutil.ignore_patterns(
-    ".git", ".venv", ".chroma", ".env", "runs", "reports", "__pycache__", ".hypothesis", ".pytest_cache", ".ruff_cache"
+    ".git", ".venv", ".venv-phoenix", ".phoenix", ".chroma", ".env", "runs", "reports", "__pycache__", ".hypothesis", ".pytest_cache", ".ruff_cache"
 )
 
 
@@ -615,6 +658,8 @@ def copy_project(folder):
     (work / "reports").mkdir()
     shutil.copy2(ROOT / "reports" / "latest.json", work / "reports" / "latest.json")
     shutil.copytree(ROOT / "reports" / "security", work / "reports" / "security")
+    shutil.copytree(ROOT / "reports" / "smoke", work / "reports" / "smoke")
+    shutil.copy2(ROOT / "reports" / "history.svg", work / "reports" / "history.svg")
     return work
 
 
@@ -674,7 +719,7 @@ def main():
     parser.add_argument("--only", default="", help="run only breaks whose name contains this text")
     args = parser.parse_args()
     selected = {name: edits for name, edits in BREAKS.items() if args.only in name}
-    files = (CHUNKER, EMBEDDER, INDEX, SETTINGS, RETRIEVER, GENERATOR, API, CHECKER, KEYWORD, QUESTIONS, LANGUAGE, GATES, GUARDS, ATTACK_RUN, SCORING, VALIDATOR, METRICS, SYSTEMS_FILE, RUN_EVALS, RENDER, JUDGE, CALIBRATE)
+    files = (CHUNKER, EMBEDDER, INDEX, SETTINGS, RETRIEVER, GENERATOR, API, CHECKER, KEYWORD, QUESTIONS, LANGUAGE, GATES, FRESHNESS, CHART, HOLDOUT, PHOENIX, PROMPT_V5, GUARDS, ATTACK_RUN, SCORING, VALIDATOR, METRICS, SYSTEMS_FILE, RUN_EVALS, RENDER, JUDGE, CALIBRATE)
     originals = {path: path.read_bytes() for path in files}
     check_breaks_apply(selected, originals)
 

@@ -27,3 +27,8 @@ langchain-core==0.3.86
 langchain-community==0.3.31
 langchain-openai==0.3.35
 openai==1.109.1
+
+# Stage 5: send traces to Phoenix (evals/phoenix_export.py). Already installed with chromadb;
+# pinned so an update cannot drop them. Phoenix itself has its own venv (make phoenix).
+opentelemetry-sdk==1.45.2
+opentelemetry-exporter-otlp-proto-grpc==1.45.2

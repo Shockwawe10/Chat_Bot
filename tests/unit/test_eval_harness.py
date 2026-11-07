@@ -89,6 +89,45 @@ def test_the_ollama_version_is_read_and_missing_ollama_is_none():
     assert run_evals.ollama_version({}, down) is None
 
 
+class Reached(Exception):
+    """Raised where a run would start calling models: the version check let it through."""
+
+
+def test_a_run_ci_checks_refuses_to_start_on_an_ollama_version_other_than_the_pin(monkeypatch):
+    from evals.freshness import pinned_ollama
+
+    def make_system(*_):
+        raise Reached
+
+    monkeypatch.setattr(run_evals, "make_system", make_system)
+    monkeypatch.setattr(run_evals, "ollama_version", lambda env, client=None: "0.0.1")
+    for argv in (["--smoke"], [], ["--system", "http", "--url", "http://test"]):
+        with pytest.raises(SystemExit, match="not the pinned"):
+            main(argv)
+    with pytest.raises(Reached):
+        main(["--smoke", "--experiment", "other-ollama"])
+    monkeypatch.setattr(run_evals, "ollama_version", lambda env, client=None: None)
+    with pytest.raises(SystemExit, match="Ollama unknown"):
+        main(["--smoke"])
+    monkeypatch.setattr(run_evals, "ollama_version", lambda env, client=None: pinned_ollama())
+    with pytest.raises(Reached):
+        main(["--smoke"])
+
+
+def test_a_full_attack_run_refuses_to_start_on_another_ollama_version(monkeypatch):
+    from evals import attack_run
+
+    def run(*_):
+        raise Reached
+
+    monkeypatch.setattr(attack_run, "run", run)
+    monkeypatch.setattr(run_evals, "ollama_version", lambda env, client=None: "0.0.1")
+    with pytest.raises(SystemExit, match="not the pinned"):
+        attack_run.main([])
+    with pytest.raises(Reached):
+        attack_run.main(["--only", "p09"])
+
+
 def run_evals_report(scored):
     return {"split": "dev", "cases": scored, "metrics": {}}
 
@@ -370,3 +409,22 @@ def test_judged_score_is_hidden_when_the_answer_check_uses_the_judge_model():
     assert f"| Faithfulness | {DASH} (judge = answer check) |" in render(TABLE, own, None, calibration)
     assert "| Faithfulness | 0.95 |" in render(TABLE, other, None, calibration)
     assert "| Faithfulness | 0.90 |" in render(TABLE, off, None, calibration)
+
+
+def test_every_run_records_the_freshness_stamp():
+    from types import SimpleNamespace
+
+    from evals.freshness import stamp
+
+    args = SimpleNamespace(label="", experiment="", split="dev", smoke=False, commit="abc", judge=False, judge_passes=1)
+    env = {"PROMPT_VERSION": "v5", "TOP_K": "8", "OLLAMA_URL": "http://127.0.0.1:9"}
+    manifest = run_evals.build_manifest("r", AlwaysAbstain(), args, env, 52, 0, "1.2", {"latency_p95_ms": 1.0}, None)
+    assert {key: manifest[key] for key in ("inputs_sha256", "settings")} == stamp(env)
+
+
+def test_a_smoke_run_becomes_the_smoke_latest_and_never_the_full_latest(tmp_path):
+    write_outputs(report(smoke=True), [], tmp_path, tmp_path / "history.csv")
+    assert (tmp_path / "smoke" / "latest.json").exists()
+    assert not (tmp_path / "latest.json").exists() and not (tmp_path / "history.csv").exists()
+    write_outputs(report(smoke=True, experiment="x"), [], tmp_path / "other", tmp_path / "h.csv")
+    assert not (tmp_path / "other" / "smoke").exists()

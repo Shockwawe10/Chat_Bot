@@ -27,3 +27,7 @@ playwright-report/
 Thumbs.db
 .vscode/
 .idea/
+
+# Phoenix (make phoenix): its own venv and its trace store
+.venv-phoenix/
+.phoenix/

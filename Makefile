@@ -1,11 +1,13 @@
 # On Windows, run these from WSL or Git Bash with GNU Make installed.
 ifeq ($(OS),Windows_NT)
 PYTHON ?= .venv/Scripts/python
+PHOENIX_BIN = .venv-phoenix/Scripts
 else
 PYTHON ?= .venv/bin/python
+PHOENIX_BIN = .venv-phoenix/bin
 endif
 
-.PHONY: ingest run test test-real lint mutation eval eval-smoke results judge-labels calibrate attacks redteam
+.PHONY: ingest run test test-real lint mutation eval eval-smoke smoke smoke-accept nightly results chart holdout phoenix judge-labels calibrate attacks redteam
 
 ingest:
 	$(PYTHON) -m app.index build
@@ -31,8 +33,39 @@ eval:
 eval-smoke:
 	$(PYTHON) -m evals.run_evals --smoke
 
+# The run CI checks on every push: 21 smoke cases, about 5 minutes (reports/smoke/latest.json).
+smoke:
+	$(PYTHON) -m evals.run_evals --smoke
+
+# Accept the latest smoke run as the per-case reference. Only on purpose, with the reason in the PR.
+smoke-accept:
+	$(PYTHON) -c "import shutil; shutil.copyfile('reports/smoke/latest.json', 'reports/smoke/reference.json')"
+
+# The full dev eval and the attack set, about 30 minutes (reports/latest.json, reports/security/latest.json).
+nightly:
+	$(PYTHON) -m evals.run_evals
+	$(PYTHON) -m evals.attack_run --label nightly
+
 results:
 	$(PYTHON) -m evals.render_results
+
+# End of a stage only, after make nightly on the same commit: the holdout run, then its check.
+# Prints counts and case ids, never question text (evals/holdout.py).
+holdout:
+	$(PYTHON) -m evals.run_evals --split holdout --allow-holdout
+	$(PYTHON) -m evals.holdout
+
+# Redraw reports/history.svg from evals/history.csv (run_evals does it after every full dev run).
+chart:
+	$(PYTHON) -m evals.history_chart
+
+# Phoenix tracing UI at http://127.0.0.1:6006, in its own venv (about 750 MB, made on first use).
+# Then: python -m evals.phoenix_export reports/latest.json. Stop it with Ctrl+C when done: its
+# gRPC receiver (port 4317) listens on every network interface, and Phoenix has no setting for that.
+phoenix:
+	$(PHOENIX_BIN)/python -c "import phoenix" 2>/dev/null || ( $(PYTHON) -m venv .venv-phoenix && $(PHOENIX_BIN)/python -m pip install arize-phoenix==20.26.0 && $(PHOENIX_BIN)/python -m pip check )
+	PHOENIX_HOST=127.0.0.1 PHOENIX_WORKING_DIR=.phoenix PHOENIX_TELEMETRY_ENABLED=false \
+	PHOENIX_DISABLE_AGENT_ASSISTANT=true PHOENIX_AGENTS_DISABLE_BASH=true $(PHOENIX_BIN)/phoenix serve
 
 judge-labels:
 	$(PYTHON) -m evals.calibrate_judge --make-labels

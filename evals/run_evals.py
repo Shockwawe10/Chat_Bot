@@ -33,8 +33,10 @@ from pathlib import Path
 from app.chunker import CHUNKER_VERSION, ChunkConfig
 from app.generator import PromptTemplate
 from app.settings import ROOT, read_env
+from evals import history_chart
 from evals.chunk_report import KB_DIR
 from evals.exposure import check_exposed, exposure_report, format_report
+from evals.freshness import stamp
 from evals.judge import JUDGED, aggregate_judged, judge_cases, make_judge
 from evals.metrics import aggregate, score_case
 from evals.systems import (
@@ -120,6 +122,18 @@ def ollama_version(env, client=None):
         return None
 
 
+def require_pinned_ollama(env, client=None):
+    """Stop before a run CI will check if Ollama is not the pinned version (reports/drift.md)."""
+    from evals.freshness import ollama_problem, pinned_ollama
+
+    problem = ollama_problem(ollama_version(env, client), pinned_ollama())
+    if problem:
+        raise SystemExit(
+            f"{problem}. Install the pinned version, or pin the new one in .env.example and make new runs. "
+            "An experiment (--experiment) may run on any version."
+        )
+
+
 def build_manifest(run_id, system, args, env, cases_run, drafts, dataset_version, metrics, store):
     sha, dirty = git_state()
     served = getattr(system, "versions", None) or {}
@@ -140,6 +154,7 @@ def build_manifest(run_id, system, args, env, cases_run, drafts, dataset_version
         "drafts_skipped": drafts,
         "prompt_version": prompt,
         "prompt_sha256": prompt_sha(prompt),
+        **stamp(env),
         "llm_provider": env.get("LLM_PROVIDER"),
         "llm_model": env.get("LLM_MODEL"),
         "llm_digest": served.get("llm_digest") or env.get("LLM_DIGEST"),
@@ -212,6 +227,21 @@ def write_outputs(report, scored, reports_dir, history_path, record_baseline=Fal
     if full_dev:
         shutil.copyfile(path, reports_dir / "latest.json")
         append_history(report, history_path, folder)
+        # The chart is a picture of the history, so the two are always committed together.
+        history_chart.write(history_path, reports_dir / "history.svg")
+    smoke_dev = (
+        report["system"] == "pipeline" and report["split"] == "dev" and report["smoke"] and not report.get("experiment")
+    )
+    if smoke_dev:
+        # What CI checks on every push (tests/ai/test_smoke.py).
+        (reports_dir / "smoke").mkdir(exist_ok=True)
+        shutil.copyfile(path, reports_dir / "smoke" / "latest.json")
+    full_holdout = (
+        report["system"] == "pipeline" and report["split"] == "holdout" and not report["smoke"] and not report.get("experiment")
+    )
+    if full_holdout:
+        # What the manual Holdout workflow checks (evals/holdout.py).
+        shutil.copyfile(path, reports_dir / "holdout" / "latest.json")
     if record_baseline:
         if not full_dev:
             raise SystemExit("only a full dev run of the pipeline can be the recorded baseline")
@@ -405,6 +435,9 @@ def main(argv=None, store=None):
         raise SystemExit("no reviewed cases to run")
 
     env = read_env()
+    if args.system in ("pipeline", "http") and not args.experiment:
+        # Its result becomes a file CI checks (reports/latest.json, reports/smoke/latest.json).
+        require_pinned_ollama(env)
     run_id = f"{datetime.now(UTC):%Y%m%dT%H%M%SZ}-{args.system}-{args.split}{'-smoke' if args.smoke else ''}"
     if args.experiment:
         run_id += f"-{args.experiment}"

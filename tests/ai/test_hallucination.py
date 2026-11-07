@@ -24,3 +24,11 @@ def test_the_committed_run_can_be_gated():
 @pytest.mark.parametrize("gate", GATES, ids=[gate.name for gate in GATES])
 def test_gate(gate):
     assert gate.passed, gate.line()
+
+
+@pytest.mark.nightly
+def test_the_committed_run_is_about_this_commit():
+    """Changed code, prompt, documents or settings need a new committed run (evals/freshness.py)."""
+    from evals.freshness import problems
+
+    assert problems(REPORT) == []

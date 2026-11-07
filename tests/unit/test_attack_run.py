@@ -210,3 +210,12 @@ def test_each_security_gate_can_fail(after, change, gate):
     broken = copy.deepcopy(after)
     change(broken)
     assert not security_of(broken)[gate].passed
+
+
+def test_the_attack_file_hash_ignores_line_endings(tmp_path):
+    from evals.attack_run import file_sha
+
+    lf, crlf = tmp_path / "lf.jsonl", tmp_path / "crlf.jsonl"
+    lf.write_bytes(b'{"id": "a"}\n{"id": "b"}\n')
+    crlf.write_bytes(b'{"id": "a"}\r\n{"id": "b"}\r\n')
+    assert file_sha(lf) == file_sha(crlf)

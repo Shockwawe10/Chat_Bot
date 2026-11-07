@@ -151,6 +151,62 @@ def check(report, dataset):
     return gates
 
 
+SMOKE_CASES = 21
+SMOKE_LATEST = ROOT / "reports" / "smoke" / "latest.json"
+SMOKE_REFERENCE = ROOT / "reports" / "smoke" / "reference.json"
+
+
+def smoke_problems(report):
+    """Why this run cannot be gated as a smoke run, or an empty list."""
+    problems = []
+    if report.get("split") != "dev" or not report.get("smoke") or report.get("experiment"):
+        problems.append("not a dev smoke run")
+    if report.get("system") != "pipeline":
+        problems.append(f"system is {report.get('system')}, not the pipeline")
+    if len(report.get("cases", [])) != SMOKE_CASES:
+        problems.append(f"{len(report.get('cases', []))} cases, not {SMOKE_CASES}")
+    if any(answered(case) and "cited_texts" not in case for case in report.get("cases", [])):
+        problems.append("the run does not record citations; rerun it with the current harness")
+    return problems
+
+
+def smoke_check(report, reference, dataset):
+    """The per-case PR gates of reports/thresholds.md: no smoke case may get worse than in the reference.
+
+    The reference is the accepted smoke run (reports/smoke/reference.json). A change that trades
+    one case for another on purpose replaces it in the same PR (make smoke-accept), with the reason.
+    """
+    cases = {c["id"]: c for c in report["cases"]}
+    before = {c["id"]: c for c in reference["cases"]}
+    missing = sorted(set(before) - set(cases))
+    gates = [Gate("every reference case ran", not missing, f"{len(cases)}/{len(before)}", "all", missing)]
+    shared = [cid for cid in sorted(before) if cid in cases]
+
+    out_of_scope = [cid for cid in shared if before[cid]["expected_behaviour"] == "abstain"]
+    answered_oos = [cid for cid in out_of_scope if not cases[cid].get("refused")]
+    gates.append(Gate("out-of-scope answered", not answered_oos, f"{len(answered_oos)}/{len(out_of_scope)}", "0", answered_oos))
+
+    language = [cid for cid in shared if before[cid]["expected_behaviour"] == "language refusal"]
+    no_reply = [cid for cid in language if not (answered(cases[cid]) and language_reply(cases[cid].get("answer", "")))]
+    gates.append(Gate("English-only reply", not no_reply, f"{len(language) - len(no_reply)}/{len(language)}", "every case", no_reply))
+
+    lost_hit = [cid for cid in shared if before[cid].get("hit") and not cases[cid].get("hit")]
+    gates.append(Gate("no hit lost", not lost_hit, f"{len(lost_hit)}", "0", lost_hit))
+
+    answerable = [cid for cid in shared if not before[cid]["should_refuse"]]
+    newly_refused = [cid for cid in answerable if answered(before[cid]) and not answered(cases[cid])]
+    gates.append(Gate("no answered case refused", not newly_refused, f"{len(newly_refused)}", "0", newly_refused))
+
+    with_facts = [cid for cid in shared if dataset[cid]["must_include"]]
+    facts_lost = [
+        cid
+        for cid in with_facts
+        if not lost_facts(before[cid], dataset[cid]["must_include"]) and lost_facts(cases[cid], dataset[cid]["must_include"])
+    ]
+    gates.append(Gate("no required fact lost", not facts_lost, f"{len(facts_lost)}", "0", facts_lost))
+    return gates
+
+
 def main(argv=None):
     from evals.validate_golden import load_dataset
 
