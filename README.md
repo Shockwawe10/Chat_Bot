@@ -433,7 +433,7 @@ No model runs in CI, so CI needs no API keys. Any keys a later stage needs go in
 
 ### Canary: a broken prompt fails CI
 
-The branch [`canary/broken-prompt`](https://github.com/Shockwawe10/Chat_Bot/tree/canary/broken-prompt) breaks prompt v5 on purpose, never to be merged. It writes `{context}` for `$context`, so the model gets the question with no passages, and nothing crashes. The branch also commits the smoke run made with that prompt, so the freshness check passes and the quality gates decide. Its CI runs are [here](https://github.com/Shockwawe10/Chat_Bot/actions?query=branch%3Acanary%2Fbroken-prompt).
+Canary PR: [#7](https://github.com/Shockwawe10/Chat_Bot/pull/7), a draft, never to be merged. Its branch, [`canary/broken-prompt`](https://github.com/Shockwawe10/Chat_Bot/tree/canary/broken-prompt), breaks prompt v5 on purpose. It writes `{context}` for `$context`, so the model gets the question with no passages, and nothing crashes. The branch also commits the smoke run made with that prompt, so the freshness check passes and the quality gates decide. Its CI runs are [here](https://github.com/Shockwawe10/Chat_Bot/actions?query=branch%3Acanary%2Fbroken-prompt).
 
 The predictions were written in the commit before the run, and all six held:
 
@@ -603,7 +603,7 @@ Personal data leakage (LLM02) needs the agent and its customer data, so it is te
 - [x] Drift: same evals on two models or two prompt versions, metric history chart (Ollama pinned; qwen3 against phi4-mini in `reports/drift.md`; `reports/history.svg`)
 - [x] Tracing with Arize Phoenix (`make phoenix`, `evals/phoenix_export.py`; a failed case in [Tracing with Arize Phoenix](#tracing-with-arize-phoenix))
 
-**Exit criteria:** a **canary PR** with a deliberately broken prompt fails CI, and the failure is linked in the README; `reports/drift.md` compares two models; a trace screenshot of one failed case.
+**Exit criteria:** a **canary PR** with a deliberately broken prompt fails CI, and the failure is linked in the README ([#7](https://github.com/Shockwawe10/Chat_Bot/pull/7), see [Canary](#canary-a-broken-prompt-fails-ci)); `reports/drift.md` compares two models; a trace screenshot of one failed case.
 
 ### Stage 6. MCP agent with tools (weeks 6–7)
 
