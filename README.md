@@ -420,7 +420,7 @@ These breaks were written by hand. [mutmut](https://github.com/boxed/mutmut) can
 | Every push (built in Stage 5, warning only) | freshness of the committed full dev run and attack run (`pytest -m nightly`) | — (a separate step that may fail: it says `make nightly` is due) |
 | Every pull request | lint; unit, data and API tests; agent tests (from Stage 6) | any test fails; any unconfirmed action or PII leak |
 | Nightly or manual, on the local GPU | `make nightly`: full dev eval and the attack set, one pass each; red teaming and the garak scan by hand | once committed, any nightly gate fails on every push |
-| Manual, end of stage | holdout eval, judge calibration | — (results written to `reports/holdout/` and reviewed once) |
+| Manual, end of stage | `make holdout` on the local GPU after `make nightly` on the same commit, then the manual GitHub workflow "Holdout" on the committed run (`evals/holdout.py`); judge calibration | the holdout run can't confirm the setup: stale, another Ollama, another setup than `reports/latest.json`, an experiment, or cases missing. Metric values don't fail it: the run is reviewed once, as counts and case ids, never question text |
 | Manual | drift comparison on a second model: the full dev eval as an experiment with `LLM_MODEL` and `LLM_DIGEST` set for that run only (first done: qwen3:4b-instruct against phi4-mini:3.8b, `reports/drift.md`) | — (report only) |
 
 Rate metrics such as refusal accuracy and tool selection accuracy are gated on the full nightly run, where there are enough cases for a rate to mean something. On a PR, the same behaviour is checked case by case.
@@ -560,10 +560,10 @@ Personal data leakage (LLM02) needs the agent and its customer data, so it is te
 
 **Goal:** quality is checked automatically on every change.
 
-- [ ] Extend the PR workflow with the smoke eval and its gates
-- [ ] Nightly or manual full dev eval and red teaming
-- [ ] Manual end-of-stage workflow for the holdout eval
-- [ ] Drift: same evals on two models or two prompt versions, metric history chart
+- [x] Extend the PR workflow with the smoke eval and its gates (per case against an accepted reference; every run stamped and checked for freshness)
+- [x] Nightly or manual full dev eval and red teaming (`make nightly`: full dev eval and the attack set; promptfoo and garak by hand)
+- [x] Manual end-of-stage workflow for the holdout eval (`make holdout` and the "Holdout" GitHub workflow)
+- [x] Drift: same evals on two models or two prompt versions, metric history chart (Ollama pinned; qwen3 against phi4-mini in `reports/drift.md`; `reports/history.svg`)
 - [ ] Tracing with Arize Phoenix
 
 **Exit criteria:** a **canary PR** with a deliberately broken prompt fails CI, and the failure is linked in the README; `reports/drift.md` compares two models; a trace screenshot of one failed case.
@@ -840,6 +840,14 @@ Parents mark a child's height on the door frame every birthday, so they can see 
 The chart shows 7 tests so far. After test 2 we changed its instructions and how many cards it reads, and a dashed line marks that spot, so nobody mistakes a jump for luck. Wrongly saying "I can't answer" went down from 0.52 to 0.29, and finding the right card went up from 0.83 to 0.95. Answers also got slower, from 4.6 to 27.7 seconds for the slow ones, partly because a checker now reads every answer before it goes out.
 
 The chart draws itself after every long test. GitHub checks that it matches the score list, so nobody can forget to update it.
+
+### Stage 5, part 5: the sealed exam
+
+We keep some questions locked away, like a sealed exam the robot has never practised on. Practice questions show what the robot learned. Sealed ones show whether it can handle questions it has never seen. We open them only once, at the end of each stage.
+
+Now there's a fixed way to sit that exam: one command runs it, and a button on GitHub checks the result. The check makes sure it was a fair exam. Was it the same robot that took the long practice test, with the same instructions, and the same version of the program that runs it? Did it answer every sealed question? If not, the result doesn't count. Even then, the check only shows scores and question numbers, never the questions, so they stay sealed.
+
+We tested the checker with pretend exams whose questions were all one secret word. It rejected every unfair one, and the secret word never came out.
 
 ---
 

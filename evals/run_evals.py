@@ -236,6 +236,12 @@ def write_outputs(report, scored, reports_dir, history_path, record_baseline=Fal
         # What CI checks on every push (tests/ai/test_smoke.py).
         (reports_dir / "smoke").mkdir(exist_ok=True)
         shutil.copyfile(path, reports_dir / "smoke" / "latest.json")
+    full_holdout = (
+        report["system"] == "pipeline" and report["split"] == "holdout" and not report["smoke"] and not report.get("experiment")
+    )
+    if full_holdout:
+        # What the manual Holdout workflow checks (evals/holdout.py).
+        shutil.copyfile(path, reports_dir / "holdout" / "latest.json")
     if record_baseline:
         if not full_dev:
             raise SystemExit("only a full dev run of the pipeline can be the recorded baseline")

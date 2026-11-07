@@ -44,6 +44,7 @@ RENDER = ROOT / "evals" / "render_results.py"
 JUDGE = ROOT / "evals" / "judge.py"
 CALIBRATE = ROOT / "evals" / "calibrate_judge.py"
 CHART = ROOT / "evals" / "history_chart.py"
+HOLDOUT = ROOT / "evals" / "holdout.py"
 
 PACK = "if joined > cfg.max or (joined > cfg.target and can_stop):"
 MERGE = "if fits and (_size(group) < cfg.min or _only_headings(group)):"
@@ -517,6 +518,13 @@ BREAKS = {
     "chart: latency not in seconds": [(CHART, '    return number / 1000 if column == "latency_p95_ms" else number\n', "    return number\n")],
     "chart: setup changes not marked": [(CHART, "        if parts:\n", "        if False:\n")],
     "chart: rates on their own scale": [(CHART, '    top = 1.0 if scale == "rate" else', "    top = max(known) if scale == \"rate\" else")],
+    # End-of-stage holdout check (evals/holdout.py)
+    "holdout: another setup accepted": [(HOLDOUT, '    if report.get("inputs_sha256") != dev.get("inputs_sha256") or report.get("settings") != dev.get("settings"):\n', "    if False:\n")],
+    "holdout: missing cases accepted": [(HOLDOUT, "    if ran != ids:\n", "    if False:\n")],
+    "holdout: an experiment confirms a setup": [(HOLDOUT, ' or report.get("smoke") or report.get("experiment"):\n', ' or report.get("smoke"):\n')],
+    "holdout: stale run accepted": [(HOLDOUT, "    found += freshness_problems(report, root, env_example)\n", "")],
+    "holdout: exposed cases not marked": [(HOLDOUT, '        return case_id + ("*" if case_id in EXPOSED_HOLDOUT else "")\n', "        return case_id\n")],
+    "holdout: run not kept as holdout latest": [(RUN_EVALS, '        shutil.copyfile(path, reports_dir / "holdout" / "latest.json")\n', "        pass\n")],
     # CI gates (evals/gates.py)
     "gates: out-of-scope answers ignored": [(GATES, 'Gate("out-of-scope answered", not answered_oos,', 'Gate("out-of-scope answered", True,')],
     "gates: any reply counts as English-only": [(GATES, "if not (answered(c) and language_reply(c.get(\"answer\", \"\")))]", "if not answered(c)]")],
@@ -700,7 +708,7 @@ def main():
     parser.add_argument("--only", default="", help="run only breaks whose name contains this text")
     args = parser.parse_args()
     selected = {name: edits for name, edits in BREAKS.items() if args.only in name}
-    files = (CHUNKER, EMBEDDER, INDEX, SETTINGS, RETRIEVER, GENERATOR, API, CHECKER, KEYWORD, QUESTIONS, LANGUAGE, GATES, FRESHNESS, CHART, GUARDS, ATTACK_RUN, SCORING, VALIDATOR, METRICS, SYSTEMS_FILE, RUN_EVALS, RENDER, JUDGE, CALIBRATE)
+    files = (CHUNKER, EMBEDDER, INDEX, SETTINGS, RETRIEVER, GENERATOR, API, CHECKER, KEYWORD, QUESTIONS, LANGUAGE, GATES, FRESHNESS, CHART, HOLDOUT, GUARDS, ATTACK_RUN, SCORING, VALIDATOR, METRICS, SYSTEMS_FILE, RUN_EVALS, RENDER, JUDGE, CALIBRATE)
     originals = {path: path.read_bytes() for path in files}
     check_breaks_apply(selected, originals)
 

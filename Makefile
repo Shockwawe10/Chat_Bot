@@ -5,7 +5,7 @@ else
 PYTHON ?= .venv/bin/python
 endif
 
-.PHONY: ingest run test test-real lint mutation eval eval-smoke smoke smoke-accept nightly results chart judge-labels calibrate attacks redteam
+.PHONY: ingest run test test-real lint mutation eval eval-smoke smoke smoke-accept nightly results chart holdout judge-labels calibrate attacks redteam
 
 ingest:
 	$(PYTHON) -m app.index build
@@ -46,6 +46,12 @@ nightly:
 
 results:
 	$(PYTHON) -m evals.render_results
+
+# End of a stage only, after make nightly on the same commit: the holdout run, then its check.
+# Prints counts and case ids, never question text (evals/holdout.py).
+holdout:
+	$(PYTHON) -m evals.run_evals --split holdout --allow-holdout
+	$(PYTHON) -m evals.holdout
 
 # Redraw reports/history.svg from evals/history.csv (run_evals does it after every full dev run).
 chart:

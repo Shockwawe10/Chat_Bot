@@ -1,0 +1,24 @@
+name: Holdout
+
+# Manual, at the end of a stage, after make nightly and make holdout on the same commit.
+# CI has no model: this checks the committed holdout run (reports/holdout/latest.json) and
+# prints its counts and case ids, never question text. Fails if the run cannot confirm the
+# setup: stale, another Ollama, another setup than reports/latest.json, or cases missing.
+on: workflow_dispatch
+
+permissions:
+  contents: read
+
+jobs:
+  holdout:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+          cache-dependency-path: requirements.txt
+      - run: pip install -r requirements.txt
+      - run: python -m evals.holdout
