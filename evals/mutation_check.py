@@ -572,6 +572,8 @@ BREAKS = {
     "agent: a guessed session id is adopted": [(AGENT, "            session = Session(uuid.uuid4().hex)\n", "            session = Session(session_id or uuid.uuid4().hex)\n")],
     "agent: the model sees the session id": [(AGENT, "    schema.get(\"properties\", {}).pop(SESSION_ARGUMENT, None)\n", "")],
     "agent: another language reaches the model": [(AGENT, "        if not is_english(message):\n", "        if False:\n")],
+    "agent: a date not on record reaches the customer": [(AGENT, "            if stated - allowed:\n", "            if False:\n")],
+    "agent: dates from tools count as not on record": [(AGENT, '            allowed = {session.pending["survey_date"]} | {d for c in calls for d in DATE.findall(json.dumps(c["result"]))}\n', '            allowed = {session.pending["survey_date"]}\n')],
     "api: chat traces look like ask traces": [(API, '{"endpoint": "chat", **turn.record, "status": 200,', '{"endpoint": "chat", "question": request.message, **turn.record, "status": 200,')],
     # The agent eval's scorer (evals/agent_eval.py)
     "agent eval: any overlapping tool counts": [(AGENT_EVAL, '    result["tools"] = None if tools is None else called == set(tools)\n', '    result["tools"] = None if tools is None else (not tools or bool(called & set(tools)))\n')],

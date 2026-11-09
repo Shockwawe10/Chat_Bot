@@ -45,6 +45,7 @@ KNOWLEDGE_TOOL = "search_knowledge_base"
 SESSION_ARGUMENT = "session_id"
 NOT_FINISHED = "I could not finish that request. Please write to support@example.com."
 BLOCKED = "I can't share that. For help, please write to support@example.com."
+DATE_ON_RECORD = 'The site survey date on record for project {project} is {date}. Reply "yes" to confirm it, or tell me another date.'
 CONFIRMATION = re.compile(
     r"^(?:yes|yes please|yes,? please|yes,? confirm(?:ed)?|confirm(?:ed)?|i confirm|ok|okay|sure|"
     r"that works|book it|yes,? book it|go ahead)$",
@@ -439,6 +440,15 @@ class Agent:
         else:
             reply = NOT_FINISHED
             flags.append("too_many_steps")
+
+        if session.pending:
+            # The customer is never told a survey date the records do not hold (agent experiment A5).
+            allowed = {session.pending["survey_date"]} | {d for c in calls for d in DATE.findall(json.dumps(c["result"]))}
+            stated = set(DATE.findall(reply))
+            if stated - allowed:
+                record["date_mismatch"] = {"stated": sorted(stated - allowed), "reply": reply}
+                reply = DATE_ON_RECORD.format(project=session.pending["project_id"], date=session.pending["survey_date"])
+                flags.append("date_mismatch")
 
         problems = self.guard.problems(reply, session.customer_text() + "\n" + message)
         if problems:

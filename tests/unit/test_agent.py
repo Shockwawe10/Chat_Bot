@@ -9,6 +9,7 @@ from fake_backend import FakeChat, say, tool_call
 from app.agent import (
     AGENT_PROMPT,
     BLOCKED,
+    DATE_ON_RECORD,
     KNOWLEDGE_TOOL,
     NOT_FINISHED,
     Agent,
@@ -332,3 +333,41 @@ def test_a_2_mw_plant_is_2000_kw_and_other_tools_are_not_checked(make_agent):
                        "contact_name": "Pablo Ruiz-Test", "email": "pablo.ruiz@sunfield-agro.test"}, said) == []
     agent, _ = make_agent(call("find_product", mount_type="ground", corrosion_class="C5"), say("GF-2."))
     assert agent.turn(Sessions().get(), "Something for a very salty site?").tool_calls[0]["result"]["products"]
+
+
+# A reply may name only the survey date on record (agent experiment A5)
+
+A022_REPLY = "The proposed site survey date for project P-1002 is Friday, 2026-11-13. Please reply \"yes\" to confirm this date."
+
+
+def test_the_a022_reply_with_a_date_not_on_record_is_replaced_by_the_date_on_record(make_agent, db):
+    agent, _ = make_agent(
+        call("book_site_survey", project_id="P-1002", date="2026-11-12"),
+        say("The proposed site survey date for project P-1002 is Thursday, 2026-11-12. Please reply \"yes\" to confirm."),
+        say(A022_REPLY),
+    )
+    session = Sessions().get()
+    agent.turn(session, "I'd like the site survey for P-1002 on Thursday 2026-11-12.")
+    turn = agent.turn(session, "Actually, make it Friday 2026-11-13 instead.")
+    assert turn.reply == DATE_ON_RECORD.format(project="P-1002", date="2026-11-12")
+    assert "date_mismatch" in turn.flags and turn.record["date_mismatch"]["stated"] == ["2026-11-13"]
+    assert agent.turn(session, "yes").booking["survey_date"] == "2026-11-12", "a yes books the date the customer was told"
+
+
+def test_the_pending_date_and_dates_from_tools_are_allowed(make_agent):
+    agent, _ = make_agent(
+        call("book_site_survey", project_id="P-1008", date="2026-11-12"),
+        say("I propose 2026-11-12 for P-1008. Reply yes to confirm."),
+        call("get_project_status", project_id="P-1003"),
+        say("P-1003 was last updated on 2026-10-22. Your survey for P-1008 is proposed for 2026-11-12."),
+    )
+    session = Sessions().get()
+    assert "date_mismatch" not in agent.turn(session, "Survey for P-1008 on 2026-11-12, please.").flags
+    turn = agent.turn(session, "And how is P-1003 doing?")
+    assert "date_mismatch" not in turn.flags and "2026-10-22" in turn.reply
+
+
+def test_without_a_pending_survey_dates_are_not_checked(make_agent):
+    agent, _ = make_agent(say("Detailed design usually starts by 2026-12-01."))
+    turn = agent.turn(Sessions().get(), "When could design start?")
+    assert "date_mismatch" not in turn.flags

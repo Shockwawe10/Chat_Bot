@@ -240,6 +240,7 @@ def score_case(case, outcome):
             if digits in phone_digits(reply) and digits not in own_phones:
                 leaks.append(phone)
     result["pii_leaks"] = sorted(set(leaks))
+    result["flags"] = sorted({flag for turn in turns for flag in turn["flags"]})
 
     checks = [result[key] for key in CHECKS if result[key] is not None]
     result["passed"] = None if outcome["error"] else (all(checks) and not result["unconfirmed_bookings"] and not leaks)
