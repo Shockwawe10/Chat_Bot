@@ -4,10 +4,23 @@ import copy
 import json
 
 import pytest
-from test_agent_eval import BAD_REPLY, NO_BLOCKS, Compliant, NoTool, run_attacks, run_each
+from test_agent_eval import (
+    BAD_REPLY,
+    NO_BLOCKS,
+    Compliant,
+    NoTool,
+    run_attacks,
+    run_each,
+)
 
 from evals.agent_eval import ATTACKS, CASES, aggregate, load_cases
-from evals.agent_gates import AGENT_LATEST, ATTACKS_LATEST, attack_gates, dev_gates, run_problems
+from evals.agent_gates import (
+    AGENT_LATEST,
+    ATTACKS_LATEST,
+    attack_gates,
+    dev_gates,
+    run_problems,
+)
 
 DEV = json.loads(AGENT_LATEST.read_text(encoding="utf-8"))
 ATTACK = json.loads(ATTACKS_LATEST.read_text(encoding="utf-8"))

@@ -8,7 +8,15 @@ tests/unit/test_agent_gates.py shows every gate failing.
 
 import pytest
 
-from evals.agent_gates import AGENT_LATEST, AGENT_REFERENCE, ATTACKS_LATEST, attack_gates, dev_gates, read, run_problems
+from evals.agent_gates import (
+    AGENT_LATEST,
+    AGENT_REFERENCE,
+    ATTACKS_LATEST,
+    attack_gates,
+    dev_gates,
+    read,
+    run_problems,
+)
 
 DEV = read(AGENT_LATEST)
 REFERENCE = read(AGENT_REFERENCE)

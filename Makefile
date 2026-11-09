@@ -63,7 +63,7 @@ holdout:
 	$(PYTHON) -m evals.holdout
 
 # The agent eval on the dev cases (reports/agent/latest.json), checked by CI on every push
-# (tests/ai/test_agent.py). Needs Ollama, not the index.
+# (tests/ai/test_agent_runs.py). Needs Ollama, not the index.
 agent-eval:
 	$(PYTHON) -m evals.agent_eval
 
