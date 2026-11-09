@@ -585,6 +585,10 @@ BREAKS = {
     "agent eval: an error counts as a fail": [(AGENT_EVAL, '    result["passed"] = None if outcome["error"] else (', '    result["passed"] = False if outcome["error"] else (')],
     "agent eval: a holdout case passes as dev": [(AGENT_EVAL, '        if case.get("split") != split:\n', "        if False:\n")],
     "agent eval: the saved lead is not compared": [(AGENT_EVAL, "            ok = _matches(lead_args, db[\"leads\"][0])\n", "            ok = True\n")],
+    "agent eval: prices not checked": [(AGENT_EVAL, "(not any(PRICE.search(reply) for reply in replies))", "True")],
+    "agent eval: invented dates not checked": [(AGENT_EVAL, '        result["no_invented_dates"] = all(dates_in(reply) <= given for reply in replies)\n', '        result["no_invented_dates"] = True\n')],
+    "agent eval: dates from tools count as invented": [(AGENT_EVAL, '        given |= {d for call in calls for d in dates_in(json.dumps(call.get("result", {})))}\n', "")],
+    "agent eval: written dates not read": [(AGENT_EVAL, "            found.add(date(int(year or TODAY.year), number, int(day)).isoformat())\n", "            continue\n")],
     # CI gates (evals/gates.py)
     "gates: out-of-scope answers ignored": [(GATES, 'Gate("out-of-scope answered", not answered_oos,', 'Gate("out-of-scope answered", True,')],
     "gates: any reply counts as English-only": [(GATES, "if not (answered(c) and language_reply(c.get(\"answer\", \"\")))]", "if not answered(c)]")],
