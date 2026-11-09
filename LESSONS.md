@@ -163,3 +163,33 @@ Written by /aar-loop after each session's After Action Review. Read this file be
 - Actual: Its first start listened on 0.0.0.0:6006 and [::]:4317 with telemetry and its AI agent on; I found this only from its startup log and netstat, then restarted it local-only with the agent off. The gRPC bind is hardcoded ([::]:{port} in phoenix/server/grpc_server.py), so it remains, documented in the README.
 - Why: The package rule checked only dependency conflicts (pip check), not what a tool does when it runs, nor how new a release is (Phoenix 21.0.0 was 8 days old). Fix applied: the CLAUDE.md package rule now covers release age, a separate venv for servers, the netstat check, and telemetry and agents off.
 - tags: dependencies,security,phoenix,fix-applied
+
+## 2026-11-09 -- A rule did not stop commits past a failed lint: .claude/hooks/lint_before_commit.py blocks any Bash command that runs git commit while ruff check . fails. Never chain make lint into git commit with ';' or through '| tail'.
+- Expected: Every commit passes make lint, as CLAUDE.md requires before every push.
+- Actual: 6fa7ccb and 24bcc6e were committed with ruff errors (import order, an unused variable). 'make lint | tail -1 && git commit' let tail hide lint's exit code; 'make lint; git commit' ran the commit after the failure. Both were fixed before any push.
+- Why: Nothing stopped a commit mechanically, and the lint check and the commit sat in one command. Fix applied: the hook, unit-tested (13 tests) and pipe-tested on a real lint error. Its registration in .claude/settings.json is the owner's edit, because blockWritesOutsideWorkingDirectories blocks Claude from writing settings files.
+- tags: lint,git,hooks,fix-applied
+
+## 2026-11-09 -- When two runs in a row die with 'CUDA error: shared object initialization failed' loading bespoke-minicheck, stop and ask the owner to restart Windows. Unloading models (ollama stop), restarting Ollama and an in-run retry after 10 s did not fix it on 2026-11-09.
+- Expected: make smoke runs on the 4 GB GPU as it did for dozens of swaps on 2026-11-07.
+- Actual: Five smoke runs on 2026-11-09 crashed when Ollama loaded minicheck after evicting qwen3: 2.8 GiB free for a 5.4 GiB model, 12/33 layers offloaded, then the CUDA error. One Ollama restart helped once; after a Windows restart the GPU idled at 259 MiB (about 700 MiB before) and every run passed.
+- Why: Ollama 0.40.15 and the driver were unchanged since 2026-11-07, so the cause looks like the GPU driver state since the 2026-11-08 boot. That was not measured beyond the free-memory numbers. Fix applied: a CLAUDE.md rule; the in-run retry (evals/run_evals.py) stays for single crashes.
+- tags: ollama,gpu,crash,fix-applied
+
+## 2026-11-09 -- An oracle's replies are not known-correct answers: check every reply_excludes word against the real replies of the last committed agent dev run, which now keep their turns (never holdout).
+- Expected: The agent scorer, proven on an oracle, reference systems and near-miss arguments, would score correct replies as passes.
+- Actual: a033 excluded 'Handover' to catch the injected 'project is complete'; the true reply 'the next stage is Handover' failed. It changed experiment A3's pre-registered decision and needed the owner's ruling and two re-runs.
+- Why: The CLAUDE.md scorer rule asks for known-correct answers from a saved run, but agent run files did not store replies, so only the oracle's own replies were ever checked. Fix applied: agent_eval keeps dev and attack turns, a CLAUDE.md rule, and a check of 27 cases' excluded words against the 2026-11-09 runs: 0 suspects.
+- tags: evals,scoring,agent,fix-applied
+
+## 2026-11-09 -- Two pytest files must not share a name across tests/ folders: tests/ai/test_agent.py beside tests/unit/test_agent.py stopped make test at collection (exit 2). Name CI suites after what they check, such as test_agent_runs.py.
+- Expected: A new CI suite tests/ai/test_agent.py would run beside the unit tests.
+- Actual: Each file passed alone; make test failed with 'ERROR tests/unit/test_agent.py ... 1 error during collection'. Renamed to tests/ai/test_agent_runs.py before any push.
+- Why: The tests folders have no __init__.py, so pytest imports test modules by base name and two files with the same name collide. make test caught it, so no fix is needed beyond the rename.
+- tags: pytest,tests,logged-only
+
+## 2026-11-09 -- On a 4B model, prefer code checks to prompt sentences once the obvious prompt fix is in: A4's one booking sentence fixed a022 but broke unrelated a018, while code checks A2 and A5 broke nothing. And a dev score is not a holdout score: the agent passed 30/35 dev cases but 3/10 of the owner's holdout.
+- Expected: Each prompt round would move only the cases it targets, and the dev pass rate would carry to unseen cases.
+- Actual: A4 (prompt v3) fixed a022 and lost a018, which then asked for the corrosion class instead of the customer's name; it was not kept. The agent holdout (run 20261109T143452Z) passed 3/10 with tool choice 9/10; 5 of 7 failed cases failed 'reply includes'.
+- Why: Small models are sensitive to any prompt change, and v2's booking rule was written from dev failures. The holdout gap's cause is unknown to the session, which may not read the cases; the owner can. Logged only: the decision rule (no pass may be lost) already caught A4.
+- tags: agent,prompts,holdout,logged-only
