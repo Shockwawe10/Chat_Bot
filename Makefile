@@ -7,7 +7,11 @@ PYTHON ?= .venv/bin/python
 PHOENIX_BIN = .venv-phoenix/bin
 endif
 
-.PHONY: ingest run test test-real lint mutation eval eval-smoke smoke smoke-accept nightly results chart holdout phoenix judge-labels calibrate attacks redteam
+.PHONY: ingest seed run test test-real lint mutation eval eval-smoke smoke smoke-accept nightly results chart holdout phoenix judge-labels calibrate attacks redteam
+
+# Build data/app.db from data/products.csv, leads.csv and projects.csv (drops leads the agent saved).
+seed:
+	$(PYTHON) -m mcp_server.seed
 
 ingest:
 	$(PYTHON) -m app.index build

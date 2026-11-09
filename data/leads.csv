@@ -1,0 +1,9 @@
+lead_id,company,contact_name,email,phone,region,power_kw,mount_type,created_at
+L-001,Northwind Logistics Test GmbH,Mira Olsen-Test,mira.olsen@northwind-logistics.test,+1-555-0101,North,850,flat_roof,2026-09-02
+L-002,Brightfield Farms Test Ltd,Tomas Reyes-Test,t.reyes@brightfield-farms.test,+1-555-0102,South,4200,ground,2026-09-10
+L-003,Highland Cold Storage Test AG,Ines Kowal-Test,ines.kowal@highland-cold.test,+1-555-0103,North,1200,flat_roof,2026-09-15
+L-004,Valley Retail Park Test Ltd,Owen Price-Test,owen.price@valley-retail.test,+1-555-0104,Central,600,carport,2026-09-21
+L-005,Copperhill Chemicals Test SA,Lena Fischer-Test,lena.fischer@copperhill-chem.test,+1-555-0105,Central,2500,ground,2026-09-28
+L-006,Stonebridge School Test Trust,Sam Adeyemi-Test,s.adeyemi@stonebridge-school.test,+1-555-0106,South,180,pitched_roof,2026-10-03
+L-007,Meadow Dairy Test Co-op,Hana Novak-Test,hana.novak@meadow-dairy.test,+1-555-0107,South,320,pitched_roof,2026-10-12
+L-008,Eastgate Warehousing Test Ltd,Rui Tanaka-Test,rui.tanaka@eastgate-warehousing.test,+1-555-0108,Central,950,flat_roof,2026-10-20

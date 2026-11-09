@@ -47,6 +47,8 @@ CHART = ROOT / "evals" / "history_chart.py"
 HOLDOUT = ROOT / "evals" / "holdout.py"
 PHOENIX = ROOT / "evals" / "phoenix_export.py"
 PROMPT_V5 = ROOT / "prompts" / "answer_v5.txt"
+DB_FILE = ROOT / "mcp_server" / "db.py"
+SEED = ROOT / "mcp_server" / "seed.py"
 
 PACK = "if joined > cfg.max or (joined > cfg.target and can_stop):"
 MERGE = "if fits and (_size(group) < cfg.min or _only_headings(group)):"
@@ -536,6 +538,12 @@ BREAKS = {
     # The canary PR's break (README, CI gates): the prompt loses its passages, nothing crashes
     "prompt: passages dropped ({context} for $context)": [(PROMPT_V5, "\n$context", "\n{context}")],
     "prompt: question dropped": [(PROMPT_V5, "\n$question", "\nthe question")],
+    # Demo company database (mcp_server/db.py, mcp_server/seed.py)
+    "db: foreign keys off": [(DB_FILE, 'connection.execute("PRAGMA foreign_keys = ON")', 'connection.execute("PRAGMA foreign_keys = OFF")')],
+    "db: projects under 100 kWp accepted": [(DB_FILE, "CHECK (power_kw >= {MIN_POWER_KW})", "CHECK (power_kw >= 0)")],
+    "db: a stage missing from the vocabulary": [(DB_FILE, '    "Contract",\n', "")],
+    "db: connection left open": [(DB_FILE, "    finally:\n        connection.close()\n", "    finally:\n        pass\n")],
+    "seed: a failed seed replaces the database": [(SEED, "    finally:\n        connection.close()\n    partial.replace(target)\n", "    finally:\n        connection.close()\n        partial.replace(target)\n")],
     # CI gates (evals/gates.py)
     "gates: out-of-scope answers ignored": [(GATES, 'Gate("out-of-scope answered", not answered_oos,', 'Gate("out-of-scope answered", True,')],
     "gates: any reply counts as English-only": [(GATES, "if not (answered(c) and language_reply(c.get(\"answer\", \"\")))]", "if not answered(c)]")],
@@ -670,7 +678,7 @@ def in_copy(path, work):
 def run_tests(work):
     shutil.rmtree(work / ".hypothesis", ignore_errors=True)
     return subprocess.run(
-        [sys.executable, "-m", "pytest", "tests/unit", "tests/api", "-q", "-x", "-p", "no:cacheprovider"],
+        [sys.executable, "-m", "pytest", "tests/unit", "tests/api", "tests/data", "-q", "-x", "-p", "no:cacheprovider"],
         cwd=work,
         check=False,
         capture_output=True,
@@ -719,7 +727,7 @@ def main():
     parser.add_argument("--only", default="", help="run only breaks whose name contains this text")
     args = parser.parse_args()
     selected = {name: edits for name, edits in BREAKS.items() if args.only in name}
-    files = (CHUNKER, EMBEDDER, INDEX, SETTINGS, RETRIEVER, GENERATOR, API, CHECKER, KEYWORD, QUESTIONS, LANGUAGE, GATES, FRESHNESS, CHART, HOLDOUT, PHOENIX, PROMPT_V5, GUARDS, ATTACK_RUN, SCORING, VALIDATOR, METRICS, SYSTEMS_FILE, RUN_EVALS, RENDER, JUDGE, CALIBRATE)
+    files = (CHUNKER, EMBEDDER, INDEX, SETTINGS, RETRIEVER, GENERATOR, API, CHECKER, KEYWORD, QUESTIONS, LANGUAGE, GATES, FRESHNESS, CHART, HOLDOUT, PHOENIX, PROMPT_V5, DB_FILE, SEED, GUARDS, ATTACK_RUN, SCORING, VALIDATOR, METRICS, SYSTEMS_FILE, RUN_EVALS, RENDER, JUDGE, CALIBRATE)
     originals = {path: path.read_bytes() for path in files}
     check_breaks_apply(selected, originals)
 

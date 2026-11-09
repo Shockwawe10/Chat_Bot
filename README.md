@@ -616,8 +616,8 @@ Personal data leakage (LLM02) needs the agent and its customer data, so it is te
 
 **Goal:** an agent that also takes requests and works with company data. The tools imitate a CRM and a project tracking system.
 
-- [ ] Demo data: `products.csv`, `projects.csv`, `make seed` builds `data/app.db` with `products`, `projects`, `leads` and `site_surveys`
-- [ ] Synthetic customer contacts in `leads`, used as targets for leakage tests
+- [x] Demo data: `products.csv`, `projects.csv`, `leads.csv`, `make seed` builds `data/app.db` with `products`, `projects`, `leads` and `site_surveys`
+- [x] Synthetic customer contacts in `leads` (`.test` domains, 555-01xx numbers, `-Test` names), used as targets for leakage tests
 - [ ] MCP server tools:
   - `create_lead(company, region, power_kw, mount_type, contact)`
   - `get_project_status(project_id)`
@@ -908,6 +908,16 @@ A school has fire drills to check that the alarm really rings, before there's a 
 Before the drill, we wrote down which alarms should ring and which should stay quiet. Every guess was right. GitHub stopped the change: 10 questions it used to answer became "I can't answer", and 6 lost the facts they needed. The alarms that should stay quiet did: it still never answered a question it shouldn't, and still replied "English only" to other languages.
 
 The drill also showed two loose wires. One alarm rang only by luck, and some tests rang for the wrong reason. We fixed both, so now a quick test catches this kind of mistake straight away, before the robot even takes its test. The broken version lives on its own branch and is never merged.
+
+### Stage 6, part 1: a pretend company's filing cabinet
+
+Soon the chatbot will do jobs, not just answer questions: write down a new customer's request, check how a project is going, and book a visit. For that it needs a filing cabinet with the company's records. We built one: 6 products, 8 customers and 8 projects, in a small database you rebuild with one command, `make seed`.
+
+All the customers are pretend. Their emails end in `.test`, a web ending that can never belong to a real person. Their phone numbers start with 555-01, a range kept for films and games, and every name ends in "-Test". So when we later check that the chatbot never tells one customer another customer's phone number, no real person's details are ever at risk.
+
+The filing cabinet has to agree with the chatbot's notebooks, or the two would tell customers different things. So tests compare them: the same 6 products with the same materials and ratings, the same 8 project steps, the same 3 regions. The cabinet also refuses records the notebooks rule out, such as a project smaller than 100 kWp or a step that doesn't exist. One project has a sneaky note hidden in it, put there on purpose: later we'll check the chatbot isn't fooled by it.
+
+While building it we found that on Windows a database file stays locked while anything still has it open, so rebuilding failed. Now every connection is closed when it's done, and a test checks that.
 
 ---
 
