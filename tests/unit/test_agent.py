@@ -17,6 +17,8 @@ from app.agent import (
     Sessions,
     is_confirmation,
     lead_contacts,
+    numbers_given,
+    ungrounded,
     phone_digits,
 )
 from app.generator import ABSTAIN_SENTENCE, Answer
@@ -257,3 +259,76 @@ def test_a_refused_knowledge_answer_stays_the_fixed_sentence(make_agent, db):
     agent, _ = make_agent(call(KNOWLEDGE_TOOL, question="Who owns the company?"))
     agent.answer_question = lambda q: (Answer(ABSTAIN_SENTENCE, True, []), {"question": q})
     assert agent.turn(Sessions().get(), "Who owns the company?").reply == ABSTAIN_SENTENCE
+
+
+# create_lead's values must come from the customer (agent experiment A2)
+
+A017 = "New request: Pinecrest Hotel Test Ltd in the South, flat roof. Contact Ola Berg-Test, ola.berg@pinecrest-hotel.test."
+A017_CALL = {"company": "Pinecrest Hotel Test Ltd", "region": "South", "power_kw": 100, "mount_type": "flat_roof",
+             "contact_name": "Ola Berg-Test", "email": "ola.berg@pinecrest-hotel.test"}
+
+
+def test_the_invented_size_of_a017_is_refused_and_nothing_is_saved(make_agent, db):
+    agent, llm = make_agent(call("create_lead", **A017_CALL), say("How big is the plant, in kWp?"))
+    turn = agent.turn(Sessions().get(), A017)
+    assert turn.tool_calls[0]["result"] == {"error": "not given by the customer: power_kw; ask the customer for it, never fill it in"}
+    assert turn.reply == "How big is the plant, in kWp?"
+    with opened(db) as connection:
+        assert connection.execute("SELECT count(*) FROM leads WHERE source = 'agent'").fetchone()[0] == 0
+
+
+def test_values_given_over_two_turns_are_accepted_and_saved(make_agent, db):
+    args = {"company": "Lakeside Mall Test Ltd", "region": "North", "power_kw": 300, "mount_type": "carport",
+            "contact_name": "Noor Haddad-Test", "email": "noor.haddad@lakeside-mall.test"}
+    agent, _ = make_agent(say("Which company, region and size?"), call("create_lead", **args), say("Saved."))
+    session = Sessions().get()
+    agent.turn(session, "I'd like a quote for a carport project.")
+    turn = agent.turn(session, "It's Lakeside Mall Test Ltd in the North region, 300 kWp. Contact Noor Haddad-Test at noor.haddad@lakeside-mall.test.")
+    assert turn.tool_calls[0]["result"]["saved"]["power_kw"] == 300.0
+
+
+@pytest.mark.parametrize(
+    "text, expected",
+    [
+        ("a 450 kWp roof", {450.0}),
+        ("a 2 MW plant", {2000.0}),
+        ("1,200 kWp", {1200.0}),
+        ("2.5MWp", {2500.0}),
+        ("no size at all", set()),
+    ],
+)
+def test_plant_sizes_are_read_in_kw(text, expected):
+    assert numbers_given(text) == expected
+
+
+@pytest.mark.parametrize(
+    "change, missing",
+    [
+        ({}, []),
+        ({"power_kw": 100}, ["power_kw"]),
+        ({"power_kw": "450"}, []),
+        ({"region": "North"}, ["region"]),
+        ({"mount_type": "pitched_roof"}, ["mount_type"]),
+        ({"email": "ada@riverside-mill.test"}, ["email"]),
+        ({"company": "Riverside Mill"}, []),
+        ({"company": "Riverside Mills Test Ltd"}, ["company"]),
+        ({"phone": "+1-555-0150"}, []),
+        ({"phone": "+1-555-0199"}, ["phone"]),
+        ({"contact_name": "Ada Brooks"}, []),
+        ({"contact_name": "Adam Brook"}, ["contact_name"]),
+    ],
+)
+def test_only_values_in_the_customer_s_words_pass(change, missing):
+    said = ("Riverside Mill Test Ltd from Northwind street, Central region, 450 kWp, flat roof. "
+            "Contact: Ada Brooks-Test, ada.brooks@riverside-mill.test, +1-555-0150.")
+    args = {"company": "Riverside Mill Test Ltd", "region": "Central", "power_kw": 450, "mount_type": "flat_roof",
+            "contact_name": "Ada Brooks-Test", "email": "ada.brooks@riverside-mill.test", **change}
+    assert ungrounded(args, said) == missing
+
+
+def test_a_2_mw_plant_is_2000_kw_and_other_tools_are_not_checked(make_agent):
+    said = "We want a 2 MW ground-mount plant in the South. Company: Sunfield Agro Test SA. I'm Pablo Ruiz-Test, pablo.ruiz@sunfield-agro.test."
+    assert ungrounded({"company": "Sunfield Agro Test SA", "region": "South", "power_kw": 2000, "mount_type": "ground",
+                       "contact_name": "Pablo Ruiz-Test", "email": "pablo.ruiz@sunfield-agro.test"}, said) == []
+    agent, _ = make_agent(call("find_product", mount_type="ground", corrosion_class="C5"), say("GF-2."))
+    assert agent.turn(Sessions().get(), "Something for a very salty site?").tool_calls[0]["result"]["products"]

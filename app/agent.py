@@ -64,6 +64,52 @@ KNOWLEDGE_SCHEMA = {
 }
 
 
+MOUNT_WORDS = {"ground": ("ground",), "flat_roof": ("flat",), "pitched_roof": ("pitched",), "carport": ("carport",)}
+NUMBER = re.compile(r"(\d{1,3}(?:,\d{3})+|\d+(?:\.\d+)?)\s*(mwp|mw|kwp|kw)?\b", re.IGNORECASE)
+
+
+def numbers_given(text):
+    """The plant sizes a text can mean, in kW: "450 kWp" -> 450, "2 MW" -> 2000, "1,200" -> 1200."""
+    found = set()
+    for digits, unit in NUMBER.findall(text):
+        value = float(digits.replace(",", ""))
+        found.add(value * 1000 if (unit or "").lower().startswith("mw") else value)
+    return found
+
+
+def _says(text, value):
+    """The value appears in the text as whole words: "North" is not in "Northwind"."""
+    words = " ".join(value.casefold().split())
+    return bool(words) and re.search(rf"(?<![\w@.-]){re.escape(words)}(?![\w@]|\.\w)", text) is not None
+
+
+def ungrounded(arguments, customer_text):
+    """The create_lead arguments whose values the customer did not give in this conversation.
+
+    A value the model fills in itself, such as the 100 kWp minimum from the tool description,
+    is refused here, in code, before the tool runs (agent experiment A2, reports/experiments.md).
+    """
+    text = " ".join(customer_text.casefold().split())
+    missing = []
+    for name, value in arguments.items():
+        if value in (None, ""):
+            continue
+        if name == "power_kw":
+            try:
+                ok = float(value) in numbers_given(customer_text)
+            except (TypeError, ValueError):
+                ok = False
+        elif name == "mount_type":
+            ok = any(_says(text, word) for word in MOUNT_WORDS.get(str(value), (str(value),)))
+        elif name == "phone":
+            ok = re.sub(r"\D", "", str(value)) in phone_digits(customer_text)
+        else:
+            ok = _says(text, str(value))
+        if not ok:
+            missing.append(name)
+    return missing
+
+
 def is_confirmation(message):
     return bool(CONFIRMATION.match(message.strip().strip(".!").strip()))
 
@@ -373,6 +419,8 @@ class Agent:
                     if result.get("status") == "pending":
                         session.pending = result
                         booking = {k: result[k] for k in ("survey_id", "project_id", "survey_date", "status")}
+                elif name == "create_lead" and (missing := ungrounded(arguments, session.customer_text() + "\n" + message)):
+                    result = {"error": f"not given by the customer: {', '.join(missing)}; ask the customer for it, never fill it in"}
                 elif name in {schema["function"]["name"] for schema in self.schemas()}:
                     result = self.tools.call(name, arguments)
                 else:
