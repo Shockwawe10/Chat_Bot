@@ -20,6 +20,15 @@ from fastapi.exception_handlers import request_validation_exception_handler
 from fastapi.exceptions import RequestValidationError
 from pydantic import BaseModel, StringConstraints
 
+from app.agent import (
+    AGENT_PROMPT,
+    Agent,
+    ChatGuard,
+    OllamaChat,
+    Sessions,
+    StdioMcpTools,
+    lead_contacts,
+)
 from app.checker import CheckUnavailable, MiniCheck
 from app.embedder import EmbeddingError, OllamaBackend
 from app.generator import (
@@ -91,6 +100,36 @@ class AskResponse(BaseModel):
     versions: Versions
 
 
+SessionId = Annotated[str, StringConstraints(strip_whitespace=True, max_length=64, pattern=r"^[A-Za-z0-9_-]*$")]
+
+
+class ChatRequest(BaseModel):
+    message: Question
+    session_id: SessionId | None = None
+
+
+class ToolCall(BaseModel):
+    name: str
+    arguments: dict
+    result: dict
+
+
+class Booking(BaseModel):
+    survey_id: int
+    project_id: str
+    survey_date: str
+    status: str
+
+
+class ChatResponse(BaseModel):
+    session_id: str
+    reply: str
+    tool_calls: list[ToolCall]
+    flags: list[str]
+    booking: Booking | None
+    total_ms: float
+
+
 class TraceLog:
     """Appends one JSON line per request. The Stage 2 harness reads these files."""
 
@@ -110,14 +149,17 @@ def _ms(start, end):
     return round((end - start) * 1000, 1)
 
 
-def create_app(make_retriever, llm, prompt, trace_dir=TRACE_DIR, checker=None, guard=None):
+def create_app(make_retriever, llm, prompt, trace_dir=TRACE_DIR, checker=None, guard=None, make_agent=None):
     """`make_retriever` opens the index. It may raise, so it can be tried again later.
 
     `checker`, when given, reads every answer before it is returned (app/checker.py).
     `guard`, when given, blocks foreign contacts, prices and prompt leaks after that (app/guards.py).
+    `make_agent`, when given, builds the /chat agent from the knowledge-answer function, so the
+    agent's knowledge answers come from this same pipeline (app/agent.py).
     """
     traces = TraceLog(trace_dir)
     state = {"retriever": None}
+    sessions = Sessions()
 
     def connect():
         if state["retriever"] is None:
@@ -164,6 +206,24 @@ def create_app(make_retriever, llm, prompt, trace_dir=TRACE_DIR, checker=None, g
         )
         return response
 
+    def pipeline(retriever, question, record):
+        """Retrieval, generation, answer check and output guard: the answer of /ask, and of /chat's
+        knowledge tool. Fills the trace record; returns (hits, result, (embedded, retrieved, generated))."""
+        vector = retriever.embed_question(question)
+        embedded = time.perf_counter()
+        hits = retriever.search(vector, question)
+        retrieved = time.perf_counter()
+        record["hits"] = [asdict(hit) for hit in hits]
+        result = generate(llm, prompt.render(hits, question), len(hits))
+        generated = time.perf_counter()
+        if checker is not None:
+            result, verdicts = checker.review(result, hits)
+            record["answer_check"] = {"model": checker.model, "verdicts": verdicts}
+        if guard is not None:
+            result, problems = guard.review(result)
+            record["output_guard"] = problems
+        return hits, result, (embedded, retrieved, generated)
+
     @app.post("/ask", response_model=AskResponse)
     def ask(request: AskRequest):
         question = request.question
@@ -173,19 +233,7 @@ def create_app(make_retriever, llm, prompt, trace_dir=TRACE_DIR, checker=None, g
             retriever = connect()
             if not is_english(question):
                 return english_only(retriever, record, started)
-            vector = retriever.embed_question(question)
-            embedded = time.perf_counter()
-            hits = retriever.search(vector, question)
-            retrieved = time.perf_counter()
-            record["hits"] = [asdict(hit) for hit in hits]
-            result = generate(llm, prompt.render(hits, question), len(hits))
-            generated = time.perf_counter()
-            if checker is not None:
-                result, verdicts = checker.review(result, hits)
-                record["answer_check"] = {"model": checker.model, "verdicts": verdicts}
-            if guard is not None:
-                result, problems = guard.review(result)
-                record["output_guard"] = problems
+            hits, result, (embedded, retrieved, generated) = pipeline(retriever, question, record)
         except GenerationError as error:
             traces.write({**record, "status": 502, "raw_outputs": error.raw_outputs})
             raise HTTPException(502, "the model output could not be parsed") from error
@@ -242,6 +290,43 @@ def create_app(make_retriever, llm, prompt, trace_dir=TRACE_DIR, checker=None, g
         )
         return response
 
+    def answer_question(question):
+        """The checked and guarded RAG answer, for the agent's search_knowledge_base tool."""
+        record = {"question": question, "prompt_version": prompt.version, "prompt_sha256": prompt.sha256}
+        _, result, _ = pipeline(connect(), question, record)
+        record["raw_outputs"] = result.raw_outputs
+        record["parsed"] = {"answer": result.answer, "abstained": result.abstained, "citations": result.citations, "reason": result.reason}
+        return result, record
+
+    agent = make_agent(answer_question) if make_agent else None
+
+    @app.post("/chat", response_model=ChatResponse)
+    def chat(request: ChatRequest):
+        if agent is None:
+            raise HTTPException(404, "the agent is not enabled")
+        session = sessions.get(request.session_id)
+        started = time.perf_counter()
+        try:
+            turn = agent.turn(session, request.message)
+        except GenerationError as error:
+            traces.write({"endpoint": "chat", "session_id": session.session_id, "message": request.message, "status": 502, "raw_outputs": error.raw_outputs})
+            raise HTTPException(502, "the model output could not be parsed") from error
+        except UNAVAILABLE as error:
+            traces.write({"endpoint": "chat", "session_id": session.session_id, "message": request.message, "status": 503, "error": str(error)})
+            raise HTTPException(503, f"service unavailable: {error}") from error
+        total = _ms(started, time.perf_counter())
+        traces.write(
+            {"endpoint": "chat", **turn.record, "status": 200, "reply": turn.reply, "flags": turn.flags, "booking": turn.booking, "total_ms": total}
+        )
+        return ChatResponse(
+            session_id=session.session_id,
+            reply=turn.reply,
+            tool_calls=turn.tool_calls,
+            flags=turn.flags,
+            booking=turn.booking,
+            total_ms=total,
+        )
+
     return app
 
 
@@ -257,4 +342,20 @@ def create_default_app():
         prompt,
         checker=MiniCheck.from_env(env),
         guard=OutputGuard.from_env(env, prompt),
+        make_agent=lambda answer_question: make_default_agent(env, answer_question),
+    )
+
+
+def make_default_agent(env, answer_question):
+    """The /chat agent: qwen3 with tools, the MCP server on stdio, the reply guard."""
+    from mcp_server.tools import confirm_pending_survey
+
+    agent_prompt = AGENT_PROMPT.read_bytes().decode("utf-8").replace("\r\n", "\n")
+    return Agent(
+        OllamaChat.from_env(env),
+        StdioMcpTools(),
+        answer_question,
+        ChatGuard(lead_contacts, agent_prompt),
+        agent_prompt,
+        confirm=confirm_pending_survey,
     )

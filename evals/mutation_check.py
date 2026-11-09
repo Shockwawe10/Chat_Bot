@@ -51,6 +51,7 @@ DB_FILE = ROOT / "mcp_server" / "db.py"
 SEED = ROOT / "mcp_server" / "seed.py"
 TOOLS = ROOT / "mcp_server" / "tools.py"
 MCP_SERVER = ROOT / "mcp_server" / "server.py"
+AGENT = ROOT / "app" / "agent.py"
 
 PACK = "if joined > cfg.max or (joined > cfg.target and can_stop):"
 MERGE = "if fits and (_size(group) < cfg.min or _only_headings(group)):"
@@ -558,6 +559,17 @@ BREAKS = {
     "tools: old proposal kept pending": [(TOOLS, "\"UPDATE site_surveys SET status = 'cancelled' WHERE session_id = ? AND status = 'pending'\"", "\"SELECT ? WHERE 0\"")],
     "tools: confirmation given to the agent": [(TOOLS, "AGENT_TOOLS = (create_lead, get_project_status, find_product, book_site_survey)\n", "AGENT_TOOLS = (create_lead, get_project_status, find_product, book_site_survey, confirm_pending_survey)\n")],
     "server: confirmation exposed as a tool": [(MCP_SERVER, "for tool in (create_lead, get_project_status, find_product, book_site_survey):\n", "for tool in (create_lead, get_project_status, find_product, book_site_survey, tools.confirm_pending_survey):\n")],
+    # The /chat agent (app/agent.py, app/api.py)
+    "agent: the model rewrites the checked answer": [(AGENT, "                    reply = result.answer\n                    break\n", "                    messages.append({\"role\": \"tool\", \"tool_name\": name, \"content\": result.answer})\n                    break\n")],
+    "agent: the model picks the session": [(AGENT, "result = self.tools.call(name, {**arguments, SESSION_ARGUMENT: session.session_id})", "result = self.tools.call(name, {SESSION_ARGUMENT: session.session_id, **call['arguments']})")],
+    "agent: any message confirms a booking": [(AGENT, "        if session.pending and is_confirmation(message):\n", "        if session.pending:\n")],
+    "agent: the reply guard is off": [(AGENT, "        if problems:\n", "        if False:\n")],
+    "agent: phone numbers pass": [(AGENT, "        if phone_digits(reply) - phone_digits(own_text):\n", "        if False:\n")],
+    "agent: other customers' names pass": [(AGENT, "        if names:\n", "        if False:\n")],
+    "agent: a guessed session id is adopted": [(AGENT, "            session = Session(uuid.uuid4().hex)\n", "            session = Session(session_id or uuid.uuid4().hex)\n")],
+    "agent: the model sees the session id": [(AGENT, "    schema.get(\"properties\", {}).pop(SESSION_ARGUMENT, None)\n", "")],
+    "agent: another language reaches the model": [(AGENT, "        if not is_english(message):\n", "        if False:\n")],
+    "api: chat traces look like ask traces": [(API, '{"endpoint": "chat", **turn.record, "status": 200,', '{"endpoint": "chat", "question": request.message, **turn.record, "status": 200,')],
     # CI gates (evals/gates.py)
     "gates: out-of-scope answers ignored": [(GATES, 'Gate("out-of-scope answered", not answered_oos,', 'Gate("out-of-scope answered", True,')],
     "gates: any reply counts as English-only": [(GATES, "if not (answered(c) and language_reply(c.get(\"answer\", \"\")))]", "if not answered(c)]")],
@@ -741,7 +753,7 @@ def main():
     parser.add_argument("--only", default="", help="run only breaks whose name contains this text")
     args = parser.parse_args()
     selected = {name: edits for name, edits in BREAKS.items() if args.only in name}
-    files = (CHUNKER, EMBEDDER, INDEX, SETTINGS, RETRIEVER, GENERATOR, API, CHECKER, KEYWORD, QUESTIONS, LANGUAGE, GATES, FRESHNESS, CHART, HOLDOUT, PHOENIX, PROMPT_V5, DB_FILE, SEED, TOOLS, MCP_SERVER, GUARDS, ATTACK_RUN, SCORING, VALIDATOR, METRICS, SYSTEMS_FILE, RUN_EVALS, RENDER, JUDGE, CALIBRATE)
+    files = (CHUNKER, EMBEDDER, INDEX, SETTINGS, RETRIEVER, GENERATOR, API, CHECKER, KEYWORD, QUESTIONS, LANGUAGE, GATES, FRESHNESS, CHART, HOLDOUT, PHOENIX, PROMPT_V5, DB_FILE, SEED, TOOLS, MCP_SERVER, AGENT, GUARDS, ATTACK_RUN, SCORING, VALIDATOR, METRICS, SYSTEMS_FILE, RUN_EVALS, RENDER, JUDGE, CALIBRATE)
     originals = {path: path.read_bytes() for path in files}
     check_breaks_apply(selected, originals)
 
