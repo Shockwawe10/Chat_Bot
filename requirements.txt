@@ -32,3 +32,6 @@ openai==1.109.1
 # pinned so an update cannot drop them. Phoenix itself has its own venv (make phoenix).
 opentelemetry-sdk==1.45.2
 opentelemetry-exporter-otlp-proto-grpc==1.45.2
+
+# Stage 6: the MCP server (mcp_server/server.py). mcp 2.x renamed FastMCP to MCPServer.
+mcp==2.3.0

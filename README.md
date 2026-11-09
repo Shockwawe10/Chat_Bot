@@ -618,16 +618,16 @@ Personal data leakage (LLM02) needs the agent and its customer data, so it is te
 
 - [x] Demo data: `products.csv`, `projects.csv`, `leads.csv`, `make seed` builds `data/app.db` with `products`, `projects`, `leads` and `site_surveys`
 - [x] Synthetic customer contacts in `leads` (`.test` domains, 555-01xx numbers, `-Test` names), used as targets for leakage tests
-- [ ] MCP server tools:
-  - `create_lead(company, region, power_kw, mount_type, contact)`
+- [x] MCP server tools (`mcp_server/server.py`, official MCP Python SDK 2.3.0 over stdio; the checks in `mcp_server/tools.py`):
+  - `create_lead(company, region, power_kw, mount_type, contact_name, email, phone)`
   - `get_project_status(project_id)`
   - `find_product(mount_type, corrosion_class)`
-  - `book_site_survey(project_id, date)`, which requires customer confirmation
+  - `book_site_survey(project_id, date)`, which only proposes a date: the customer's next message confirms it, through code the model cannot call
 - [ ] `evals/agent_cases.jsonl` with at least 30 cases: correct tool, correct arguments, asks for missing required data instead of inventing it, handles a non-existent project
 - [ ] Excessive agency and misinformation (LLM06, LLM09): no booking without confirmation, no price or deadline that is not in the KB
 - [ ] Personal data leakage (LLM02): one customer's contact never appears in another customer's answer
 - [ ] Indirect injection through a tool result: a malicious instruction in a demo project comment
-- [ ] Database tests: a saved lead matches what the customer said
+- [x] Database tests: a saved lead matches what the customer said (`test_a_saved_lead_matches_what_the_customer_said`)
 - [ ] Agent tests added to the PR workflow; full agent cases added to the nightly run
 
 **Exit criteria:** tool selection accuracy measured on at least 30 agent cases; 0 unconfirmed bookings; 0 PII leaks; indirect injection test in the suite.
@@ -918,6 +918,16 @@ All the customers are pretend. Their emails end in `.test`, a web ending that ca
 The filing cabinet has to agree with the chatbot's notebooks, or the two would tell customers different things. So tests compare them: the same 6 products with the same materials and ratings, the same 8 project steps, the same 3 regions. The cabinet also refuses records the notebooks rule out, such as a project smaller than 100 kWp or a step that doesn't exist. One project has a sneaky note hidden in it, put there on purpose: later we'll check the chatbot isn't fooled by it.
 
 While building it we found that on Windows a database file stays locked while anything still has it open, so rebuilding failed. Now every connection is closed when it's done, and a test checks that.
+
+### Stage 6, part 2: four buttons the robot can press
+
+Next, the robot got four buttons: save a new customer's request, look up how a project is going, find the right product, and suggest a date for an engineer's visit. They're plugged in with MCP, a standard plug for giving AI tools, like a USB socket for robots.
+
+Every button checks what it's given before doing anything. A request for a 50 kWp project is turned down, because the company starts at 100. A visit on a Saturday, in the past, or for a project that's already being built is turned down too. Asked about a project that doesn't exist, a button says so instead of making something up.
+
+Two rules are built into the buttons themselves, so the robot can't talk its way around them. First, no button ever tells the robot another customer's email or phone number, so it can't pass on what it was never given. Second, the visit button only *suggests* a date. The robot has no button to confirm it. Only the customer's own next message can, a bit like a shop that won't charge your card until you press "Pay" yourself.
+
+How we know it works: 42 tests check the buttons, including one that saves a request and checks the saved record matches exactly what the customer said. Then we broke each rule on purpose in a copy of the code, 11 times, and a test caught every break.
 
 ---
 

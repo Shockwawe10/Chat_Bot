@@ -49,6 +49,8 @@ PHOENIX = ROOT / "evals" / "phoenix_export.py"
 PROMPT_V5 = ROOT / "prompts" / "answer_v5.txt"
 DB_FILE = ROOT / "mcp_server" / "db.py"
 SEED = ROOT / "mcp_server" / "seed.py"
+TOOLS = ROOT / "mcp_server" / "tools.py"
+MCP_SERVER = ROOT / "mcp_server" / "server.py"
 
 PACK = "if joined > cfg.max or (joined > cfg.target and can_stop):"
 MERGE = "if fits and (_size(group) < cfg.min or _only_headings(group)):"
@@ -544,6 +546,18 @@ BREAKS = {
     "db: a stage missing from the vocabulary": [(DB_FILE, '    "Contract",\n', "")],
     "db: connection left open": [(DB_FILE, "    finally:\n        connection.close()\n", "    finally:\n        pass\n")],
     "seed: a failed seed replaces the database": [(SEED, "    finally:\n        connection.close()\n    partial.replace(target)\n", "    finally:\n        connection.close()\n        partial.replace(target)\n")],
+    # MCP tools (mcp_server/tools.py, mcp_server/server.py)
+    "tools: lead under 100 kWp saved": [(TOOLS, "    if power_kw < MIN_POWER_KW:\n", "    if False:\n")],
+    "tools: power as text accepted": [(TOOLS, "    if isinstance(power_kw, bool) or not isinstance(power_kw, (int, float)):\n", "    if False:\n")],
+    "tools: missing contact data invented as blank": [(TOOLS, "    if missing:\n", "    if False:\n")],
+    "tools: duplicate email accepted": [(TOOLS, '            return _error("a request with this email already exists; the sales team will reply to it")\n', "            pass\n")],
+    "tools: survey in the past booked": [(TOOLS, "    if day <= today:\n", "    if False:\n")],
+    "tools: survey past the survey stage booked": [(TOOLS, '    if row["stage"] not in SURVEY_STAGES:\n', "    if False:\n")],
+    "tools: booking confirmed at once": [(TOOLS, "\" VALUES (?, ?, 'pending', ?, ?)\"", "\" VALUES (?, ?, 'confirmed', ?, ?)\"")],
+    "tools: another conversation confirms": [(TOOLS, "\"SELECT * FROM site_surveys WHERE session_id = ? AND status = 'pending'", "\"SELECT * FROM site_surveys WHERE ? IS NOT NULL AND status = 'pending'")],
+    "tools: old proposal kept pending": [(TOOLS, "\"UPDATE site_surveys SET status = 'cancelled' WHERE session_id = ? AND status = 'pending'\"", "\"SELECT ? WHERE 0\"")],
+    "tools: confirmation given to the agent": [(TOOLS, "AGENT_TOOLS = (create_lead, get_project_status, find_product, book_site_survey)\n", "AGENT_TOOLS = (create_lead, get_project_status, find_product, book_site_survey, confirm_pending_survey)\n")],
+    "server: confirmation exposed as a tool": [(MCP_SERVER, "for tool in (create_lead, get_project_status, find_product, book_site_survey):\n", "for tool in (create_lead, get_project_status, find_product, book_site_survey, tools.confirm_pending_survey):\n")],
     # CI gates (evals/gates.py)
     "gates: out-of-scope answers ignored": [(GATES, 'Gate("out-of-scope answered", not answered_oos,', 'Gate("out-of-scope answered", True,')],
     "gates: any reply counts as English-only": [(GATES, "if not (answered(c) and language_reply(c.get(\"answer\", \"\")))]", "if not answered(c)]")],
@@ -727,7 +741,7 @@ def main():
     parser.add_argument("--only", default="", help="run only breaks whose name contains this text")
     args = parser.parse_args()
     selected = {name: edits for name, edits in BREAKS.items() if args.only in name}
-    files = (CHUNKER, EMBEDDER, INDEX, SETTINGS, RETRIEVER, GENERATOR, API, CHECKER, KEYWORD, QUESTIONS, LANGUAGE, GATES, FRESHNESS, CHART, HOLDOUT, PHOENIX, PROMPT_V5, DB_FILE, SEED, GUARDS, ATTACK_RUN, SCORING, VALIDATOR, METRICS, SYSTEMS_FILE, RUN_EVALS, RENDER, JUDGE, CALIBRATE)
+    files = (CHUNKER, EMBEDDER, INDEX, SETTINGS, RETRIEVER, GENERATOR, API, CHECKER, KEYWORD, QUESTIONS, LANGUAGE, GATES, FRESHNESS, CHART, HOLDOUT, PHOENIX, PROMPT_V5, DB_FILE, SEED, TOOLS, MCP_SERVER, GUARDS, ATTACK_RUN, SCORING, VALIDATOR, METRICS, SYSTEMS_FILE, RUN_EVALS, RENDER, JUDGE, CALIBRATE)
     originals = {path: path.read_bytes() for path in files}
     check_breaks_apply(selected, originals)
 
