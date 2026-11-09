@@ -1,16 +1,16 @@
 {
- "run_id": "20261109T104448Z-agent-dev",
- "timestamp": "2026-11-09T10:44:48+00:00",
- "label": "A1 baseline agent_v1",
+ "run_id": "20261109T105858Z-agent-dev",
+ "timestamp": "2026-11-09T10:58:58+00:00",
+ "label": "A2 kept",
  "experiment": "",
  "split": "dev",
- "git_sha": "707a8a577a51c91d34792c4b072eeb48ece8b3fc",
+ "git_sha": "0108a3bdc0ecf617c5eea9f761951d5d8ccda953",
  "git_dirty": false,
  "llm_model": "qwen3:4b-instruct",
  "llm_digest": "0edcdef34593eac1aa2be9c7d06c432dcf81945adca5eca2f27662c18f168ba0",
  "ollama_version": "0.40.15",
- "agent_inputs_sha256": "4869ac8d8d42901edf1a9d99f30e2962943ce8e3c367035b40e37951ba248072",
- "inputs_sha256": "5ca178f0960075924cc832830dde2a9b5dbb3d7d612f342ffb6fb7ae037c0dd5",
+ "agent_inputs_sha256": "3b576c68bda5b80f08d45b87169270c0baccb6a2c945c101096e228e54e088e9",
+ "inputs_sha256": "86f66bce888151793adb0488be48d067169938a8bf88f314b9b95d1d49a3d4eb",
  "settings": {
   "PROMPT_VERSION": "v5",
   "TOP_K": "8",
@@ -48,7 +48,7 @@
    20
   ],
   "asks_for_missing": [
-   4,
+   5,
    5
   ],
   "reply_includes": [
@@ -60,7 +60,7 @@
    12
   ],
   "database": [
-   9,
+   10,
    14
   ],
   "unconfirmed_bookings": 0,
@@ -396,10 +396,10 @@
    ],
    "tools": false,
    "arguments": null,
-   "asks_for": false,
+   "asks_for": true,
    "reply_includes_any": null,
    "reply_excludes": null,
-   "db": false,
+   "db": true,
    "unconfirmed_bookings": 0,
    "pii_leaks": [],
    "passed": false
