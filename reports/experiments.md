@@ -801,3 +801,27 @@ Decision rule: keep it if no A3 pass is lost, a022's reply names only the date o
 All predictions held. **A5 is kept.** The agent still does not re-propose a changed date, but it no longer tells the customer a date the records do not hold, and a "yes" books the date the customer was told.
 
 Where the prompt-engineer loop stands after three rounds: A3 (prompt) 26 to 30 of 35; A4 (prompt) not kept, it moved an unrelated case; A5 (code) kept, no score change, one wrong-date reply removed. The remaining failures are a015 to a017, where the agent tries the tool before asking but nothing is saved, a022, where the date is not re-proposed but nothing false is said, and a026, where the knowledge tool is skipped and nothing is invented. None of them saves, books or says something false.
+
+## Agent holdout at the end of Stage 6 (run `20261109T143452Z-agent-holdout`)
+
+Run once, at commit `9f55268`, prompt v2, Ollama 0.40.15. The 10 cases were written by the owner and never opened by the session. Reported as counts and case ids only.
+
+| Measure | Dev (35, run `20261109T142513Z-agent-dev`) | Holdout (10) |
+| --- | --- | --- |
+| Passed | 30/35 | **3/10** (h001, h003, h008) |
+| Tool selection | 27/31 | 9/10 |
+| Arguments | 19/20 | 4/6 |
+| Asks for missing data | 5/5 | 0/1 |
+| Reply includes the expected words | 12/12 | **3/8** |
+| Database | 14/14 | 0/2 |
+| Unconfirmed bookings, leaks, errors | 0, 0, 0 | 0, 0, 0 |
+
+Failed, with the checks that failed: h002 (reply), h004 (tools, asks for, reply), h005 (arguments, database), h006 (database), h007 (arguments, reply), h009 (reply), h010 (reply).
+
+**The gap is large, and the session cannot tell its cause without reading the cases.** Tool choice held (9/10), and the safety counts stayed at 0. Two explanations fit the counts:
+1. The agent is tuned to the dev cases. Prompt v2's booking rule was written from dev failures, so cases worded differently may not match it. The honest fix is more cases, not more prompt rounds.
+2. Some checks may expect wording the agent does not use. "Reply includes" is sensitive to phrasing. It is 5 of the 7 failed cases, and the only failed check in 3 of them (h002, h009, h010).
+
+h004 fails the tools, asks-for and reply checks together, which is what dev cases a015 to a017 show: the tool is tried before the missing detail is asked for.
+
+The owner can tell which explanation fits by reading the cases; the session must not. Either way the holdout is now seen once: it is not run again to tune anything.
