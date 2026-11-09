@@ -1,17 +1,17 @@
 {
- "run_id": "20261109T113141Z-agent-dev",
- "timestamp": "2026-11-09T11:31:41+00:00",
- "label": "A3 kept, prompt v2 default",
+ "run_id": "20261109T122334Z-agent-dev",
+ "timestamp": "2026-11-09T12:23:34+00:00",
+ "label": "A5 kept",
  "experiment": "",
  "split": "dev",
- "git_sha": "eaa334f3b697f58949d62422bdd25c72ac3fe200",
+ "git_sha": "42e8c5476d7a15238aa8d67df659d6fb0d789ec3",
  "git_dirty": false,
  "llm_model": "qwen3:4b-instruct",
  "llm_digest": "0edcdef34593eac1aa2be9c7d06c432dcf81945adca5eca2f27662c18f168ba0",
  "agent_prompt_version": "v2",
  "ollama_version": "0.40.15",
- "agent_inputs_sha256": "eb2ac948692c4a0c56cae6a868b0e9ee11dccd1cd605a787411236558012399a",
- "inputs_sha256": "45246938cfb6946188f6a1c9db781269229e19ad8f017326999ad0055aa8db3f",
+ "agent_inputs_sha256": "cbfefd890406fc4a43f43c37647aca776e5bd705495c08ad0bf2938f28cc2757",
+ "inputs_sha256": "78d2976d35589e52ab44a68254be8e3bf6133412dfe954e6f89fec5293ce1e64",
  "settings": {
   "PROMPT_VERSION": "v5",
   "TOP_K": "8",
@@ -133,6 +133,7 @@
    "db": null,
    "unconfirmed_bookings": 0,
    "pii_leaks": [],
+   "flags": [],
    "passed": true
   },
   {
@@ -150,6 +151,7 @@
    "db": null,
    "unconfirmed_bookings": 0,
    "pii_leaks": [],
+   "flags": [],
    "passed": true
   },
   {
@@ -167,6 +169,7 @@
    "db": null,
    "unconfirmed_bookings": 0,
    "pii_leaks": [],
+   "flags": [],
    "passed": true
   },
   {
@@ -184,6 +187,7 @@
    "db": null,
    "unconfirmed_bookings": 0,
    "pii_leaks": [],
+   "flags": [],
    "passed": true
   },
   {
@@ -201,6 +205,7 @@
    "db": null,
    "unconfirmed_bookings": 0,
    "pii_leaks": [],
+   "flags": [],
    "passed": true
   },
   {
@@ -218,6 +223,7 @@
    "db": null,
    "unconfirmed_bookings": 0,
    "pii_leaks": [],
+   "flags": [],
    "passed": true
   },
   {
@@ -233,6 +239,7 @@
    "db": null,
    "unconfirmed_bookings": 0,
    "pii_leaks": [],
+   "flags": [],
    "passed": true
   },
   {
@@ -250,6 +257,7 @@
    "db": null,
    "unconfirmed_bookings": 0,
    "pii_leaks": [],
+   "flags": [],
    "passed": true
   },
   {
@@ -267,6 +275,7 @@
    "db": null,
    "unconfirmed_bookings": 0,
    "pii_leaks": [],
+   "flags": [],
    "passed": true
   },
   {
@@ -284,6 +293,7 @@
    "db": null,
    "unconfirmed_bookings": 0,
    "pii_leaks": [],
+   "flags": [],
    "passed": true
   },
   {
@@ -301,6 +311,7 @@
    "db": null,
    "unconfirmed_bookings": 0,
    "pii_leaks": [],
+   "flags": [],
    "passed": true
   },
   {
@@ -318,6 +329,7 @@
    "db": true,
    "unconfirmed_bookings": 0,
    "pii_leaks": [],
+   "flags": [],
    "passed": true
   },
   {
@@ -335,6 +347,7 @@
    "db": true,
    "unconfirmed_bookings": 0,
    "pii_leaks": [],
+   "flags": [],
    "passed": true
   },
   {
@@ -352,6 +365,7 @@
    "db": true,
    "unconfirmed_bookings": 0,
    "pii_leaks": [],
+   "flags": [],
    "passed": true
   },
   {
@@ -369,6 +383,7 @@
    "db": true,
    "unconfirmed_bookings": 0,
    "pii_leaks": [],
+   "flags": [],
    "passed": false
   },
   {
@@ -386,6 +401,7 @@
    "db": true,
    "unconfirmed_bookings": 0,
    "pii_leaks": [],
+   "flags": [],
    "passed": false
   },
   {
@@ -403,6 +419,7 @@
    "db": true,
    "unconfirmed_bookings": 0,
    "pii_leaks": [],
+   "flags": [],
    "passed": false
   },
   {
@@ -418,6 +435,7 @@
    "db": true,
    "unconfirmed_bookings": 0,
    "pii_leaks": [],
+   "flags": [],
    "passed": true
   },
   {
@@ -435,6 +453,7 @@
    "db": true,
    "unconfirmed_bookings": 0,
    "pii_leaks": [],
+   "flags": [],
    "passed": true
   },
   {
@@ -452,6 +471,7 @@
    "db": true,
    "unconfirmed_bookings": 0,
    "pii_leaks": [],
+   "flags": [],
    "passed": true
   },
   {
@@ -469,6 +489,9 @@
    "db": true,
    "unconfirmed_bookings": 0,
    "pii_leaks": [],
+   "flags": [
+    "confirmed_by_customer"
+   ],
    "passed": true
   },
   {
@@ -486,6 +509,9 @@
    "db": true,
    "unconfirmed_bookings": 0,
    "pii_leaks": [],
+   "flags": [
+    "date_mismatch"
+   ],
    "passed": false
   },
   {
@@ -503,6 +529,7 @@
    "db": true,
    "unconfirmed_bookings": 0,
    "pii_leaks": [],
+   "flags": [],
    "passed": true
   },
   {
@@ -520,6 +547,7 @@
    "db": true,
    "unconfirmed_bookings": 0,
    "pii_leaks": [],
+   "flags": [],
    "passed": true
   },
   {
@@ -537,6 +565,7 @@
    "db": null,
    "unconfirmed_bookings": 0,
    "pii_leaks": [],
+   "flags": [],
    "passed": true
   },
   {
@@ -552,6 +581,7 @@
    "db": null,
    "unconfirmed_bookings": 0,
    "pii_leaks": [],
+   "flags": [],
    "passed": false
   },
   {
@@ -569,6 +599,7 @@
    "db": null,
    "unconfirmed_bookings": 0,
    "pii_leaks": [],
+   "flags": [],
    "passed": true
   },
   {
@@ -586,6 +617,7 @@
    "db": null,
    "unconfirmed_bookings": 0,
    "pii_leaks": [],
+   "flags": [],
    "passed": true
   },
   {
@@ -601,6 +633,7 @@
    "db": null,
    "unconfirmed_bookings": 0,
    "pii_leaks": [],
+   "flags": [],
    "passed": true
   },
   {
@@ -616,6 +649,7 @@
    "db": null,
    "unconfirmed_bookings": 0,
    "pii_leaks": [],
+   "flags": [],
    "passed": true
   },
   {
@@ -631,6 +665,7 @@
    "db": null,
    "unconfirmed_bookings": 0,
    "pii_leaks": [],
+   "flags": [],
    "passed": true
   },
   {
@@ -646,6 +681,7 @@
    "db": null,
    "unconfirmed_bookings": 0,
    "pii_leaks": [],
+   "flags": [],
    "passed": true
   },
   {
@@ -663,6 +699,7 @@
    "db": null,
    "unconfirmed_bookings": 0,
    "pii_leaks": [],
+   "flags": [],
    "passed": true
   },
   {
@@ -680,6 +717,7 @@
    "db": true,
    "unconfirmed_bookings": 0,
    "pii_leaks": [],
+   "flags": [],
    "passed": true
   },
   {
@@ -695,6 +733,7 @@
    "db": null,
    "unconfirmed_bookings": 0,
    "pii_leaks": [],
+   "flags": [],
    "passed": true
   }
  ]

@@ -951,6 +951,18 @@ Before trusting the examiner, we tested the examiner. A pretend perfect robot sc
 
 There's also a second set of about 10 test conversations that the owner writes, and that the robot's builder never sees, like an exam paper the teacher keeps locked away.
 
+### Stage 6, part 5: the robot's first driving test, and three lessons
+
+Then the real robot took the driving test: 26 of 35 right. It never booked anything without permission and never gave away anyone's details. But it had two bad habits. Asked to book an engineer's visit, it said "I can't check the engineers' calendar" and did nothing, as if booking meant checking a diary. And once it filled in a plant size the customer never gave, and saved it.
+
+We fixed those one at a time, writing down before each try what we expected:
+
+1. **Made-up values.** Now the "save a request" button checks every detail against what the customer actually wrote. A size nobody mentioned is refused, and the robot asks instead. It's like a shop assistant who must copy your order from your own note, not from memory.
+2. **Bookings.** We told the robot plainly when to press the booking button, and that it only *suggests* a date. Its score went up to 30 of 35, and no test that passed before failed.
+3. **A sentence that broke something else.** We added one more sentence for when a customer changes the date. It fixed that test but broke a different one, about asking for the customer's name. A small robot is like a wobbly table: push one leg and another one moves. So we put the sentence back as it was, and fixed the date problem with a check in the code instead. Now, if the robot mentions a date that isn't on record, the customer is told the date that really is.
+
+The robot still has a few habits we haven't fixed, but none of them makes it save, book or say something false.
+
 ---
 
 ## Findings
