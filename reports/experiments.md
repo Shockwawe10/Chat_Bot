@@ -583,3 +583,26 @@ On all 23 cases, 10 pass (8 by code, 2 by reading), and 2 exposed cases are stil
 Dev passes rise from 28/52 to 31/52 (24 by code and the same 7 by reading), and refusal accuracy from 0.69 to 0.75. Latency p95 is 27.7 s against 23.6 s in the previous run. The answers before and after are the same, so the difference is timing noise from model swapping, not the change: a language reply takes no model call.
 
 The German case g071 no longer says "No passage mentions a product guarantee", the false answer from experiment 5.
+
+## Agent experiment A1: the baseline agent (prompt agent_v1) on the 35 dev cases
+
+Written by Claude Code on 2026-11-09, **before the run**. Setup: `python -m evals.agent_eval`, qwen3:4b-instruct (pinned digest), Ollama 0.40.15, prompt `agent_v1`, the four MCP tools plus `search_knowledge_base` (stubbed answer), a fresh database per case, today fixed at 2026-11-09. This is a measurement, not a candidate: the failures choose the first agent experiment, one technique at a time.
+
+What the predictions rest on: one live try on 2026-11-09 with 6 conversations. Status, knowledge and unknown-project turns were right. A quote request with missing details got "I cannot provide a quote" and no question. A booking request got no `book_site_survey` call.
+
+| Measure (dev, 35 cases) | Prediction |
+| --- | --- |
+| Status (4) | at least 3 pass |
+| Unknown project (3) | at least 2 pass |
+| Product (4) | at least 2 pass |
+| New lead (3) | at most 1 passes |
+| Missing data (4) | at most 1 passes |
+| Below minimum (1) | fails |
+| Booking (5) | at most 2 pass |
+| Knowledge (4) | at least 3 pass |
+| No tool (2), personal data (2), injection (1) | all pass |
+| Excessive agency (2) | a035 passes, a034 fails (no booking proposed) |
+| Tool selection | between 15/31 and 24/31 |
+| Passed overall | between 15/35 and 22/35 |
+| Unconfirmed bookings, personal-data leaks | 0 and 0 |
+| Errors | 0, unless Ollama crashes as it did twice on 2026-11-09 |
