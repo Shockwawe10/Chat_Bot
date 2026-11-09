@@ -7,7 +7,7 @@ PYTHON ?= .venv/bin/python
 PHOENIX_BIN = .venv-phoenix/bin
 endif
 
-.PHONY: ingest seed run test test-real lint mutation eval eval-smoke smoke smoke-accept nightly results chart holdout phoenix judge-labels calibrate attacks redteam
+.PHONY: ingest seed run test test-real lint mutation eval eval-smoke smoke smoke-accept nightly results chart holdout phoenix agent-eval judge-labels calibrate attacks redteam
 
 # Build data/app.db from data/products.csv, leads.csv and projects.csv (drops leads the agent saved).
 seed:
@@ -58,6 +58,10 @@ results:
 holdout:
 	$(PYTHON) -m evals.run_evals --split holdout --allow-holdout
 	$(PYTHON) -m evals.holdout
+
+# The agent eval on the dev cases (reports/agent/latest.json). Needs Ollama, not the index.
+agent-eval:
+	$(PYTHON) -m evals.agent_eval
 
 # Redraw reports/history.svg from evals/history.csv (run_evals does it after every full dev run).
 chart:

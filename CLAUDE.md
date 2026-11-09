@@ -18,6 +18,8 @@ python -m evals.mutation_check breaks a temporary copy of the project, never the
 
 Do not print or read holdout cases from evals/golden_dataset.jsonl. Filter to split == dev, and report holdout as ids and booleans only.
 
+evals/agent_holdout.jsonl holds the agent holdout cases, written by the owner. Never open, print or read it: check it only with python -m evals.agent_eval --check-holdout, and run it only with --split holdout at the end of a stage. Report it as counts and case ids only.
+
 evals/annotation/blind_20.csv and any filled copy hold 8 holdout questions: score them only with python -m evals.validate_golden --agreement and read only its summary line. If holdout question text reaches the session, add the ids to EXPOSED_HOLDOUT in evals/exposure.py and to Holdout exposure in evals/golden_validation.md the same day.
 
 Before every push, run make lint and make test, the exact commands CI runs. Never a narrower path such as ruff check app evals tests.

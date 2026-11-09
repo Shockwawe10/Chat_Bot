@@ -52,6 +52,7 @@ SEED = ROOT / "mcp_server" / "seed.py"
 TOOLS = ROOT / "mcp_server" / "tools.py"
 MCP_SERVER = ROOT / "mcp_server" / "server.py"
 AGENT = ROOT / "app" / "agent.py"
+AGENT_EVAL = ROOT / "evals" / "agent_eval.py"
 
 PACK = "if joined > cfg.max or (joined > cfg.target and can_stop):"
 MERGE = "if fits and (_size(group) < cfg.min or _only_headings(group)):"
@@ -570,6 +571,16 @@ BREAKS = {
     "agent: the model sees the session id": [(AGENT, "    schema.get(\"properties\", {}).pop(SESSION_ARGUMENT, None)\n", "")],
     "agent: another language reaches the model": [(AGENT, "        if not is_english(message):\n", "        if False:\n")],
     "api: chat traces look like ask traces": [(API, '{"endpoint": "chat", **turn.record, "status": 200,', '{"endpoint": "chat", "question": request.message, **turn.record, "status": 200,')],
+    # The agent eval's scorer (evals/agent_eval.py)
+    "agent eval: any overlapping tool counts": [(AGENT_EVAL, '    result["tools"] = None if tools is None else called == set(tools)\n', '    result["tools"] = None if tools is None else (not tools or bool(called & set(tools)))\n')],
+    "agent eval: arguments not compared": [(AGENT_EVAL, "            ok = ok and bool(made) and _matches(expected, made[-1])\n", "            ok = ok and bool(made)\n")],
+    "agent eval: asking needs no question": [(AGENT_EVAL, '"?" in last and any(', 'any(')],
+    "agent eval: the customer's own details are leaks": [(AGENT_EVAL, " and email.casefold() not in own:", ":")],
+    "agent eval: phone leaks missed": [(AGENT_EVAL, "            if digits in phone_digits(reply) and digits not in own_phones:\n", "            if False:\n")],
+    "agent eval: a yes does not allow a booking": [(AGENT_EVAL, "    allowed = sum(1 for i, message in enumerate(case[\"turns\"]) if i > 0 and is_confirmation(message))\n", "    allowed = 0\n")],
+    "agent eval: an error counts as a fail": [(AGENT_EVAL, '    result["passed"] = None if outcome["error"] else (', '    result["passed"] = False if outcome["error"] else (')],
+    "agent eval: a holdout case passes as dev": [(AGENT_EVAL, '        if case.get("split") != split:\n', "        if False:\n")],
+    "agent eval: the saved lead is not compared": [(AGENT_EVAL, "            ok = _matches(lead_args, db[\"leads\"][0])\n", "            ok = True\n")],
     # CI gates (evals/gates.py)
     "gates: out-of-scope answers ignored": [(GATES, 'Gate("out-of-scope answered", not answered_oos,', 'Gate("out-of-scope answered", True,')],
     "gates: any reply counts as English-only": [(GATES, "if not (answered(c) and language_reply(c.get(\"answer\", \"\")))]", "if not answered(c)]")],
@@ -753,7 +764,7 @@ def main():
     parser.add_argument("--only", default="", help="run only breaks whose name contains this text")
     args = parser.parse_args()
     selected = {name: edits for name, edits in BREAKS.items() if args.only in name}
-    files = (CHUNKER, EMBEDDER, INDEX, SETTINGS, RETRIEVER, GENERATOR, API, CHECKER, KEYWORD, QUESTIONS, LANGUAGE, GATES, FRESHNESS, CHART, HOLDOUT, PHOENIX, PROMPT_V5, DB_FILE, SEED, TOOLS, MCP_SERVER, AGENT, GUARDS, ATTACK_RUN, SCORING, VALIDATOR, METRICS, SYSTEMS_FILE, RUN_EVALS, RENDER, JUDGE, CALIBRATE)
+    files = (CHUNKER, EMBEDDER, INDEX, SETTINGS, RETRIEVER, GENERATOR, API, CHECKER, KEYWORD, QUESTIONS, LANGUAGE, GATES, FRESHNESS, CHART, HOLDOUT, PHOENIX, PROMPT_V5, DB_FILE, SEED, TOOLS, MCP_SERVER, AGENT, AGENT_EVAL, GUARDS, ATTACK_RUN, SCORING, VALIDATOR, METRICS, SYSTEMS_FILE, RUN_EVALS, RENDER, JUDGE, CALIBRATE)
     originals = {path: path.read_bytes() for path in files}
     check_breaks_apply(selected, originals)
 

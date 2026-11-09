@@ -72,6 +72,26 @@ def inputs_digest(prompt_version, root=ROOT):
     return digest.hexdigest()
 
 
+def agent_inputs(root=ROOT):
+    """The files that shape the agent's behaviour on its dev cases (Stage 6), sorted."""
+    files = sorted((root / "app").glob("*.py")) + sorted((root / "mcp_server").glob("*.py"))
+    files += [root / "prompts" / "agent_v1.txt", root / "data" / "allowed_contacts.txt"]
+    files += [root / "data" / name for name in ("leads.csv", "products.csv", "projects.csv")]
+    files += [root / "evals" / "agent_cases.jsonl", root / "evals" / "agent_eval.py"]
+    return files
+
+
+def agent_inputs_digest(root=ROOT):
+    """sha256 over the agent's inputs, like inputs_digest: relative path and text with LF line endings."""
+    digest = hashlib.sha256()
+    for path in agent_inputs(root):
+        digest.update(path.relative_to(root).as_posix().encode())
+        digest.update(b"\0")
+        digest.update(path.read_bytes().replace(b"\r\n", b"\n"))
+        digest.update(b"\0")
+    return digest.hexdigest()
+
+
 def stamp(env, root=ROOT):
     """What a run records about its inputs."""
     current = settings(env)
