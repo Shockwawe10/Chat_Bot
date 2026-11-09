@@ -32,13 +32,13 @@ from app.guards import PRICE, contacts, leaks_prompt, prompt_ngrams, read_allowe
 from app.language import ENGLISH_ONLY, is_english
 from app.settings import ROOT
 
-AGENT_PROMPT = ROOT / "prompts" / "agent_v1.txt"
+AGENT_PROMPT = ROOT / "prompts" / "agent_v2.txt"
 MAX_STEPS = 5
 
 
 def agent_prompt(env):
-    """(version, text) of the agent prompt chosen by AGENT_PROMPT_VERSION (default v1), with LF line endings."""
-    version = env.get("AGENT_PROMPT_VERSION") or "v1"
+    """(version, text) of the agent prompt chosen by AGENT_PROMPT_VERSION (default v2, agent experiment A3), with LF line endings."""
+    version = env.get("AGENT_PROMPT_VERSION") or "v2"
     path = ROOT / "prompts" / f"agent_{version}.txt"
     return version, path.read_bytes().decode("utf-8").replace("\r\n", "\n")
 KNOWLEDGE_TOOL = "search_knowledge_base"
