@@ -786,3 +786,18 @@ Written by Claude Code on 2026-11-09, **before the run**. Round 3 of the prompt-
 | Unconfirmed bookings, leaks, errors | 0, 0, 0 | 0, 0, 0 |
 
 Decision rule: keep it if no A3 pass is lost, a022's reply names only the date on record, and no other case is flagged.
+
+### Result (run `20261109T121950Z-agent-dev-A5-date-on-record`, commit `6d254bc`)
+
+| Case or measure | Prediction | A5 | Held? |
+| --- | --- | --- | --- |
+| a022 reply | the fixed sentence with 2026-11-12, flagged | "The site survey date on record for project P-1002 is 2026-11-12. Reply "yes" to confirm it, or tell me another date.", flagged `date_mismatch` | yes |
+| a022 overall | still fails | fails (arguments: no re-proposal) | yes |
+| Cases flagged `date_mismatch` | exactly 1 | 1 (a022) | yes |
+| Every case that passed in A3 | all still pass | all pass | yes |
+| Passed overall | 30/35, the same failed ids | 30/35: a015 a016 a017 a022 a026 | yes |
+| Unconfirmed bookings, leaks, errors | 0, 0, 0 | 0, 0, 0 | yes |
+
+All predictions held. **A5 is kept.** The agent still does not re-propose a changed date, but it no longer tells the customer a date the records do not hold, and a "yes" books the date the customer was told.
+
+Where the prompt-engineer loop stands after three rounds: A3 (prompt) 26 to 30 of 35; A4 (prompt) not kept, it moved an unrelated case; A5 (code) kept, no score change, one wrong-date reply removed. The remaining failures are a015 to a017, where the agent tries the tool before asking but nothing is saved, a022, where the date is not re-proposed but nothing false is said, and a026, where the knowledge tool is skipped and nothing is invented. None of them saves, books or says something false.
