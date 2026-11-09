@@ -37,11 +37,11 @@ from datetime import UTC, date, datetime
 from pathlib import Path
 
 from app.agent import (
-    AGENT_PROMPT,
     Agent,
     ChatGuard,
     McpTools,
     Sessions,
+    agent_prompt,
     is_confirmation,
     lead_contacts,
     phone_digits,
@@ -127,7 +127,7 @@ def real_agent(env, db):
     from app.agent import OllamaChat
     from mcp_server.tools import confirm_pending_survey
 
-    prompt = AGENT_PROMPT.read_bytes().decode("utf-8").replace("\r\n", "\n")
+    _, prompt = agent_prompt(env)
     guard = ChatGuard(lambda: lead_contacts(db), prompt)
     return Agent(OllamaChat.from_env(env), McpTools(), stub_answer, guard, prompt, confirm=confirm_pending_survey, today=lambda: TODAY)
 
@@ -348,6 +348,7 @@ def main(argv=None):
         "git_dirty": dirty,
         "llm_model": env.get("LLM_MODEL"),
         "llm_digest": env.get("LLM_DIGEST"),
+        "agent_prompt_version": agent_prompt(env)[0],
         "ollama_version": ollama_version(env),
         "agent_inputs_sha256": agent_inputs_digest(),
         **stamp(env),

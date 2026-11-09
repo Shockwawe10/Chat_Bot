@@ -21,12 +21,12 @@ from fastapi.exceptions import RequestValidationError
 from pydantic import BaseModel, StringConstraints
 
 from app.agent import (
-    AGENT_PROMPT,
     Agent,
     ChatGuard,
     OllamaChat,
     Sessions,
     StdioMcpTools,
+    agent_prompt,
     lead_contacts,
 )
 from app.checker import CheckUnavailable, MiniCheck
@@ -350,12 +350,12 @@ def make_default_agent(env, answer_question):
     """The /chat agent: qwen3 with tools, the MCP server on stdio, the reply guard."""
     from mcp_server.tools import confirm_pending_survey
 
-    agent_prompt = AGENT_PROMPT.read_bytes().decode("utf-8").replace("\r\n", "\n")
+    _, prompt_text = agent_prompt(env)
     return Agent(
         OllamaChat.from_env(env),
         StdioMcpTools(),
         answer_question,
-        ChatGuard(lead_contacts, agent_prompt),
-        agent_prompt,
+        ChatGuard(lead_contacts, prompt_text),
+        prompt_text,
         confirm=confirm_pending_survey,
     )

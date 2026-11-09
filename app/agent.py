@@ -34,6 +34,13 @@ from app.settings import ROOT
 
 AGENT_PROMPT = ROOT / "prompts" / "agent_v1.txt"
 MAX_STEPS = 5
+
+
+def agent_prompt(env):
+    """(version, text) of the agent prompt chosen by AGENT_PROMPT_VERSION (default v1), with LF line endings."""
+    version = env.get("AGENT_PROMPT_VERSION") or "v1"
+    path = ROOT / "prompts" / f"agent_{version}.txt"
+    return version, path.read_bytes().decode("utf-8").replace("\r\n", "\n")
 KNOWLEDGE_TOOL = "search_knowledge_base"
 SESSION_ARGUMENT = "session_id"
 NOT_FINISHED = "I could not finish that request. Please write to support@example.com."

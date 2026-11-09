@@ -75,7 +75,7 @@ def inputs_digest(prompt_version, root=ROOT):
 def agent_inputs(root=ROOT):
     """The files that shape the agent's behaviour on its dev cases (Stage 6), sorted."""
     files = sorted((root / "app").glob("*.py")) + sorted((root / "mcp_server").glob("*.py"))
-    files += [root / "prompts" / "agent_v1.txt", root / "data" / "allowed_contacts.txt"]
+    files += sorted((root / "prompts").glob("agent_*.txt")) + [root / "data" / "allowed_contacts.txt"]
     files += [root / "data" / name for name in ("leads.csv", "products.csv", "projects.csv")]
     files += [root / "evals" / "agent_cases.jsonl", root / "evals" / "agent_eval.py"]
     return files

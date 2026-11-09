@@ -53,8 +53,11 @@ def find_product(mount_type: str, corrosion_class: str) -> dict:
 def book_site_survey(project_id: str, date: str, session_id: str) -> dict:
     """Propose a site survey date (YYYY-MM-DD, a future working day) for an existing project.
 
-    This only proposes the date. It is not booked until the customer confirms it in their next
-    message, so tell them the date and ask them to confirm.
+    Call it whenever the customer asks for a site survey, a visit or an engineer for a project on a
+    date. It proposes the date: no availability check is needed, the company confirms the visit
+    afterwards. If it returns an error, tell the customer the reason.
+    It is not booked until the customer confirms it in their next message, so tell them the date
+    and ask them to confirm.
     """
     return tools.book_site_survey(project_id, date, session_id=session_id)
 
