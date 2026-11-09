@@ -730,3 +730,22 @@ The `rescore-v1` run is not a clean A2 baseline: the booking description lives i
 **A3 is kept.** Every case that failed with v2 also failed in A2, so no A2 pass was lost. 0 unconfirmed bookings, 0 leaks. 4 of the 5 booking cases and a034 now pass. The prediction "29 to 31 of 35" held at 30, as did "at least 3 of the 5 booking cases" (4 of 5) and "a023 still passes". Prompt v2 is the default from now on.
 
 Still failing: a015 to a017 (the tool tried before asking; nothing is saved), a022 (says Friday, stores Thursday), a026 (the knowledge tool skipped).
+
+## Agent experiment A4: re-propose when the customer changes the date (prompt agent_v3)
+
+Written by Claude Code on 2026-11-09, **before the run**. Round 2 of the prompt-engineer loop.
+
+**Diagnosis.** In a022 the customer moved the survey from Thursday 2026-11-12 to Friday 2026-11-13. The agent replied that the proposed date is Friday but did not call `book_site_survey` again, so the pending booking in the database stayed Thursday. The customer is told one date while the records hold another, and a "yes" would book the wrong day.
+
+**One technique, explicit conditions for this class (the same as A3), in the prompt only.** `prompts/agent_v3.txt` is v2 with two sentences added to the booking rule: when the customer changes the date or the project of a proposed survey, call `book_site_survey` again with the new values; and tell the customer only a date that `book_site_survey` returned.
+
+**Predictions** (A3 run `20261109T113141Z-agent-dev`: 30/35):
+
+| Case or measure | A3 | Prediction for A4 |
+| --- | --- | --- |
+| a022 | fails: says Friday, stores Thursday | passes: the last `book_site_survey` call has 2026-11-13, one pending survey |
+| Every case that passed in A3 | 30 | all still pass |
+| Passed overall | 30/35 | 31/35 |
+| Unconfirmed bookings, leaks, errors | 0, 0, 0 | 0, 0, 0 |
+
+Decision rule, as before: keep it only if no case that passed in A3 fails, with 0 unconfirmed bookings and 0 leaks.
