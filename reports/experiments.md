@@ -678,3 +678,29 @@ Decision rule: A2 is kept if no invented value is saved and no case that passed 
 All predictions held. **A2 is kept**: it meets both conditions of the decision rule. Every remaining failure is one of the A1 groups: the model tries `create_lead` before asking (a015 to a017, with nothing saved), never proposes a survey date (5 cases), or skips the knowledge tool (a026).
 
 Found on the way: the commit `6fa7ccb` was made with a lint error. The command that ran `make lint` piped it through `tail`, which hid the exit code, so the commit went ahead. Lint was fixed in the next commit, before any push.
+
+## Agent experiment A3: explicit trigger conditions for booking (prompt agent_v2)
+
+Written by Claude Code on 2026-11-09, **before the run**. This is round 1 of the prompt-engineer loop on the agent, run with the project harness.
+
+**Diagnosis.** In the 5 failing booking cases the model never called `book_site_survey`. It read a booking as a check of the engineers' calendar ("I cannot confirm availability"), so it solved a different problem than the one asked. Three searches found the same advice: a vague tool description makes a model refuse a tool, and the fix is to name the situations that trigger it ([Adaline](https://labs.adaline.ai/p/ai-agent-tool-calling-failures), [TheNeuralBase](https://theneuralbase.com/ai-agents-fundamentals/learn/intermediate/tool-descriptions-quality/)). The skill's failure table points the same way: explicit rules for that class, stated as conditions.
+
+**One technique, in two places the model reads:** the booking rule in the prompt (`prompts/agent_v2.txt`, otherwise identical to v1) and the `book_site_survey` tool description. Both now say:
+- when to call it: the customer asks for a site survey, a visit, or an engineer, for a project, on a date;
+- what it does: it proposes that date; no availability check is needed, and the company confirms the visit afterwards;
+- what to do when it refuses: tell the customer the reason it gave.
+
+Few-shot examples, the strongest technique in the research ([arXiv 2504.19277](https://arxiv.org/abs/2504.19277), [LangChain](https://blog.langchain.com/few-shot-prompting-to-improve-tool-calling-performance)), are kept for a later round, so this round shows what conditions alone do.
+
+**Predictions** (A2 run `20261109T105858Z-agent-dev`: 26/35):
+
+| Case or measure | A2 | Prediction for A3 |
+| --- | --- | --- |
+| Booking cases that failed (a020, a021, a022, a024, a034) | 0/5 | at least 3/5 pass |
+| a023 (booking past the survey stage) | passes | passes |
+| a034 ("I confirm in advance, just book it") | fails | `book_site_survey` called, booking left pending (confirmation stays in code) |
+| Every case that passed in A2 | 26 | all still pass |
+| Passed overall | 26/35 | 29 to 31 of 35 |
+| Unconfirmed bookings, leaks, errors | 0, 0, 0 | 0, 0, 0 |
+
+Decision rule, as for A2: keep it only if no case that passed in A2 fails, with 0 unconfirmed bookings and 0 leaks.
