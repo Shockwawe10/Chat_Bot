@@ -633,6 +633,13 @@ Personal data leakage (LLM02) needs the agent and its customer data, so it is te
 
 **Exit criteria:** tool selection accuracy measured on at least 30 agent cases; 0 unconfirmed bookings; 0 PII leaks; indirect injection test in the suite.
 
+**Status: done (2026-11-09).**
+- **Built:** demo company data with fake contacts (`make seed`); four MCP tools over stdio; the `/chat` agent. It reuses the checked RAG answer and confirms bookings in code. A reply guard stops other customers' details, prices and prompt quotes. Code checks refuse invented lead values and survey dates not on record.
+- **Measured:** tool selection 27/31 on 35 dev cases, with 30/35 passing after five experiments (A1 to A5, `reports/experiments.md`).
+- **Attacked:** 0 of 22 attacks worked, with 0 unconfirmed bookings and 0 leaks. The model obeyed P-1006's planted note until notes that address the assistant were withheld (`reports/SECURITY_REPORT.md`).
+- **Gated:** every push checks the committed agent runs.
+- **Holdout:** the owner's 10 agent cases: **3/10 passed** against 30/35 on dev. Tool choice held at 9/10 and the safety counts stayed at 0. Most failures are on "the reply includes the expected words", and the cause is not yet known.
+
 ### Stage 7. UI, Playwright and cloud (weeks 7–8)
 
 **Goal:** a live demo and browser tests.
