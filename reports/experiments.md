@@ -749,3 +749,19 @@ Written by Claude Code on 2026-11-09, **before the run**. Round 2 of the prompt-
 | Unconfirmed bookings, leaks, errors | 0, 0, 0 | 0, 0, 0 |
 
 Decision rule, as before: keep it only if no case that passed in A3 fails, with 0 unconfirmed bookings and 0 leaks.
+
+### Result (run `20261109T120051Z-agent-dev-A4-reproposed-date`, commit `04038ba`)
+
+| Case or measure | A3 | Prediction | A4 | Held? |
+| --- | --- | --- | --- | --- |
+| a022 | fails | passes | **passes**: re-proposed 2026-11-13, so the reply and the database agree | yes |
+| Every case that passed in A3 | 30 | all still pass | **a018 fails** | no |
+| Passed overall | 30/35 | 31/35 | 30/35 | no |
+| Arguments | 19/20 | | 20/20 | |
+| Unconfirmed bookings, leaks, errors | 0, 0, 0 | 0, 0, 0 | 0, 0, 0 | yes |
+
+**A4 is not kept**: a018 passed in A3 and fails in A4. Prompt v2 stays the default.
+
+Why a018 failed, from reruns of the single dev case with both prompts: the customer gave no company or name. With v2 the agent asked "Could you please provide your full name and phone number?", which passes. With v3 it asked only for the site's corrosivity class, so it never asked who the customer is. The sentence v3 adds is about bookings and has nothing to do with this case. **A one-sentence change elsewhere in the prompt changed an unrelated answer.** With a 4B model, every prompt change can move cases it was not aimed at, so each round must be checked on all 35 cases, not only its target.
+
+a022 still has a real defect under v2: the reply can name a date the database does not hold. The next candidate fixes that in code, not in the prompt, as A2 did for invented values: a reply that names a survey date other than the one the booking tool returned is caught before it reaches the customer.
