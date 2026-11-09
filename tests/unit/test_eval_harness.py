@@ -428,3 +428,43 @@ def test_a_smoke_run_becomes_the_smoke_latest_and_never_the_full_latest(tmp_path
     assert not (tmp_path / "latest.json").exists() and not (tmp_path / "history.csv").exists()
     write_outputs(report(smoke=True, experiment="x"), [], tmp_path / "other", tmp_path / "h.csv")
     assert not (tmp_path / "other" / "smoke").exists()
+
+
+class Flaky:
+    """A system whose first `failures` requests fail as unavailable, like an Ollama crash."""
+
+    name = "flaky"
+    has_retrieval = False
+    has_generation = True
+
+    def __init__(self, failures):
+        self.failures = failures
+        self.asked = []
+
+    def ask(self, question):
+        from evals.systems import ServiceUnavailable
+
+        self.asked.append(question)
+        if len(self.asked) <= self.failures:
+            raise ServiceUnavailable("Ollama returned 500: llama-server process has terminated")
+        return {"status": 200, "answer": "It is 5 years.", "abstained": False, "latency_ms": 1.0}
+
+
+def test_a_case_that_fails_once_is_asked_again_and_recorded():
+    system = Flaky(failures=1)
+    scored, metrics = run([case(id="t1"), case(id="t2")], system, STORE, pause=0)
+    assert metrics["retried"] == ["t1"] and len(scored) == 2
+    assert system.asked == [case()["question"]] * 3
+    assert all(s["status"] == 200 for s in scored)
+
+
+def test_a_case_that_fails_twice_still_stops_the_run():
+    from evals.systems import ServiceUnavailable
+
+    with pytest.raises(ServiceUnavailable):
+        run([case(id="t1")], Flaky(failures=2), STORE, pause=0)
+
+
+def test_a_run_without_failures_retries_nothing():
+    _, metrics = run([case(id="t1")], Flaky(failures=0), STORE, pause=0)
+    assert metrics["retried"] == []

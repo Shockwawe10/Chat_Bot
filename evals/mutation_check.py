@@ -520,6 +520,8 @@ BREAKS = {
     "smoke: lost facts accepted": [(GATES, 'gates.append(Gate("no required fact lost", not facts_lost,', 'gates.append(Gate("no required fact lost", True,')],
     "smoke: missing cases accepted": [(GATES, 'gates = [Gate("every reference case ran", not missing,', 'gates = [Gate("every reference case ran", True,')],
     "smoke: run not kept as smoke latest": [(RUN_EVALS, '        shutil.copyfile(path, reports_dir / "smoke" / "latest.json")\n', "        pass\n")],
+    "harness: an unavailable case is not retried": [(RUN_EVALS, "        except ServiceUnavailable:\n", "        except ZeroDivisionError:\n")],
+    "harness: a retry is not recorded": [(RUN_EVALS, '            retried.append(case["id"])\n', "            pass\n")],
     # Metric history chart (evals/history_chart.py)
     "chart: not redrawn after a full dev run": [(RUN_EVALS, '        history_chart.write(history_path, reports_dir / "history.svg")\n', "        pass\n")],
     "chart: missing value drawn as zero": [(CHART, "    if not text:\n        return None\n", "    if not text:\n        return 0.0\n")],

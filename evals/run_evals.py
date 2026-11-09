@@ -26,6 +26,7 @@ import math
 import shutil
 import subprocess
 import sys
+import time
 from contextlib import ExitStack
 from datetime import UTC, datetime
 from pathlib import Path
@@ -45,6 +46,7 @@ from evals.systems import (
     ApiSystem,
     ChunkStore,
     RandomRetriever,
+    ServiceUnavailable,
 )
 from evals.validate_golden import LOW_OVERLAP, check, load_corpus, load_dataset
 
@@ -85,14 +87,31 @@ def select_cases(cases, split, smoke):
     return reviewed, len(chosen) - len(reviewed)
 
 
-def run(cases, system, store, overlap=None):
-    scored = []
+RETRY_PAUSE_S = 10
+
+
+def run(cases, system, store, overlap=None, pause=RETRY_PAUSE_S):
+    """Ask every case once. A case whose request fails as unavailable is asked once more after a
+    pause, and its id is recorded in metrics["retried"]; a second failure still stops the run.
+
+    On the 4 GB GPU, Ollama sometimes crashes while swapping models ("CUDA error: shared object
+    initialization failed", four runs on 2026-11-09) and starts a fresh model server on the next
+    request. One retry keeps a run alive without hiding a real outage.
+    """
+    scored, retried = [], []
     for number, case in enumerate(cases, start=1):
-        response = system.ask(case["question"])
+        try:
+            response = system.ask(case["question"])
+        except ServiceUnavailable:
+            retried.append(case["id"])
+            time.sleep(pause)
+            response = system.ask(case["question"])
         scored.append(score_case(case, response, store, system.has_retrieval, system.has_generation))
         print(f"\r{system.name}: {number}/{len(cases)}", end="", file=sys.stderr, flush=True)
     print(file=sys.stderr)
-    return scored, aggregate(scored, overlap, LOW_OVERLAP)
+    metrics = aggregate(scored, overlap, LOW_OVERLAP)
+    metrics["retried"] = retried
+    return scored, metrics
 
 
 def git_state():
@@ -293,6 +312,7 @@ def summary(report):
         "numeric_fidelity",
         "out_of_scope_answered",
         "errors",
+        "retried",
         *JUDGED,
         "judge_errors",
         "latency_p95_ms",
