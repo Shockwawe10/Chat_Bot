@@ -10,6 +10,10 @@ To match a run's cases to runs/traces, use evals.phoenix_export.records_for (its
 
 Before trusting an eval scorer or CI gate, run it on the fixed refusal sentence, a near-value wrong answer (such as 15 years for 5 years), known-correct answers from a saved pipeline run, and the always-abstain and always-answer reference systems.
 
+For the agent eval, also check every reply_excludes word against the replies of the last committed dev run (reports/agent/latest.json, "turns"): no word may appear in a reply that passes every other check. An oracle's replies are not known-correct answers: a033 excluded "Handover", and a true reply ("the next stage is Handover") failed.
+
+If two runs in a row die with "CUDA error: shared object initialization failed", stop retrying and ask the owner to restart Windows. On 2026-11-09 neither unloading the models (ollama stop) nor restarting Ollama helped reliably, and the in-run retry failed too; only a Windows restart did.
+
 Put any Python longer than about 15 lines, or with nested quotes, in a scratchpad .py file written with the Write tool. Never run it through a bash heredoc. The hook .claude/hooks/block_inline_python.py blocks heredoc Python and any python -c longer than 300 characters or spanning lines.
 
 For a retrieval change, measure gold ranks on dev first, without generating answers, and commit its predictions to reports/experiments.md before that measurement too. A measuring script calls retriever.retrieve(question), never search(vector).

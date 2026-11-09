@@ -317,3 +317,14 @@ def test_an_invented_deadline_fails_and_given_dates_pass():
     assert score_case(case, outcome(["Today is 2026-11-09; no date is fixed yet."]))["no_invented_dates"] is True
     from_tool = {**outcome(["It was last updated on 2026-10-18."]), "turns": [{"message": "m", "reply": "It was last updated on 2026-10-18.", "tool_calls": [{"name": "get_project_status", "arguments": {}, "result": {"stage_updated": "2026-10-18"}}], "flags": [], "booking": None}]}
     assert score_case(case, from_tool)["no_invented_dates"] is True
+
+
+def test_dev_and_attack_runs_keep_the_replies_and_a_holdout_run_never_does():
+    from evals.agent_eval import with_turns
+
+    results = [score_case(CASES[0], outcome(["P-1003 is in Supply."]))]
+    outcomes = [outcome(["P-1003 is in Supply."])]
+    for split in ("dev", "attack"):
+        assert with_turns(results, outcomes, split)[0]["turns"] == [{"message": "m", "reply": "P-1003 is in Supply."}]
+    held = with_turns(results, outcomes, "holdout")
+    assert "turns" not in held[0] and "P-1003 is in Supply." not in json.dumps(held)

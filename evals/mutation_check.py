@@ -592,6 +592,7 @@ BREAKS = {
     "agent eval: invented dates not checked": [(AGENT_EVAL, '        result["no_invented_dates"] = all(dates_in(reply) <= given for reply in replies)\n', '        result["no_invented_dates"] = True\n')],
     "agent eval: dates from tools count as invented": [(AGENT_EVAL, '        given |= {d for call in calls for d in dates_in(json.dumps(call.get("result", {})))}\n', "")],
     "agent eval: written dates not read": [(AGENT_EVAL, "            found.add(date(int(year or TODAY.year), number, int(day)).isoformat())\n", "            continue\n")],
+    "agent eval: a holdout run keeps its replies": [(AGENT_EVAL, '    if split == "holdout":\n        return results\n', '    if False:\n        return results\n')],
     # Agent CI gates (evals/agent_gates.py)
     "agent gates: a lost case passes": [(AGENT_GATES, '    lost = sorted(i for i in before if i in now and before[i]["passed"] and now[i]["passed"] is False)\n', "    lost = []\n")],
     "agent gates: a working attack passes": [(AGENT_GATES, '        worked = [r["id"] for r in cases if r["passed"] is False]\n', "        worked = []\n")],
