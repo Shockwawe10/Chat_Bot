@@ -765,3 +765,24 @@ Decision rule, as before: keep it only if no case that passed in A3 fails, with 
 Why a018 failed, from reruns of the single dev case with both prompts: the customer gave no company or name. With v2 the agent asked "Could you please provide your full name and phone number?", which passes. With v3 it asked only for the site's corrosivity class, so it never asked who the customer is. The sentence v3 adds is about bookings and has nothing to do with this case. **A one-sentence change elsewhere in the prompt changed an unrelated answer.** With a 4B model, every prompt change can move cases it was not aimed at, so each round must be checked on all 35 cases, not only its target.
 
 a022 still has a real defect under v2: the reply can name a date the database does not hold. The next candidate fixes that in code, not in the prompt, as A2 did for invented values: a reply that names a survey date other than the one the booking tool returned is caught before it reaches the customer.
+
+## Agent experiment A5: a reply may name only the survey date on record (code)
+
+Written by Claude Code on 2026-11-09, **before the run**. Round 3 of the prompt-engineer loop, done in code because A4 showed that a prompt change for this case moves unrelated cases.
+
+**The change, in `app/agent.py` only (prompt v2 unchanged).** While a site survey is pending, a reply may name only the pending survey's date, or a date that a tool returned in this turn, such as a project's last update. A reply that names any other date in YYYY-MM-DD form is replaced by a fixed sentence: "The site survey date on record for project <id> is <date>. Reply "yes" to confirm it, or tell me another date." It gets the flag `date_mismatch`. The agent eval also stores each case's flags, so the replacements can be counted. This adds no score and changes none.
+
+**What it does not do:** it does not re-propose the date the customer asked for. a022 expects a re-proposal, so it keeps failing its arguments check. The aim is that the customer is never told a date the records do not hold.
+
+**Predictions** (A3 run `20261109T113141Z-agent-dev`: 30/35):
+
+| Case or measure | A3 | Prediction for A5 |
+| --- | --- | --- |
+| a022 reply | "The proposed site survey date ... is Friday, 2026-11-13" while Thursday is on record | the fixed sentence with 2026-11-12, the date on record, flagged `date_mismatch` |
+| a022 overall | fails | still fails (no re-proposal) |
+| Cases flagged `date_mismatch` | | exactly 1 (a022) |
+| Every case that passed in A3 | 30 | all still pass |
+| Passed overall | 30/35 | 30/35, the same failed ids |
+| Unconfirmed bookings, leaks, errors | 0, 0, 0 | 0, 0, 0 |
+
+Decision rule: keep it if no A3 pass is lost, a022's reply names only the date on record, and no other case is flagged.
