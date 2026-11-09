@@ -15,10 +15,14 @@ Two rules hold in code, not in a prompt:
 import re
 from datetime import date, datetime
 
+from app.guards import suspicious
 from mcp_server.db import CATEGORIES, MIN_POWER_KW, MOUNT_TYPES, REGIONS, STAGES, opened
 
 PROJECT_ID = re.compile(r"^P-\d{4}$")
 EMAIL = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
+# A note that speaks to the assistant is an injection, not data: the model never reads it.
+# The same instruction scan keeps planted documents out of the index (Stage 4, app/guards.py).
+NOTE_WITHHELD = "[note withheld: it contained instructions]"
 # A survey comes before the design (process-cooperation-stages.md): later stages cannot book one.
 SURVEY_STAGES = ("Request", "Site survey")
 
@@ -95,7 +99,7 @@ def get_project_status(project_id, *, db=None):
         "next_stage": STAGES[number] if number < len(STAGES) else None,
         "stage_updated": row["stage_updated"],
         "product": product["name"],
-        "notes": row["comment"],
+        "notes": NOTE_WITHHELD if suspicious(row["comment"]) else row["comment"],
     }
 
 

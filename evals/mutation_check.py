@@ -561,6 +561,8 @@ BREAKS = {
     "tools: another conversation confirms": [(TOOLS, "\"SELECT * FROM site_surveys WHERE session_id = ? AND status = 'pending'", "\"SELECT * FROM site_surveys WHERE ? IS NOT NULL AND status = 'pending'")],
     "tools: old proposal kept pending": [(TOOLS, "\"UPDATE site_surveys SET status = 'cancelled' WHERE session_id = ? AND status = 'pending'\"", "\"SELECT ? WHERE 0\"")],
     "tools: confirmation given to the agent": [(TOOLS, "AGENT_TOOLS = (create_lead, get_project_status, find_product, book_site_survey)\n", "AGENT_TOOLS = (create_lead, get_project_status, find_product, book_site_survey, confirm_pending_survey)\n")],
+    "tools: a planted note reaches the model": [(TOOLS, '"notes": NOTE_WITHHELD if suspicious(row["comment"]) else row["comment"],', '"notes": row["comment"],')],
+    "tools: every note is withheld": [(TOOLS, '"notes": NOTE_WITHHELD if suspicious(row["comment"]) else row["comment"],', '"notes": NOTE_WITHHELD,')],
     "server: confirmation exposed as a tool": [(MCP_SERVER, "for tool in (create_lead, get_project_status, find_product, book_site_survey):\n", "for tool in (create_lead, get_project_status, find_product, book_site_survey, tools.confirm_pending_survey):\n")],
     # The /chat agent (app/agent.py, app/api.py)
     "agent: the model rewrites the checked answer": [(AGENT, "                    reply = result.answer\n                    break\n", "                    messages.append({\"role\": \"tool\", \"tool_name\": name, \"content\": result.answer})\n                    break\n")],

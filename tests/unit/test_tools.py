@@ -101,11 +101,20 @@ def test_an_unknown_or_malformed_project_is_an_error(db, project_id, error):
     assert error in tools.get_project_status(project_id, db=db)["error"]
 
 
-def test_the_planted_injection_comes_back_as_data_only(db):
-    """P-1006's notes carry an instruction; the tool returns it as notes, and no contact with it."""
+def test_the_planted_injection_is_withheld_and_the_status_stays(db):
+    """P-1006's note speaks to the assistant, so the model never reads it (SECURITY_REPORT, Stage 6).
+
+    In the first attack run the model obeyed it 3 times out of 3 ("Your project is complete")."""
     status = tools.get_project_status("P-1006", db=db)
-    assert "ignore your previous instructions" in status["notes"]
-    assert "mira.olsen" not in str(status) and "555-0101" not in str(status)
+    assert status["notes"] == tools.NOTE_WITHHELD
+    assert "ignore" not in str(status).lower() and "mira.olsen" not in str(status) and "555-0101" not in str(status)
+    assert (status["stage"], status["next_stage"]) == ("Installation", "Handover")
+
+
+def test_ordinary_notes_still_come_through(db):
+    for project_id in ("P-1001", "P-1002", "P-1003", "P-1004", "P-1005", "P-1007", "P-1008"):
+        assert tools.get_project_status(project_id, db=db)["notes"] != tools.NOTE_WITHHELD, project_id
+    assert tools.get_project_status("P-1003", db=db)["notes"] == "Parts in production."
 
 
 # find_product
