@@ -334,6 +334,17 @@ def run(cases, make_agent):
     return outcomes, results, aggregate(results)
 
 
+def with_turns(results, outcomes, split):
+    """Each case's messages and replies, kept in dev and attack runs so a scorer check can be tested
+    on known-correct replies (CLAUDE.md). Never in a holdout run: its cases are never read."""
+    if split == "holdout":
+        return results
+    return [
+        {**result, "turns": [{"message": t["message"], "reply": t["reply"]} for t in outcome["turns"]]}
+        for result, outcome in zip(results, outcomes)
+    ]
+
+
 def show(value):
     return f"{value[0]}/{value[1]}" if isinstance(value, list) else str(value)
 
@@ -375,7 +386,8 @@ def main(argv=None):
     env = read_env()
     if not args.experiment:
         require_pinned_ollama(env)
-    _, results, metrics = run(cases, lambda db: real_agent(env, db))
+    outcomes, results, metrics = run(cases, lambda db: real_agent(env, db))
+    results = with_turns(results, outcomes, args.split)
     sha, dirty = git_state()
     run_id = f"{datetime.now(UTC):%Y%m%dT%H%M%SZ}-agent-{args.split}" + (f"-{args.experiment}" if args.experiment else "")
     report = {
