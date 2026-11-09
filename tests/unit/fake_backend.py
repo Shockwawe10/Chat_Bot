@@ -81,3 +81,26 @@ class FakeLlm:
         count = len(prompt.split()) + 20 if count is None else count
         text = self.outputs[min(len(self.calls) - 1, len(self.outputs) - 1)]
         return Completion(text, count, "stop")
+
+
+class FakeChat:
+    """A tool-calling chat model for /chat tests: returns scripted messages in order, repeats the last."""
+
+    def __init__(self, *messages, error=None):
+        self.messages = list(messages)
+        self.error = error
+        self.calls = []
+
+    def chat(self, messages, tools):
+        if self.error:
+            raise self.error
+        self.calls.append({"messages": [dict(m) for m in messages], "tools": tools})
+        return self.messages[min(len(self.calls) - 1, len(self.messages) - 1)]
+
+
+def tool_call(name, **arguments):
+    return {"content": "", "tool_calls": [{"name": name, "arguments": arguments}]}
+
+
+def say(text):
+    return {"content": text, "tool_calls": []}

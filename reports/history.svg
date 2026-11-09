@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="900" height="466" viewBox="0 0 900 466" role="img" aria-labelledby="t d">
 <title id="t">Eval history</title>
-<desc id="d">Metrics of 8 full dev runs from 2026-11-02 to 2026-11-07, from evals/history.csv.</desc>
+<desc id="d">Metrics of 9 full dev runs from 2026-11-02 to 2026-11-09, from evals/history.csv.</desc>
 <style>
   .surface { fill: #fcfcfb; }
   .title { fill: #0b0b0b; font: 600 13px system-ui, -apple-system, "Segoe UI", sans-serif; }
@@ -25,7 +25,7 @@
   }
 </style>
 <rect class="surface" width="900" height="466" rx="8"/>
-<text class="title" x="8" y="22">Full dev runs, 2026-11-02 to 2026-11-07 (8 runs, x axis: run number)</text>
+<text class="title" x="8" y="22">Full dev runs, 2026-11-02 to 2026-11-09 (9 runs, x axis: run number)</text>
 <text class="change" x="8" y="40">Dashed line = the setup changed: before run 3: prompt v2→v5, top-k 5→8</text>
 <text class="title" x="8" y="74">Hit rate</text>
 <text class="note" x="8" y="89">gold passage among the retrieved</text>
@@ -36,23 +36,25 @@
 <line class="grid" x1="40" x2="254" y1="100.0" y2="100.0"/>
 <text class="tick" x="34" y="104.0" text-anchor="end">1</text>
 <text class="tick" x="40.0" y="232" text-anchor="middle">1</text>
-<text class="tick" x="70.6" y="232" text-anchor="middle">2</text>
-<text class="tick" x="101.1" y="232" text-anchor="middle">3</text>
-<text class="tick" x="131.7" y="232" text-anchor="middle">4</text>
-<text class="tick" x="162.3" y="232" text-anchor="middle">5</text>
-<text class="tick" x="192.9" y="232" text-anchor="middle">6</text>
-<text class="tick" x="223.4" y="232" text-anchor="middle">7</text>
-<text class="tick" x="254.0" y="232" text-anchor="middle">8</text>
-<line class="rule" x1="85.9" x2="85.9" y1="96" y2="216"/>
-<polyline class="line" points="40.0,119.3 70.6,119.3 101.1,105.5 131.7,105.5 162.3,105.5 192.9,105.5 223.4,105.5 254.0,105.5"/>
+<text class="tick" x="66.8" y="232" text-anchor="middle">2</text>
+<text class="tick" x="93.5" y="232" text-anchor="middle">3</text>
+<text class="tick" x="120.2" y="232" text-anchor="middle">4</text>
+<text class="tick" x="147.0" y="232" text-anchor="middle">5</text>
+<text class="tick" x="173.8" y="232" text-anchor="middle">6</text>
+<text class="tick" x="200.5" y="232" text-anchor="middle">7</text>
+<text class="tick" x="227.2" y="232" text-anchor="middle">8</text>
+<text class="tick" x="254.0" y="232" text-anchor="middle">9</text>
+<line class="rule" x1="80.1" x2="80.1" y1="96" y2="216"/>
+<polyline class="line" points="40.0,119.3 66.8,119.3 93.5,105.5 120.2,105.5 147.0,105.5 173.8,105.5 200.5,105.5 227.2,105.5 254.0,105.5"/>
 <circle class="dot" cx="40.0" cy="119.3" r="4"><title>Run 1 (20261102T103932Z-pipeline-dev): Hit rate 0.83</title></circle>
-<circle class="dot" cx="70.6" cy="119.3" r="4"><title>Run 2 (20261103T114147Z-pipeline-dev): Hit rate 0.83</title></circle>
-<circle class="dot" cx="101.1" cy="105.5" r="4"><title>Run 3 (20261105T084127Z-pipeline-dev): Hit rate 0.95</title></circle>
-<circle class="dot" cx="131.7" cy="105.5" r="4"><title>Run 4 (20261105T091225Z-pipeline-dev): Hit rate 0.95</title></circle>
-<circle class="dot" cx="162.3" cy="105.5" r="4"><title>Run 5 (20261105T103326Z-pipeline-dev): Hit rate 0.95</title></circle>
-<circle class="dot" cx="192.9" cy="105.5" r="4"><title>Run 6 (20261106T133004Z-pipeline-dev): Hit rate 0.95</title></circle>
-<circle class="dot" cx="223.4" cy="105.5" r="4"><title>Run 7 (20261107T112153Z-pipeline-dev): Hit rate 0.95</title></circle>
-<circle class="dot" cx="254.0" cy="105.5" r="4"><title>Run 8 (20261107T144942Z-pipeline-dev): Hit rate 0.95</title></circle>
+<circle class="dot" cx="66.8" cy="119.3" r="4"><title>Run 2 (20261103T114147Z-pipeline-dev): Hit rate 0.83</title></circle>
+<circle class="dot" cx="93.5" cy="105.5" r="4"><title>Run 3 (20261105T084127Z-pipeline-dev): Hit rate 0.95</title></circle>
+<circle class="dot" cx="120.2" cy="105.5" r="4"><title>Run 4 (20261105T091225Z-pipeline-dev): Hit rate 0.95</title></circle>
+<circle class="dot" cx="147.0" cy="105.5" r="4"><title>Run 5 (20261105T103326Z-pipeline-dev): Hit rate 0.95</title></circle>
+<circle class="dot" cx="173.8" cy="105.5" r="4"><title>Run 6 (20261106T133004Z-pipeline-dev): Hit rate 0.95</title></circle>
+<circle class="dot" cx="200.5" cy="105.5" r="4"><title>Run 7 (20261107T112153Z-pipeline-dev): Hit rate 0.95</title></circle>
+<circle class="dot" cx="227.2" cy="105.5" r="4"><title>Run 8 (20261107T144942Z-pipeline-dev): Hit rate 0.95</title></circle>
+<circle class="dot" cx="254.0" cy="105.5" r="4"><title>Run 9 (20261109T135656Z-pipeline-dev): Hit rate 0.95</title></circle>
 <text class="value" x="42.0" y="109.3">0.83</text>
 <text class="value" x="262.0" y="109.5">0.95</text>
 <text class="title" x="308" y="74">Over-refusal</text>
@@ -64,23 +66,25 @@
 <line class="grid" x1="340" x2="554" y1="100.0" y2="100.0"/>
 <text class="tick" x="334" y="104.0" text-anchor="end">1</text>
 <text class="tick" x="340.0" y="232" text-anchor="middle">1</text>
-<text class="tick" x="370.6" y="232" text-anchor="middle">2</text>
-<text class="tick" x="401.1" y="232" text-anchor="middle">3</text>
-<text class="tick" x="431.7" y="232" text-anchor="middle">4</text>
-<text class="tick" x="462.3" y="232" text-anchor="middle">5</text>
-<text class="tick" x="492.9" y="232" text-anchor="middle">6</text>
-<text class="tick" x="523.4" y="232" text-anchor="middle">7</text>
-<text class="tick" x="554.0" y="232" text-anchor="middle">8</text>
-<line class="rule" x1="385.9" x2="385.9" y1="96" y2="216"/>
-<polyline class="line" points="340.0,155.2 370.6,155.2 401.1,180.1 431.7,180.1 462.3,180.1 492.9,180.1 523.4,182.9 554.0,182.9"/>
+<text class="tick" x="366.8" y="232" text-anchor="middle">2</text>
+<text class="tick" x="393.5" y="232" text-anchor="middle">3</text>
+<text class="tick" x="420.2" y="232" text-anchor="middle">4</text>
+<text class="tick" x="447.0" y="232" text-anchor="middle">5</text>
+<text class="tick" x="473.8" y="232" text-anchor="middle">6</text>
+<text class="tick" x="500.5" y="232" text-anchor="middle">7</text>
+<text class="tick" x="527.2" y="232" text-anchor="middle">8</text>
+<text class="tick" x="554.0" y="232" text-anchor="middle">9</text>
+<line class="rule" x1="380.1" x2="380.1" y1="96" y2="216"/>
+<polyline class="line" points="340.0,155.2 366.8,155.2 393.5,180.1 420.2,180.1 447.0,180.1 473.8,180.1 500.5,182.9 527.2,182.9 554.0,182.9"/>
 <circle class="dot" cx="340.0" cy="155.2" r="4"><title>Run 1 (20261102T103932Z-pipeline-dev): Over-refusal 0.52</title></circle>
-<circle class="dot" cx="370.6" cy="155.2" r="4"><title>Run 2 (20261103T114147Z-pipeline-dev): Over-refusal 0.52</title></circle>
-<circle class="dot" cx="401.1" cy="180.1" r="4"><title>Run 3 (20261105T084127Z-pipeline-dev): Over-refusal 0.31</title></circle>
-<circle class="dot" cx="431.7" cy="180.1" r="4"><title>Run 4 (20261105T091225Z-pipeline-dev): Over-refusal 0.31</title></circle>
-<circle class="dot" cx="462.3" cy="180.1" r="4"><title>Run 5 (20261105T103326Z-pipeline-dev): Over-refusal 0.31</title></circle>
-<circle class="dot" cx="492.9" cy="180.1" r="4"><title>Run 6 (20261106T133004Z-pipeline-dev): Over-refusal 0.31</title></circle>
-<circle class="dot" cx="523.4" cy="182.9" r="4"><title>Run 7 (20261107T112153Z-pipeline-dev): Over-refusal 0.29</title></circle>
-<circle class="dot" cx="554.0" cy="182.9" r="4"><title>Run 8 (20261107T144942Z-pipeline-dev): Over-refusal 0.29</title></circle>
+<circle class="dot" cx="366.8" cy="155.2" r="4"><title>Run 2 (20261103T114147Z-pipeline-dev): Over-refusal 0.52</title></circle>
+<circle class="dot" cx="393.5" cy="180.1" r="4"><title>Run 3 (20261105T084127Z-pipeline-dev): Over-refusal 0.31</title></circle>
+<circle class="dot" cx="420.2" cy="180.1" r="4"><title>Run 4 (20261105T091225Z-pipeline-dev): Over-refusal 0.31</title></circle>
+<circle class="dot" cx="447.0" cy="180.1" r="4"><title>Run 5 (20261105T103326Z-pipeline-dev): Over-refusal 0.31</title></circle>
+<circle class="dot" cx="473.8" cy="180.1" r="4"><title>Run 6 (20261106T133004Z-pipeline-dev): Over-refusal 0.31</title></circle>
+<circle class="dot" cx="500.5" cy="182.9" r="4"><title>Run 7 (20261107T112153Z-pipeline-dev): Over-refusal 0.29</title></circle>
+<circle class="dot" cx="527.2" cy="182.9" r="4"><title>Run 8 (20261107T144942Z-pipeline-dev): Over-refusal 0.29</title></circle>
+<circle class="dot" cx="554.0" cy="182.9" r="4"><title>Run 9 (20261109T135656Z-pipeline-dev): Over-refusal 0.29</title></circle>
 <text class="value" x="342.0" y="145.2">0.52</text>
 <text class="value" x="562.0" y="186.9">0.29</text>
 <text class="title" x="608" y="74">Numeric fidelity</text>
@@ -92,23 +96,25 @@
 <line class="grid" x1="640" x2="854" y1="100.0" y2="100.0"/>
 <text class="tick" x="634" y="104.0" text-anchor="end">1</text>
 <text class="tick" x="640.0" y="232" text-anchor="middle">1</text>
-<text class="tick" x="670.6" y="232" text-anchor="middle">2</text>
-<text class="tick" x="701.1" y="232" text-anchor="middle">3</text>
-<text class="tick" x="731.7" y="232" text-anchor="middle">4</text>
-<text class="tick" x="762.3" y="232" text-anchor="middle">5</text>
-<text class="tick" x="792.9" y="232" text-anchor="middle">6</text>
-<text class="tick" x="823.4" y="232" text-anchor="middle">7</text>
-<text class="tick" x="854.0" y="232" text-anchor="middle">8</text>
-<line class="rule" x1="685.9" x2="685.9" y1="96" y2="216"/>
-<polyline class="line" points="640.0,158.0 670.6,158.0 701.1,136.9 731.7,136.9 762.3,136.9 792.9,136.9 823.4,136.9 854.0,136.9"/>
+<text class="tick" x="666.8" y="232" text-anchor="middle">2</text>
+<text class="tick" x="693.5" y="232" text-anchor="middle">3</text>
+<text class="tick" x="720.2" y="232" text-anchor="middle">4</text>
+<text class="tick" x="747.0" y="232" text-anchor="middle">5</text>
+<text class="tick" x="773.8" y="232" text-anchor="middle">6</text>
+<text class="tick" x="800.5" y="232" text-anchor="middle">7</text>
+<text class="tick" x="827.2" y="232" text-anchor="middle">8</text>
+<text class="tick" x="854.0" y="232" text-anchor="middle">9</text>
+<line class="rule" x1="680.1" x2="680.1" y1="96" y2="216"/>
+<polyline class="line" points="640.0,158.0 666.8,158.0 693.5,136.9 720.2,136.9 747.0,136.9 773.8,136.9 800.5,136.9 827.2,136.9 854.0,136.9"/>
 <circle class="dot" cx="640.0" cy="158.0" r="4"><title>Run 1 (20261102T103932Z-pipeline-dev): Numeric fidelity 0.50</title></circle>
-<circle class="dot" cx="670.6" cy="158.0" r="4"><title>Run 2 (20261103T114147Z-pipeline-dev): Numeric fidelity 0.50</title></circle>
-<circle class="dot" cx="701.1" cy="136.9" r="4"><title>Run 3 (20261105T084127Z-pipeline-dev): Numeric fidelity 0.68</title></circle>
-<circle class="dot" cx="731.7" cy="136.9" r="4"><title>Run 4 (20261105T091225Z-pipeline-dev): Numeric fidelity 0.68</title></circle>
-<circle class="dot" cx="762.3" cy="136.9" r="4"><title>Run 5 (20261105T103326Z-pipeline-dev): Numeric fidelity 0.68</title></circle>
-<circle class="dot" cx="792.9" cy="136.9" r="4"><title>Run 6 (20261106T133004Z-pipeline-dev): Numeric fidelity 0.68</title></circle>
-<circle class="dot" cx="823.4" cy="136.9" r="4"><title>Run 7 (20261107T112153Z-pipeline-dev): Numeric fidelity 0.68</title></circle>
-<circle class="dot" cx="854.0" cy="136.9" r="4"><title>Run 8 (20261107T144942Z-pipeline-dev): Numeric fidelity 0.68</title></circle>
+<circle class="dot" cx="666.8" cy="158.0" r="4"><title>Run 2 (20261103T114147Z-pipeline-dev): Numeric fidelity 0.50</title></circle>
+<circle class="dot" cx="693.5" cy="136.9" r="4"><title>Run 3 (20261105T084127Z-pipeline-dev): Numeric fidelity 0.68</title></circle>
+<circle class="dot" cx="720.2" cy="136.9" r="4"><title>Run 4 (20261105T091225Z-pipeline-dev): Numeric fidelity 0.68</title></circle>
+<circle class="dot" cx="747.0" cy="136.9" r="4"><title>Run 5 (20261105T103326Z-pipeline-dev): Numeric fidelity 0.68</title></circle>
+<circle class="dot" cx="773.8" cy="136.9" r="4"><title>Run 6 (20261106T133004Z-pipeline-dev): Numeric fidelity 0.68</title></circle>
+<circle class="dot" cx="800.5" cy="136.9" r="4"><title>Run 7 (20261107T112153Z-pipeline-dev): Numeric fidelity 0.68</title></circle>
+<circle class="dot" cx="827.2" cy="136.9" r="4"><title>Run 8 (20261107T144942Z-pipeline-dev): Numeric fidelity 0.68</title></circle>
+<circle class="dot" cx="854.0" cy="136.9" r="4"><title>Run 9 (20261109T135656Z-pipeline-dev): Numeric fidelity 0.68</title></circle>
 <text class="value" x="642.0" y="148.0">0.50</text>
 <text class="value" x="862.0" y="140.9">0.68</text>
 <text class="title" x="8" y="264">Refusal accuracy</text>
@@ -120,23 +126,25 @@
 <line class="grid" x1="40" x2="254" y1="290.0" y2="290.0"/>
 <text class="tick" x="34" y="294.0" text-anchor="end">1</text>
 <text class="tick" x="40.0" y="422" text-anchor="middle">1</text>
-<text class="tick" x="70.6" y="422" text-anchor="middle">2</text>
-<text class="tick" x="101.1" y="422" text-anchor="middle">3</text>
-<text class="tick" x="131.7" y="422" text-anchor="middle">4</text>
-<text class="tick" x="162.3" y="422" text-anchor="middle">5</text>
-<text class="tick" x="192.9" y="422" text-anchor="middle">6</text>
-<text class="tick" x="223.4" y="422" text-anchor="middle">7</text>
-<text class="tick" x="254.0" y="422" text-anchor="middle">8</text>
-<line class="rule" x1="85.9" x2="85.9" y1="286" y2="406"/>
-<polyline class="line" points="40.0,345.8 70.6,345.8 101.1,325.7 131.7,319.0 162.3,319.0 192.9,319.0 223.4,316.8 254.0,316.8"/>
+<text class="tick" x="66.8" y="422" text-anchor="middle">2</text>
+<text class="tick" x="93.5" y="422" text-anchor="middle">3</text>
+<text class="tick" x="120.2" y="422" text-anchor="middle">4</text>
+<text class="tick" x="147.0" y="422" text-anchor="middle">5</text>
+<text class="tick" x="173.8" y="422" text-anchor="middle">6</text>
+<text class="tick" x="200.5" y="422" text-anchor="middle">7</text>
+<text class="tick" x="227.2" y="422" text-anchor="middle">8</text>
+<text class="tick" x="254.0" y="422" text-anchor="middle">9</text>
+<line class="rule" x1="80.1" x2="80.1" y1="286" y2="406"/>
+<polyline class="line" points="40.0,345.8 66.8,345.8 93.5,325.7 120.2,319.0 147.0,319.0 173.8,319.0 200.5,316.8 227.2,316.8 254.0,316.8"/>
 <circle class="dot" cx="40.0" cy="345.8" r="4"><title>Run 1 (20261102T103932Z-pipeline-dev): Refusal accuracy 0.52</title></circle>
-<circle class="dot" cx="70.6" cy="345.8" r="4"><title>Run 2 (20261103T114147Z-pipeline-dev): Refusal accuracy 0.52</title></circle>
-<circle class="dot" cx="101.1" cy="325.7" r="4"><title>Run 3 (20261105T084127Z-pipeline-dev): Refusal accuracy 0.69</title></circle>
-<circle class="dot" cx="131.7" cy="319.0" r="4"><title>Run 4 (20261105T091225Z-pipeline-dev): Refusal accuracy 0.75</title></circle>
-<circle class="dot" cx="162.3" cy="319.0" r="4"><title>Run 5 (20261105T103326Z-pipeline-dev): Refusal accuracy 0.75</title></circle>
-<circle class="dot" cx="192.9" cy="319.0" r="4"><title>Run 6 (20261106T133004Z-pipeline-dev): Refusal accuracy 0.75</title></circle>
-<circle class="dot" cx="223.4" cy="316.8" r="4"><title>Run 7 (20261107T112153Z-pipeline-dev): Refusal accuracy 0.77</title></circle>
-<circle class="dot" cx="254.0" cy="316.8" r="4"><title>Run 8 (20261107T144942Z-pipeline-dev): Refusal accuracy 0.77</title></circle>
+<circle class="dot" cx="66.8" cy="345.8" r="4"><title>Run 2 (20261103T114147Z-pipeline-dev): Refusal accuracy 0.52</title></circle>
+<circle class="dot" cx="93.5" cy="325.7" r="4"><title>Run 3 (20261105T084127Z-pipeline-dev): Refusal accuracy 0.69</title></circle>
+<circle class="dot" cx="120.2" cy="319.0" r="4"><title>Run 4 (20261105T091225Z-pipeline-dev): Refusal accuracy 0.75</title></circle>
+<circle class="dot" cx="147.0" cy="319.0" r="4"><title>Run 5 (20261105T103326Z-pipeline-dev): Refusal accuracy 0.75</title></circle>
+<circle class="dot" cx="173.8" cy="319.0" r="4"><title>Run 6 (20261106T133004Z-pipeline-dev): Refusal accuracy 0.75</title></circle>
+<circle class="dot" cx="200.5" cy="316.8" r="4"><title>Run 7 (20261107T112153Z-pipeline-dev): Refusal accuracy 0.77</title></circle>
+<circle class="dot" cx="227.2" cy="316.8" r="4"><title>Run 8 (20261107T144942Z-pipeline-dev): Refusal accuracy 0.77</title></circle>
+<circle class="dot" cx="254.0" cy="316.8" r="4"><title>Run 9 (20261109T135656Z-pipeline-dev): Refusal accuracy 0.77</title></circle>
 <text class="value" x="42.0" y="335.8">0.52</text>
 <text class="value" x="262.0" y="320.8">0.77</text>
 <text class="title" x="308" y="264">Behaviour accuracy</text>
@@ -148,23 +156,25 @@
 <line class="grid" x1="340" x2="554" y1="290.0" y2="290.0"/>
 <text class="tick" x="334" y="294.0" text-anchor="end">1</text>
 <text class="tick" x="340.0" y="422" text-anchor="middle">1</text>
-<text class="tick" x="370.6" y="422" text-anchor="middle">2</text>
-<text class="tick" x="401.1" y="422" text-anchor="middle">3</text>
-<text class="tick" x="431.7" y="422" text-anchor="middle">4</text>
-<text class="tick" x="462.3" y="422" text-anchor="middle">5</text>
-<text class="tick" x="492.9" y="422" text-anchor="middle">6</text>
-<text class="tick" x="523.4" y="422" text-anchor="middle">7</text>
-<text class="tick" x="554.0" y="422" text-anchor="middle">8</text>
-<line class="rule" x1="385.9" x2="385.9" y1="286" y2="406"/>
-<polyline class="line" points="340.0,358.5 370.6,358.5 401.1,341.9 431.7,332.7 462.3,332.7 492.9,332.7 523.4,330.8 554.0,330.8"/>
+<text class="tick" x="366.8" y="422" text-anchor="middle">2</text>
+<text class="tick" x="393.5" y="422" text-anchor="middle">3</text>
+<text class="tick" x="420.2" y="422" text-anchor="middle">4</text>
+<text class="tick" x="447.0" y="422" text-anchor="middle">5</text>
+<text class="tick" x="473.8" y="422" text-anchor="middle">6</text>
+<text class="tick" x="500.5" y="422" text-anchor="middle">7</text>
+<text class="tick" x="527.2" y="422" text-anchor="middle">8</text>
+<text class="tick" x="554.0" y="422" text-anchor="middle">9</text>
+<line class="rule" x1="380.1" x2="380.1" y1="286" y2="406"/>
+<polyline class="line" points="340.0,358.5 366.8,358.5 393.5,341.9 420.2,332.7 447.0,332.7 473.8,332.7 500.5,330.8 527.2,330.8 554.0,330.8"/>
 <circle class="dot" cx="340.0" cy="358.5" r="4"><title>Run 1 (20261102T103932Z-pipeline-dev): Behaviour accuracy 0.41</title></circle>
-<circle class="dot" cx="370.6" cy="358.5" r="4"><title>Run 2 (20261103T114147Z-pipeline-dev): Behaviour accuracy 0.41</title></circle>
-<circle class="dot" cx="401.1" cy="341.9" r="4"><title>Run 3 (20261105T084127Z-pipeline-dev): Behaviour accuracy 0.55</title></circle>
-<circle class="dot" cx="431.7" cy="332.7" r="4"><title>Run 4 (20261105T091225Z-pipeline-dev): Behaviour accuracy 0.63</title></circle>
-<circle class="dot" cx="462.3" cy="332.7" r="4"><title>Run 5 (20261105T103326Z-pipeline-dev): Behaviour accuracy 0.63</title></circle>
-<circle class="dot" cx="492.9" cy="332.7" r="4"><title>Run 6 (20261106T133004Z-pipeline-dev): Behaviour accuracy 0.63</title></circle>
-<circle class="dot" cx="523.4" cy="330.8" r="4"><title>Run 7 (20261107T112153Z-pipeline-dev): Behaviour accuracy 0.65</title></circle>
-<circle class="dot" cx="554.0" cy="330.8" r="4"><title>Run 8 (20261107T144942Z-pipeline-dev): Behaviour accuracy 0.65</title></circle>
+<circle class="dot" cx="366.8" cy="358.5" r="4"><title>Run 2 (20261103T114147Z-pipeline-dev): Behaviour accuracy 0.41</title></circle>
+<circle class="dot" cx="393.5" cy="341.9" r="4"><title>Run 3 (20261105T084127Z-pipeline-dev): Behaviour accuracy 0.55</title></circle>
+<circle class="dot" cx="420.2" cy="332.7" r="4"><title>Run 4 (20261105T091225Z-pipeline-dev): Behaviour accuracy 0.63</title></circle>
+<circle class="dot" cx="447.0" cy="332.7" r="4"><title>Run 5 (20261105T103326Z-pipeline-dev): Behaviour accuracy 0.63</title></circle>
+<circle class="dot" cx="473.8" cy="332.7" r="4"><title>Run 6 (20261106T133004Z-pipeline-dev): Behaviour accuracy 0.63</title></circle>
+<circle class="dot" cx="500.5" cy="330.8" r="4"><title>Run 7 (20261107T112153Z-pipeline-dev): Behaviour accuracy 0.65</title></circle>
+<circle class="dot" cx="527.2" cy="330.8" r="4"><title>Run 8 (20261107T144942Z-pipeline-dev): Behaviour accuracy 0.65</title></circle>
+<circle class="dot" cx="554.0" cy="330.8" r="4"><title>Run 9 (20261109T135656Z-pipeline-dev): Behaviour accuracy 0.65</title></circle>
 <text class="value" x="342.0" y="348.5">0.41</text>
 <text class="value" x="562.0" y="334.8">0.65</text>
 <text class="title" x="608" y="264">Latency p95</text>
@@ -176,24 +186,26 @@
 <line class="grid" x1="640" x2="854" y1="290.0" y2="290.0"/>
 <text class="tick" x="634" y="294.0" text-anchor="end">30</text>
 <text class="tick" x="640.0" y="422" text-anchor="middle">1</text>
-<text class="tick" x="670.6" y="422" text-anchor="middle">2</text>
-<text class="tick" x="701.1" y="422" text-anchor="middle">3</text>
-<text class="tick" x="731.7" y="422" text-anchor="middle">4</text>
-<text class="tick" x="762.3" y="422" text-anchor="middle">5</text>
-<text class="tick" x="792.9" y="422" text-anchor="middle">6</text>
-<text class="tick" x="823.4" y="422" text-anchor="middle">7</text>
-<text class="tick" x="854.0" y="422" text-anchor="middle">8</text>
-<line class="rule" x1="685.9" x2="685.9" y1="286" y2="406"/>
-<polyline class="line" points="640.0,388.0 670.6,378.9 701.1,314.6 731.7,299.0 762.3,313.2 792.9,305.5 823.4,299.1 854.0,303.6"/>
+<text class="tick" x="666.8" y="422" text-anchor="middle">2</text>
+<text class="tick" x="693.5" y="422" text-anchor="middle">3</text>
+<text class="tick" x="720.2" y="422" text-anchor="middle">4</text>
+<text class="tick" x="747.0" y="422" text-anchor="middle">5</text>
+<text class="tick" x="773.8" y="422" text-anchor="middle">6</text>
+<text class="tick" x="800.5" y="422" text-anchor="middle">7</text>
+<text class="tick" x="827.2" y="422" text-anchor="middle">8</text>
+<text class="tick" x="854.0" y="422" text-anchor="middle">9</text>
+<line class="rule" x1="680.1" x2="680.1" y1="286" y2="406"/>
+<polyline class="line" points="640.0,388.0 666.8,378.9 693.5,314.6 720.2,299.0 747.0,313.2 773.8,305.5 800.5,299.1 827.2,303.6 854.0,315.0"/>
 <circle class="dot" cx="640.0" cy="388.0" r="4"><title>Run 1 (20261102T103932Z-pipeline-dev): Latency p95 4.6 s</title></circle>
-<circle class="dot" cx="670.6" cy="378.9" r="4"><title>Run 2 (20261103T114147Z-pipeline-dev): Latency p95 7.0 s</title></circle>
-<circle class="dot" cx="701.1" cy="314.6" r="4"><title>Run 3 (20261105T084127Z-pipeline-dev): Latency p95 23.6 s</title></circle>
-<circle class="dot" cx="731.7" cy="299.0" r="4"><title>Run 4 (20261105T091225Z-pipeline-dev): Latency p95 27.7 s</title></circle>
-<circle class="dot" cx="762.3" cy="313.2" r="4"><title>Run 5 (20261105T103326Z-pipeline-dev): Latency p95 24.0 s</title></circle>
-<circle class="dot" cx="792.9" cy="305.5" r="4"><title>Run 6 (20261106T133004Z-pipeline-dev): Latency p95 26.0 s</title></circle>
-<circle class="dot" cx="823.4" cy="299.1" r="4"><title>Run 7 (20261107T112153Z-pipeline-dev): Latency p95 27.7 s</title></circle>
-<circle class="dot" cx="854.0" cy="303.6" r="4"><title>Run 8 (20261107T144942Z-pipeline-dev): Latency p95 26.5 s</title></circle>
+<circle class="dot" cx="666.8" cy="378.9" r="4"><title>Run 2 (20261103T114147Z-pipeline-dev): Latency p95 7.0 s</title></circle>
+<circle class="dot" cx="693.5" cy="314.6" r="4"><title>Run 3 (20261105T084127Z-pipeline-dev): Latency p95 23.6 s</title></circle>
+<circle class="dot" cx="720.2" cy="299.0" r="4"><title>Run 4 (20261105T091225Z-pipeline-dev): Latency p95 27.7 s</title></circle>
+<circle class="dot" cx="747.0" cy="313.2" r="4"><title>Run 5 (20261105T103326Z-pipeline-dev): Latency p95 24.0 s</title></circle>
+<circle class="dot" cx="773.8" cy="305.5" r="4"><title>Run 6 (20261106T133004Z-pipeline-dev): Latency p95 26.0 s</title></circle>
+<circle class="dot" cx="800.5" cy="299.1" r="4"><title>Run 7 (20261107T112153Z-pipeline-dev): Latency p95 27.7 s</title></circle>
+<circle class="dot" cx="827.2" cy="303.6" r="4"><title>Run 8 (20261107T144942Z-pipeline-dev): Latency p95 26.5 s</title></circle>
+<circle class="dot" cx="854.0" cy="315.0" r="4"><title>Run 9 (20261109T135656Z-pipeline-dev): Latency p95 23.5 s</title></circle>
 <text class="value" x="642.0" y="378.0">4.6 s</text>
-<text class="value" x="862.0" y="307.6">26.5 s</text>
+<text class="value" x="862.0" y="319.0">23.5 s</text>
 <text class="note" x="8" y="456">Source: evals/history.csv. Hover a point for its run id.</text>
 </svg>

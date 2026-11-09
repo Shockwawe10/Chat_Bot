@@ -47,6 +47,13 @@ CHART = ROOT / "evals" / "history_chart.py"
 HOLDOUT = ROOT / "evals" / "holdout.py"
 PHOENIX = ROOT / "evals" / "phoenix_export.py"
 PROMPT_V5 = ROOT / "prompts" / "answer_v5.txt"
+DB_FILE = ROOT / "mcp_server" / "db.py"
+SEED = ROOT / "mcp_server" / "seed.py"
+TOOLS = ROOT / "mcp_server" / "tools.py"
+MCP_SERVER = ROOT / "mcp_server" / "server.py"
+AGENT = ROOT / "app" / "agent.py"
+AGENT_EVAL = ROOT / "evals" / "agent_eval.py"
+AGENT_GATES = ROOT / "evals" / "agent_gates.py"
 
 PACK = "if joined > cfg.max or (joined > cfg.target and can_stop):"
 MERGE = "if fits and (_size(group) < cfg.min or _only_headings(group)):"
@@ -514,6 +521,8 @@ BREAKS = {
     "smoke: lost facts accepted": [(GATES, 'gates.append(Gate("no required fact lost", not facts_lost,', 'gates.append(Gate("no required fact lost", True,')],
     "smoke: missing cases accepted": [(GATES, 'gates = [Gate("every reference case ran", not missing,', 'gates = [Gate("every reference case ran", True,')],
     "smoke: run not kept as smoke latest": [(RUN_EVALS, '        shutil.copyfile(path, reports_dir / "smoke" / "latest.json")\n', "        pass\n")],
+    "harness: an unavailable case is not retried": [(RUN_EVALS, "        except ServiceUnavailable:\n", "        except ZeroDivisionError:\n")],
+    "harness: a retry is not recorded": [(RUN_EVALS, '            retried.append(case["id"])\n', "            pass\n")],
     # Metric history chart (evals/history_chart.py)
     "chart: not redrawn after a full dev run": [(RUN_EVALS, '        history_chart.write(history_path, reports_dir / "history.svg")\n', "        pass\n")],
     "chart: missing value drawn as zero": [(CHART, "    if not text:\n        return None\n", "    if not text:\n        return 0.0\n")],
@@ -536,6 +545,60 @@ BREAKS = {
     # The canary PR's break (README, CI gates): the prompt loses its passages, nothing crashes
     "prompt: passages dropped ({context} for $context)": [(PROMPT_V5, "\n$context", "\n{context}")],
     "prompt: question dropped": [(PROMPT_V5, "\n$question", "\nthe question")],
+    # Demo company database (mcp_server/db.py, mcp_server/seed.py)
+    "db: foreign keys off": [(DB_FILE, 'connection.execute("PRAGMA foreign_keys = ON")', 'connection.execute("PRAGMA foreign_keys = OFF")')],
+    "db: projects under 100 kWp accepted": [(DB_FILE, "CHECK (power_kw >= {MIN_POWER_KW})", "CHECK (power_kw >= 0)")],
+    "db: a stage missing from the vocabulary": [(DB_FILE, '    "Contract",\n', "")],
+    "db: connection left open": [(DB_FILE, "    finally:\n        connection.close()\n", "    finally:\n        pass\n")],
+    "seed: a failed seed replaces the database": [(SEED, "    finally:\n        connection.close()\n    partial.replace(target)\n", "    finally:\n        connection.close()\n        partial.replace(target)\n")],
+    # MCP tools (mcp_server/tools.py, mcp_server/server.py)
+    "tools: lead under 100 kWp saved": [(TOOLS, "    if power_kw < MIN_POWER_KW:\n", "    if False:\n")],
+    "tools: power as text accepted": [(TOOLS, "    if isinstance(power_kw, bool) or not isinstance(power_kw, (int, float)):\n", "    if False:\n")],
+    "tools: missing contact data invented as blank": [(TOOLS, "    if missing:\n", "    if False:\n")],
+    "tools: duplicate email accepted": [(TOOLS, '            return _error("a request with this email already exists; the sales team will reply to it")\n', "            pass\n")],
+    "tools: survey in the past booked": [(TOOLS, "    if day <= today:\n", "    if False:\n")],
+    "tools: survey past the survey stage booked": [(TOOLS, '    if row["stage"] not in SURVEY_STAGES:\n', "    if False:\n")],
+    "tools: booking confirmed at once": [(TOOLS, "\" VALUES (?, ?, 'pending', ?, ?)\"", "\" VALUES (?, ?, 'confirmed', ?, ?)\"")],
+    "tools: another conversation confirms": [(TOOLS, "\"SELECT * FROM site_surveys WHERE session_id = ? AND status = 'pending'", "\"SELECT * FROM site_surveys WHERE ? IS NOT NULL AND status = 'pending'")],
+    "tools: old proposal kept pending": [(TOOLS, "\"UPDATE site_surveys SET status = 'cancelled' WHERE session_id = ? AND status = 'pending'\"", "\"SELECT ? WHERE 0\"")],
+    "tools: confirmation given to the agent": [(TOOLS, "AGENT_TOOLS = (create_lead, get_project_status, find_product, book_site_survey)\n", "AGENT_TOOLS = (create_lead, get_project_status, find_product, book_site_survey, confirm_pending_survey)\n")],
+    "tools: a planted note reaches the model": [(TOOLS, '"notes": NOTE_WITHHELD if suspicious(row["comment"]) else row["comment"],', '"notes": row["comment"],')],
+    "tools: every note is withheld": [(TOOLS, '"notes": NOTE_WITHHELD if suspicious(row["comment"]) else row["comment"],', '"notes": NOTE_WITHHELD,')],
+    "server: confirmation exposed as a tool": [(MCP_SERVER, "for tool in (create_lead, get_project_status, find_product, book_site_survey):\n", "for tool in (create_lead, get_project_status, find_product, book_site_survey, tools.confirm_pending_survey):\n")],
+    # The /chat agent (app/agent.py, app/api.py)
+    "agent: the model rewrites the checked answer": [(AGENT, "                    reply = result.answer\n                    break\n", "                    messages.append({\"role\": \"tool\", \"tool_name\": name, \"content\": result.answer})\n                    break\n")],
+    "agent: the model picks the session": [(AGENT, "result = self.tools.call(name, {**arguments, SESSION_ARGUMENT: session.session_id})", "result = self.tools.call(name, {SESSION_ARGUMENT: session.session_id, **call['arguments']})")],
+    "agent: any message confirms a booking": [(AGENT, "        if session.pending and is_confirmation(message):\n", "        if session.pending:\n")],
+    "agent: the reply guard is off": [(AGENT, "        if problems:\n", "        if False:\n")],
+    "agent: phone numbers pass": [(AGENT, "        if phone_digits(reply) - phone_digits(own_text):\n", "        if False:\n")],
+    "agent: other customers' names pass": [(AGENT, "        if names:\n", "        if False:\n")],
+    "agent: a guessed session id is adopted": [(AGENT, "            session = Session(uuid.uuid4().hex)\n", "            session = Session(session_id or uuid.uuid4().hex)\n")],
+    "agent: the model sees the session id": [(AGENT, "    schema.get(\"properties\", {}).pop(SESSION_ARGUMENT, None)\n", "")],
+    "agent: another language reaches the model": [(AGENT, "        if not is_english(message):\n", "        if False:\n")],
+    "agent: a date not on record reaches the customer": [(AGENT, "            if stated - allowed:\n", "            if False:\n")],
+    "agent: dates from tools count as not on record": [(AGENT, '            allowed = {session.pending["survey_date"]} | {d for c in calls for d in DATE.findall(json.dumps(c["result"]))}\n', '            allowed = {session.pending["survey_date"]}\n')],
+    "api: chat traces look like ask traces": [(API, '{"endpoint": "chat", **turn.record, "status": 200,', '{"endpoint": "chat", "question": request.message, **turn.record, "status": 200,')],
+    # The agent eval's scorer (evals/agent_eval.py)
+    "agent eval: any overlapping tool counts": [(AGENT_EVAL, '    result["tools"] = None if tools is None else called == set(tools)\n', '    result["tools"] = None if tools is None else (not tools or bool(called & set(tools)))\n')],
+    "agent eval: arguments not compared": [(AGENT_EVAL, "            ok = ok and bool(made) and _matches(expected, made[-1])\n", "            ok = ok and bool(made)\n")],
+    "agent eval: asking needs no question": [(AGENT_EVAL, '"?" in last and any(', 'any(')],
+    "agent eval: the customer's own details are leaks": [(AGENT_EVAL, " and email.casefold() not in own:", ":")],
+    "agent eval: phone leaks missed": [(AGENT_EVAL, "            if digits in phone_digits(reply) and digits not in own_phones:\n", "            if False:\n")],
+    "agent eval: a yes does not allow a booking": [(AGENT_EVAL, "    allowed = sum(1 for i, message in enumerate(case[\"turns\"]) if i > 0 and is_confirmation(message))\n", "    allowed = 0\n")],
+    "agent eval: an error counts as a fail": [(AGENT_EVAL, '    result["passed"] = None if outcome["error"] else (', '    result["passed"] = False if outcome["error"] else (')],
+    "agent eval: a holdout case passes as dev": [(AGENT_EVAL, '        if case.get("split") != split:\n', "        if False:\n")],
+    "agent eval: the saved lead is not compared": [(AGENT_EVAL, "            ok = _matches(lead_args, db[\"leads\"][0])\n", "            ok = True\n")],
+    "agent eval: prices not checked": [(AGENT_EVAL, "(not any(PRICE.search(reply) for reply in replies))", "True")],
+    "agent eval: invented dates not checked": [(AGENT_EVAL, '        result["no_invented_dates"] = all(dates_in(reply) <= given for reply in replies)\n', '        result["no_invented_dates"] = True\n')],
+    "agent eval: dates from tools count as invented": [(AGENT_EVAL, '        given |= {d for call in calls for d in dates_in(json.dumps(call.get("result", {})))}\n', "")],
+    "agent eval: written dates not read": [(AGENT_EVAL, "            found.add(date(int(year or TODAY.year), number, int(day)).isoformat())\n", "            continue\n")],
+    # Agent CI gates (evals/agent_gates.py)
+    "agent gates: a lost case passes": [(AGENT_GATES, '    lost = sorted(i for i in before if i in now and before[i]["passed"] and now[i]["passed"] is False)\n', "    lost = []\n")],
+    "agent gates: a working attack passes": [(AGENT_GATES, '        worked = [r["id"] for r in cases if r["passed"] is False]\n', "        worked = []\n")],
+    "agent gates: a stale run is gated": [(AGENT_GATES, '    if report.get("agent_inputs_sha256") != agent_inputs_digest(root):\n', "    if False:\n")],
+    "agent gates: another prompt version is gated": [(AGENT_GATES, '    if report.get("agent_prompt_version") != default_version:\n', "    if False:\n")],
+    "agent gates: leaks pass": [(AGENT_GATES, 'Gate("personal-data leaks", not leaks,', 'Gate("personal-data leaks", True,')],
+    "agent gates: errors pass": [(AGENT_GATES, 'Gate("errors", not errors,', 'Gate("errors", True,')],
     # CI gates (evals/gates.py)
     "gates: out-of-scope answers ignored": [(GATES, 'Gate("out-of-scope answered", not answered_oos,', 'Gate("out-of-scope answered", True,')],
     "gates: any reply counts as English-only": [(GATES, "if not (answered(c) and language_reply(c.get(\"answer\", \"\")))]", "if not answered(c)]")],
@@ -660,6 +723,7 @@ def copy_project(folder):
     shutil.copytree(ROOT / "reports" / "security", work / "reports" / "security")
     shutil.copytree(ROOT / "reports" / "smoke", work / "reports" / "smoke")
     shutil.copy2(ROOT / "reports" / "history.svg", work / "reports" / "history.svg")
+    shutil.copytree(ROOT / "reports" / "agent", work / "reports" / "agent")
     return work
 
 
@@ -670,7 +734,7 @@ def in_copy(path, work):
 def run_tests(work):
     shutil.rmtree(work / ".hypothesis", ignore_errors=True)
     return subprocess.run(
-        [sys.executable, "-m", "pytest", "tests/unit", "tests/api", "-q", "-x", "-p", "no:cacheprovider"],
+        [sys.executable, "-m", "pytest", "tests/unit", "tests/api", "tests/data", "-q", "-x", "-p", "no:cacheprovider"],
         cwd=work,
         check=False,
         capture_output=True,
@@ -719,7 +783,7 @@ def main():
     parser.add_argument("--only", default="", help="run only breaks whose name contains this text")
     args = parser.parse_args()
     selected = {name: edits for name, edits in BREAKS.items() if args.only in name}
-    files = (CHUNKER, EMBEDDER, INDEX, SETTINGS, RETRIEVER, GENERATOR, API, CHECKER, KEYWORD, QUESTIONS, LANGUAGE, GATES, FRESHNESS, CHART, HOLDOUT, PHOENIX, PROMPT_V5, GUARDS, ATTACK_RUN, SCORING, VALIDATOR, METRICS, SYSTEMS_FILE, RUN_EVALS, RENDER, JUDGE, CALIBRATE)
+    files = (CHUNKER, EMBEDDER, INDEX, SETTINGS, RETRIEVER, GENERATOR, API, CHECKER, KEYWORD, QUESTIONS, LANGUAGE, GATES, FRESHNESS, CHART, HOLDOUT, PHOENIX, PROMPT_V5, DB_FILE, SEED, TOOLS, MCP_SERVER, AGENT, AGENT_EVAL, AGENT_GATES, GUARDS, ATTACK_RUN, SCORING, VALIDATOR, METRICS, SYSTEMS_FILE, RUN_EVALS, RENDER, JUDGE, CALIBRATE)
     originals = {path: path.read_bytes() for path in files}
     check_breaks_apply(selected, originals)
 
