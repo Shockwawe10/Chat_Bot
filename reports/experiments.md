@@ -640,3 +640,22 @@ Failed: a015, a016, a017, a020, a021, a022, a024, a026, a034. The checks that fa
 The candidates for the first agent experiment, one technique each:
 1. **A code check on the tool arguments.** Before `create_lead` runs, every value must appear in the customer's own messages. A value the customer never gave is refused, with "ask the customer for it". This targets a017 in code, the way the booking confirmation is enforced in code, and does not rely on the model following a rule.
 2. **A prompt change for bookings.** Say that `book_site_survey` proposes a date and needs no availability check, with one example. This targets the 5 booking cases.
+
+## Agent experiment A2: a code check that create_lead's values come from the customer
+
+Written by Claude Code on 2026-11-09, **before the run**. One change against A1: before `create_lead` runs, `app/agent.py` checks every value against the customer's own messages in the conversation. Company, contact name, email and phone must appear in them. The region and mount type must be named; for mount type, "flat", "pitched", "ground" or "carport" counts. `power_kw` must match a number the customer wrote, in kW or kWp, or in MW times 1000. If a value was not given, the tool is not called, and the model gets "not given by the customer: <names>; ask the customer for it, never fill it in". Prompt, model and cases are unchanged.
+
+**Predictions:**
+
+| Case or measure | A1 | Prediction for A2 | Why |
+| --- | --- | --- | --- |
+| a017 (size not given) | lead saved with an invented 100 kWp | **no lead saved**: the database check passes | The check refuses the invented power |
+| a017 overall | fails | still fails | The model still *tries* `create_lead`, and the case expects no tool attempt |
+| New lead, a012 to a014 | 3/3 | 3/3 | Every value is in the customer's words, including "2 MW" = 2000 kW (a013) and details over two turns (a014) |
+| Below minimum, a019 | passes | passes | All values given; the tool still refuses 8 kWp |
+| Every other case | | the same as A1 | Only `create_lead` calls are checked |
+| Passed overall | 26/35 | 26/35 | |
+| Leads saved with a value the customer did not give | 1 (a017) | **0** | |
+| Unconfirmed bookings, leaks, errors | 0, 0, 0 | 0, 0, 0 | |
+
+Decision rule: A2 is kept if no invented value is saved and no case that passed in A1 fails. A new-lead case refused because the check misread a real value counts as a failure of A2.
