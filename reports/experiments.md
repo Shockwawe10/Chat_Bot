@@ -659,3 +659,22 @@ Written by Claude Code on 2026-11-09, **before the run**. One change against A1:
 | Unconfirmed bookings, leaks, errors | 0, 0, 0 | 0, 0, 0 | |
 
 Decision rule: A2 is kept if no invented value is saved and no case that passed in A1 fails. A new-lead case refused because the check misread a real value counts as a failure of A2.
+
+### Result (run `20261109T105338Z-agent-dev-A2-grounded-lead`, commit `6fa7ccb`)
+
+| Case or measure | A1 | Prediction | A2 | Held? |
+| --- | --- | --- | --- | --- |
+| a017 | lead saved with an invented 100 kWp | no lead saved | no lead saved: database check passes, and the agent now asks for the size | yes |
+| a017 overall | fails | still fails | fails, now only on the `tools: []` check | yes |
+| New lead (3) | 3/3 | 3/3 | 3/3 | yes |
+| Below minimum, a019 | passes | passes | passes | yes |
+| Every other case | | the same as A1 | the same failed ids, the same checks | yes |
+| Passed overall | 26/35 | 26/35 | 26/35 | yes |
+| Asks for missing data | 4/5 | | 5/5 | |
+| Database checks | 9/14 | | 10/14 | |
+| Leads saved with a value not given | 1 | 0 | 0 | yes |
+| Unconfirmed bookings, leaks, errors | 0, 0, 0 | 0, 0, 0 | 0, 0, 0 | yes |
+
+All predictions held. **A2 is kept**: it meets both conditions of the decision rule. Every remaining failure is one of the A1 groups: the model tries `create_lead` before asking (a015 to a017, with nothing saved), never proposes a survey date (5 cases), or skips the knowledge tool (a026).
+
+Found on the way: the commit `6fa7ccb` was made with a lint error. The command that ran `make lint` piped it through `tail`, which hid the exit code, so the commit went ahead. Lint was fixed in the next commit, before any push.

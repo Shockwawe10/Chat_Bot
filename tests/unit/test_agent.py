@@ -18,8 +18,8 @@ from app.agent import (
     is_confirmation,
     lead_contacts,
     numbers_given,
-    ungrounded,
     phone_digits,
+    ungrounded,
 )
 from app.generator import ABSTAIN_SENTENCE, Answer
 from app.language import ENGLISH_ONLY
@@ -269,7 +269,7 @@ A017_CALL = {"company": "Pinecrest Hotel Test Ltd", "region": "South", "power_kw
 
 
 def test_the_invented_size_of_a017_is_refused_and_nothing_is_saved(make_agent, db):
-    agent, llm = make_agent(call("create_lead", **A017_CALL), say("How big is the plant, in kWp?"))
+    agent, _ = make_agent(call("create_lead", **A017_CALL), say("How big is the plant, in kWp?"))
     turn = agent.turn(Sessions().get(), A017)
     assert turn.tool_calls[0]["result"] == {"error": "not given by the customer: power_kw; ask the customer for it, never fill it in"}
     assert turn.reply == "How big is the plant, in kWp?"
