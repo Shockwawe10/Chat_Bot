@@ -77,7 +77,7 @@ def agent_inputs(root=ROOT):
     files = sorted((root / "app").glob("*.py")) + sorted((root / "mcp_server").glob("*.py"))
     files += sorted((root / "prompts").glob("agent_*.txt")) + [root / "data" / "allowed_contacts.txt"]
     files += [root / "data" / name for name in ("leads.csv", "products.csv", "projects.csv")]
-    files += [root / "evals" / "agent_cases.jsonl", root / "evals" / "agent_eval.py"]
+    files += [root / "evals" / name for name in ("agent_cases.jsonl", "agent_attacks.jsonl", "agent_eval.py")]
     return files
 
 

@@ -7,7 +7,7 @@ PYTHON ?= .venv/bin/python
 PHOENIX_BIN = .venv-phoenix/bin
 endif
 
-.PHONY: ingest seed run test test-real lint mutation eval eval-smoke smoke smoke-accept nightly results chart holdout phoenix agent-eval judge-labels calibrate attacks redteam
+.PHONY: ingest seed run test test-real lint mutation eval eval-smoke smoke smoke-accept nightly results chart holdout phoenix agent-eval agent-attacks agent-accept judge-labels calibrate attacks redteam
 
 # Build data/app.db from data/products.csv, leads.csv and projects.csv (drops leads the agent saved).
 seed:
@@ -45,10 +45,13 @@ smoke:
 smoke-accept:
 	$(PYTHON) -c "import shutil; shutil.copyfile('reports/smoke/latest.json', 'reports/smoke/reference.json')"
 
-# The full dev eval and the attack set, about 30 minutes (reports/latest.json, reports/security/latest.json).
+# The full dev eval and the attack set (about 30 minutes on 2026-11-07), then the agent dev cases and attacks
+# (reports/latest.json, reports/security/latest.json, reports/agent/latest.json, reports/agent/attacks/latest.json).
 nightly:
 	$(PYTHON) -m evals.run_evals
 	$(PYTHON) -m evals.attack_run --label nightly
+	$(PYTHON) -m evals.agent_eval --label nightly
+	$(PYTHON) -m evals.agent_eval --split attack --label nightly
 
 results:
 	$(PYTHON) -m evals.render_results
@@ -59,9 +62,18 @@ holdout:
 	$(PYTHON) -m evals.run_evals --split holdout --allow-holdout
 	$(PYTHON) -m evals.holdout
 
-# The agent eval on the dev cases (reports/agent/latest.json). Needs Ollama, not the index.
+# The agent eval on the dev cases (reports/agent/latest.json), checked by CI on every push
+# (tests/ai/test_agent.py). Needs Ollama, not the index.
 agent-eval:
 	$(PYTHON) -m evals.agent_eval
+
+# The 22 attacks on the agent (reports/agent/attacks/latest.json), checked by CI on every push.
+agent-attacks:
+	$(PYTHON) -m evals.agent_eval --split attack
+
+# Accept the latest agent dev run as the per-case reference. Only on purpose, with the reason in the PR.
+agent-accept:
+	$(PYTHON) -c "import shutil; shutil.copyfile('reports/agent/latest.json', 'reports/agent/reference.json')"
 
 # Redraw reports/history.svg from evals/history.csv (run_evals does it after every full dev run).
 chart:

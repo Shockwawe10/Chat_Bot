@@ -53,6 +53,7 @@ TOOLS = ROOT / "mcp_server" / "tools.py"
 MCP_SERVER = ROOT / "mcp_server" / "server.py"
 AGENT = ROOT / "app" / "agent.py"
 AGENT_EVAL = ROOT / "evals" / "agent_eval.py"
+AGENT_GATES = ROOT / "evals" / "agent_gates.py"
 
 PACK = "if joined > cfg.max or (joined > cfg.target and can_stop):"
 MERGE = "if fits and (_size(group) < cfg.min or _only_headings(group)):"
@@ -591,6 +592,13 @@ BREAKS = {
     "agent eval: invented dates not checked": [(AGENT_EVAL, '        result["no_invented_dates"] = all(dates_in(reply) <= given for reply in replies)\n', '        result["no_invented_dates"] = True\n')],
     "agent eval: dates from tools count as invented": [(AGENT_EVAL, '        given |= {d for call in calls for d in dates_in(json.dumps(call.get("result", {})))}\n', "")],
     "agent eval: written dates not read": [(AGENT_EVAL, "            found.add(date(int(year or TODAY.year), number, int(day)).isoformat())\n", "            continue\n")],
+    # Agent CI gates (evals/agent_gates.py)
+    "agent gates: a lost case passes": [(AGENT_GATES, '    lost = sorted(i for i in before if i in now and before[i]["passed"] and now[i]["passed"] is False)\n', "    lost = []\n")],
+    "agent gates: a working attack passes": [(AGENT_GATES, '        worked = [r["id"] for r in cases if r["passed"] is False]\n', "        worked = []\n")],
+    "agent gates: a stale run is gated": [(AGENT_GATES, '    if report.get("agent_inputs_sha256") != agent_inputs_digest(root):\n', "    if False:\n")],
+    "agent gates: another prompt version is gated": [(AGENT_GATES, '    if report.get("agent_prompt_version") != default_version:\n', "    if False:\n")],
+    "agent gates: leaks pass": [(AGENT_GATES, 'Gate("personal-data leaks", not leaks,', 'Gate("personal-data leaks", True,')],
+    "agent gates: errors pass": [(AGENT_GATES, 'Gate("errors", not errors,', 'Gate("errors", True,')],
     # CI gates (evals/gates.py)
     "gates: out-of-scope answers ignored": [(GATES, 'Gate("out-of-scope answered", not answered_oos,', 'Gate("out-of-scope answered", True,')],
     "gates: any reply counts as English-only": [(GATES, "if not (answered(c) and language_reply(c.get(\"answer\", \"\")))]", "if not answered(c)]")],
@@ -715,6 +723,7 @@ def copy_project(folder):
     shutil.copytree(ROOT / "reports" / "security", work / "reports" / "security")
     shutil.copytree(ROOT / "reports" / "smoke", work / "reports" / "smoke")
     shutil.copy2(ROOT / "reports" / "history.svg", work / "reports" / "history.svg")
+    shutil.copytree(ROOT / "reports" / "agent", work / "reports" / "agent")
     return work
 
 
@@ -774,7 +783,7 @@ def main():
     parser.add_argument("--only", default="", help="run only breaks whose name contains this text")
     args = parser.parse_args()
     selected = {name: edits for name, edits in BREAKS.items() if args.only in name}
-    files = (CHUNKER, EMBEDDER, INDEX, SETTINGS, RETRIEVER, GENERATOR, API, CHECKER, KEYWORD, QUESTIONS, LANGUAGE, GATES, FRESHNESS, CHART, HOLDOUT, PHOENIX, PROMPT_V5, DB_FILE, SEED, TOOLS, MCP_SERVER, AGENT, AGENT_EVAL, GUARDS, ATTACK_RUN, SCORING, VALIDATOR, METRICS, SYSTEMS_FILE, RUN_EVALS, RENDER, JUDGE, CALIBRATE)
+    files = (CHUNKER, EMBEDDER, INDEX, SETTINGS, RETRIEVER, GENERATOR, API, CHECKER, KEYWORD, QUESTIONS, LANGUAGE, GATES, FRESHNESS, CHART, HOLDOUT, PHOENIX, PROMPT_V5, DB_FILE, SEED, TOOLS, MCP_SERVER, AGENT, AGENT_EVAL, AGENT_GATES, GUARDS, ATTACK_RUN, SCORING, VALIDATOR, METRICS, SYSTEMS_FILE, RUN_EVALS, RENDER, JUDGE, CALIBRATE)
     originals = {path: path.read_bytes() for path in files}
     check_breaks_apply(selected, originals)
 
