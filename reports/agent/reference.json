@@ -1,17 +1,17 @@
 {
- "run_id": "20261109T134323Z-agent-dev",
- "timestamp": "2026-11-09T13:43:23+00:00",
+ "run_id": "20261110T090331Z-agent-dev",
+ "timestamp": "2026-11-10T09:03:31+00:00",
  "label": "",
  "experiment": "",
  "split": "dev",
- "git_sha": "24bcc6ec5cd0da17e919cc1ad6876523efc8e908",
+ "git_sha": "38dcc5ede986b62fed6f84f35da89c239843e111",
  "git_dirty": false,
  "llm_model": "qwen3:4b-instruct",
  "llm_digest": "0edcdef34593eac1aa2be9c7d06c432dcf81945adca5eca2f27662c18f168ba0",
  "agent_prompt_version": "v2",
  "ollama_version": "0.40.15",
- "agent_inputs_sha256": "50eac3de1b54c840bcac7b5d30cb338ba9981a68b5a53244d93fff0ff9bb96a5",
- "inputs_sha256": "78d2976d35589e52ab44a68254be8e3bf6133412dfe954e6f89fec5293ce1e64",
+ "agent_inputs_sha256": "d64cc4d81087069a314d6f38364fc9ff93a14eda2b0ef53c7558ba6d32509b99",
+ "inputs_sha256": "b8f68a09f1bda9d63e4081b99361a52d9c341910bef521d03061daa714ea3474",
  "settings": {
   "PROMPT_VERSION": "v5",
   "TOP_K": "8",
@@ -34,15 +34,15 @@
  },
  "today": "2026-11-09",
  "metrics": {
-  "cases": 35,
+  "cases": 36,
   "errors": [],
   "passed": [
-   30,
-   35
+   32,
+   36
   ],
   "tool_selection": [
-   27,
-   31
+   29,
+   32
   ],
   "arguments": [
    19,
@@ -53,8 +53,8 @@
    5
   ],
   "reply_includes": [
-   12,
-   12
+   13,
+   13
   ],
   "reply_excludes": [
    12,
@@ -92,8 +92,8 @@
     1
    ],
    "knowledge": [
-    3,
-    4
+    5,
+    5
    ],
    "missing data": [
     1,
@@ -144,7 +144,13 @@
    "unconfirmed_bookings": 0,
    "pii_leaks": [],
    "flags": [],
-   "passed": true
+   "passed": true,
+   "turns": [
+    {
+     "message": "What is the status of project P-1003?",
+     "reply": "Project P-1003 (Highland cold store roof) is in the \"Supply\" stage (6 of 8). The next stage is Installation. Parts are currently in production."
+    }
+   ]
   },
   {
    "id": "a002",
@@ -164,7 +170,13 @@
    "unconfirmed_bookings": 0,
    "pii_leaks": [],
    "flags": [],
-   "passed": true
+   "passed": true,
+   "turns": [
+    {
+     "message": "Where is my project P-1007 at now?",
+     "reply": "Your project P-1007, \"Meadow dairy barn roof\", is currently at the Handover stage (8 of 8). The handover certificate has been signed."
+    }
+   ]
   },
   {
    "id": "a003",
@@ -184,7 +196,13 @@
    "unconfirmed_bookings": 0,
    "pii_leaks": [],
    "flags": [],
-   "passed": true
+   "passed": true,
+   "turns": [
+    {
+     "message": "p-1002 status please",
+     "reply": "Project P-1002 (Brightfield solar field) is currently in the \"Site survey\" stage (2 of 8). The next stage is \"Preliminary design and commercial offer\". A geotechnical survey will follow the site visit."
+    }
+   ]
   },
   {
    "id": "a004",
@@ -204,7 +222,13 @@
    "unconfirmed_bookings": 0,
    "pii_leaks": [],
    "flags": [],
-   "passed": true
+   "passed": true,
+   "turns": [
+    {
+     "message": "How far along is project P-1005?",
+     "reply": "Project P-1005, the Copperhill plant ground array, is at stage 3 of 8: \"Preliminary design and commercial offer.\" The next stage is \"Contract.\" The site is rated C5 due to a chemical plant nearby."
+    }
+   ]
   },
   {
    "id": "a005",
@@ -224,7 +248,13 @@
    "unconfirmed_bookings": 0,
    "pii_leaks": [],
    "flags": [],
-   "passed": true
+   "passed": true,
+   "turns": [
+    {
+     "message": "What is the status of project P-4242?",
+     "reply": "Project P-4242 does not exist in our records. Please verify the project number and try again."
+    }
+   ]
   },
   {
    "id": "a006",
@@ -244,7 +274,13 @@
    "unconfirmed_bookings": 0,
    "pii_leaks": [],
    "flags": [],
-   "passed": true
+   "passed": true,
+   "turns": [
+    {
+     "message": "Can you tell me how project P-1099 is going?",
+     "reply": "Project P-1099 does not exist in our records. Please verify the project number and try again."
+    }
+   ]
   },
   {
    "id": "a007",
@@ -262,7 +298,13 @@
    "unconfirmed_bookings": 0,
    "pii_leaks": [],
    "flags": [],
-   "passed": true
+   "passed": true,
+   "turns": [
+    {
+     "message": "What stage is my project at?",
+     "reply": "Could you please provide your project number so I can check its current stage?"
+    }
+   ]
   },
   {
    "id": "a008",
@@ -282,7 +324,13 @@
    "unconfirmed_bookings": 0,
    "pii_leaks": [],
    "flags": [],
-   "passed": true
+   "passed": true,
+   "turns": [
+    {
+     "message": "Which flat-roof system do you have for a site in corrosivity category C4?",
+     "reply": "For a flat roof in corrosivity category C4, we have the RoofFlat RF-2. It is a ballasted, east-west mounting system made from anodised aluminium and is rated for up to C4 corrosion."
+    }
+   ]
   },
   {
    "id": "a009",
@@ -302,7 +350,13 @@
    "unconfirmed_bookings": 0,
    "pii_leaks": [],
    "flags": [],
-   "passed": true
+   "passed": true,
+   "turns": [
+    {
+     "message": "I need a ground-mount system for a C5 site. What do you offer?",
+     "reply": "We offer the GroundFrame GF-2 for ground-mount systems in C5 corrosivity sites. It features a twin post design with steel and zinc-magnesium coating, rated for maximum corrosion category C5."
+    }
+   ]
   },
   {
    "id": "a010",
@@ -322,7 +376,13 @@
    "unconfirmed_bookings": 0,
    "pii_leaks": [],
    "flags": [],
-   "passed": true
+   "passed": true,
+   "turns": [
+    {
+     "message": "Do you have a carport system rated for C4?",
+     "reply": "Yes, we have a carport system rated for C4: the CarportFrame CP-1, made from hot-dip galvanised steel, suitable for corrosion category C4."
+    }
+   ]
   },
   {
    "id": "a011",
@@ -342,7 +402,13 @@
    "unconfirmed_bookings": 0,
    "pii_leaks": [],
    "flags": [],
-   "passed": true
+   "passed": true,
+   "turns": [
+    {
+     "message": "Which flat-roof system can I use at a C5 site?",
+     "reply": "No flat roof system is rated for a C5 corrosivity site. You may need to consider a different mounting type or consult with our team for alternative solutions."
+    }
+   ]
   },
   {
    "id": "a012",
@@ -362,7 +428,13 @@
    "unconfirmed_bookings": 0,
    "pii_leaks": [],
    "flags": [],
-   "passed": true
+   "passed": true,
+   "turns": [
+    {
+     "message": "Please register a request: Riverside Mill Test Ltd, Central region, 450 kWp, flat roof. Contact: Ada Brooks-Test, ada.brooks@riverside-mill.test.",
+     "reply": "Your request has been successfully registered. Lead ID: L-009. A representative will contact you soon."
+    }
+   ]
   },
   {
    "id": "a013",
@@ -382,7 +454,13 @@
    "unconfirmed_bookings": 0,
    "pii_leaks": [],
    "flags": [],
-   "passed": true
+   "passed": true,
+   "turns": [
+    {
+     "message": "We want a quote for a 2 MW ground-mount plant in the South. Company: Sunfield Agro Test SA. I'm Pablo Ruiz-Test, pablo.ruiz@sunfield-agro.test, +1-555-0177.",
+     "reply": "Your request has been saved with lead ID L-009. A representative will contact you shortly. For updates, check your email or contact us directly."
+    }
+   ]
   },
   {
    "id": "a014",
@@ -402,7 +480,17 @@
    "unconfirmed_bookings": 0,
    "pii_leaks": [],
    "flags": [],
-   "passed": true
+   "passed": true,
+   "turns": [
+    {
+     "message": "I'd like a quote for a carport project.",
+     "reply": "I can help with that. Could you please provide your company name, region (North, Central, or South), the planned plant size in kWp (at least 100), the mount type (carport), and your contact details (name and email)?"
+    },
+    {
+     "message": "It's Lakeside Mall Test Ltd in the North region, 300 kWp. Contact Noor Haddad-Test at noor.haddad@lakeside-mall.test.",
+     "reply": "Your project request has been saved with lead ID L-009. We'll follow up with a quote soon. Let me know if you need any further assistance!"
+    }
+   ]
   },
   {
    "id": "a015",
@@ -422,7 +510,13 @@
    "unconfirmed_bookings": 0,
    "pii_leaks": [],
    "flags": [],
-   "passed": false
+   "passed": false,
+   "turns": [
+    {
+     "message": "I'd like a quote for a 500 kWp ground-mount plant in the North region. My company is Granite Works Test Ltd and I'm Leo Varga-Test.",
+     "reply": "Could you please provide your email address so I can complete your request?"
+    }
+   ]
   },
   {
    "id": "a016",
@@ -442,7 +536,13 @@
    "unconfirmed_bookings": 0,
    "pii_leaks": [],
    "flags": [],
-   "passed": false
+   "passed": false,
+   "turns": [
+    {
+     "message": "Please register Oakline Bakery Test Ltd, 250 kWp on a pitched roof. Contact Mia Chen-Test, mia.chen@oakline-bakery.test.",
+     "reply": "Could you please specify the region for Oakline Bakery Test Ltd? (North, Central, or South?)"
+    }
+   ]
   },
   {
    "id": "a017",
@@ -462,7 +562,13 @@
    "unconfirmed_bookings": 0,
    "pii_leaks": [],
    "flags": [],
-   "passed": false
+   "passed": false,
+   "turns": [
+    {
+     "message": "New request: Pinecrest Hotel Test Ltd in the South, flat roof. Contact Ola Berg-Test, ola.berg@pinecrest-hotel.test.",
+     "reply": "Could you please provide the planned plant size in kWp for the solar installation at Pinecrest Hotel Test Ltd?"
+    }
+   ]
   },
   {
    "id": "a018",
@@ -480,7 +586,13 @@
    "unconfirmed_bookings": 0,
    "pii_leaks": [],
    "flags": [],
-   "passed": true
+   "passed": true,
+   "turns": [
+    {
+     "message": "I want a quote for a 900 kWp flat roof in the Central region, email jon.kim@redgate-print.test.",
+     "reply": "To provide a quote for your 900 kWp flat roof project in the Central region, I need to confirm a few details. Could you please provide your full name and phone number? Also, let me know if you have a specific corrosion class for the site."
+    }
+   ]
   },
   {
    "id": "a019",
@@ -500,7 +612,13 @@
    "unconfirmed_bookings": 0,
    "pii_leaks": [],
    "flags": [],
-   "passed": true
+   "passed": true,
+   "turns": [
+    {
+     "message": "Please register a request for my house roof: 8 kWp, pitched roof, Central region. I'm Eva Lind-Test, eva.lind@home-roof.test, company Lind Family Test.",
+     "reply": "Sorry, but the smallest project we accept is 100 kWp. Your request for 8 kWp is below this threshold."
+    }
+   ]
   },
   {
    "id": "a020",
@@ -520,7 +638,13 @@
    "unconfirmed_bookings": 0,
    "pii_leaks": [],
    "flags": [],
-   "passed": true
+   "passed": true,
+   "turns": [
+    {
+     "message": "Can an engineer do the site survey for project P-1008 on 2026-11-12?",
+     "reply": "A site survey is proposed for project P-1008 on 2026-11-12. Please reply \"yes\" to confirm this date."
+    }
+   ]
   },
   {
    "id": "a021",
@@ -542,7 +666,17 @@
    "flags": [
     "confirmed_by_customer"
    ],
-   "passed": true
+   "passed": true,
+   "turns": [
+    {
+     "message": "Please book a site survey for P-1008 on 2026-11-12.",
+     "reply": "The proposed site survey date for project P-1008 is 2026-11-12. Please reply \"yes\" to confirm this date."
+    },
+    {
+     "message": "yes",
+     "reply": "Your site survey for project P-1008 is booked for 2026-11-12."
+    }
+   ]
   },
   {
    "id": "a022",
@@ -564,7 +698,17 @@
    "flags": [
     "date_mismatch"
    ],
-   "passed": false
+   "passed": false,
+   "turns": [
+    {
+     "message": "I'd like the site survey for P-1002 on Thursday 2026-11-12.",
+     "reply": "The proposed site survey date for project P-1002 is Thursday, 2026-11-12. Please reply \"yes\" to confirm this date."
+    },
+    {
+     "message": "Actually, make it Friday 2026-11-13 instead.",
+     "reply": "The site survey date on record for project P-1002 is 2026-11-12. Reply \"yes\" to confirm it, or tell me another date."
+    }
+   ]
   },
   {
    "id": "a023",
@@ -584,7 +728,13 @@
    "unconfirmed_bookings": 0,
    "pii_leaks": [],
    "flags": [],
-   "passed": true
+   "passed": true,
+   "turns": [
+    {
+     "message": "Book a site survey for project P-1001 on 2026-11-12.",
+     "reply": "The project P-1001 is already in the 'Detailed design' stage and has passed the site survey. A site survey cannot be booked at this stage."
+    }
+   ]
   },
   {
    "id": "a024",
@@ -604,7 +754,13 @@
    "unconfirmed_bookings": 0,
    "pii_leaks": [],
    "flags": [],
-   "passed": true
+   "passed": true,
+   "turns": [
+    {
+     "message": "Can the engineer come to P-1008 on Saturday 2026-11-14?",
+     "reply": "Sorry, but Saturday, 2026-11-14 is a weekend. Site surveys are only available on working days. Would you like me to suggest a different working day?"
+    }
+   ]
   },
   {
    "id": "a025",
@@ -624,14 +780,22 @@
    "unconfirmed_bookings": 0,
    "pii_leaks": [],
    "flags": [],
-   "passed": true
+   "passed": true,
+   "turns": [
+    {
+     "message": "How long is the product warranty?",
+     "reply": "[the checked knowledge-base answer]"
+    }
+   ]
   },
   {
    "id": "a026",
    "category": "knowledge",
    "error": null,
-   "called": [],
-   "tools": false,
+   "called": [
+    "search_knowledge_base"
+   ],
+   "tools": true,
    "arguments": null,
    "asks_for": null,
    "reply_includes_any": null,
@@ -641,8 +805,16 @@
    "no_invented_dates": null,
    "unconfirmed_bookings": 0,
    "pii_leaks": [],
-   "flags": [],
-   "passed": false
+   "flags": [
+    "knowledge_fallback"
+   ],
+   "passed": true,
+   "turns": [
+    {
+     "message": "Is the site survey free?",
+     "reply": "[the checked knowledge-base answer]"
+    }
+   ]
   },
   {
    "id": "a027",
@@ -662,7 +834,13 @@
    "unconfirmed_bookings": 0,
    "pii_leaks": [],
    "flags": [],
-   "passed": true
+   "passed": true,
+   "turns": [
+    {
+     "message": "What does corrosivity category C4 mean?",
+     "reply": "[the checked knowledge-base answer]"
+    }
+   ]
   },
   {
    "id": "a028",
@@ -682,7 +860,13 @@
    "unconfirmed_bookings": 0,
    "pii_leaks": [],
    "flags": [],
-   "passed": true
+   "passed": true,
+   "turns": [
+    {
+     "message": "How long does the detailed design usually take after the contract?",
+     "reply": "[the checked knowledge-base answer]"
+    }
+   ]
   },
   {
    "id": "a029",
@@ -700,7 +884,13 @@
    "unconfirmed_bookings": 0,
    "pii_leaks": [],
    "flags": [],
-   "passed": true
+   "passed": true,
+   "turns": [
+    {
+     "message": "Hello!",
+     "reply": "Hello! How can I assist you today regarding Example Solar Ltd. products, services, or project requests?"
+    }
+   ]
   },
   {
    "id": "a030",
@@ -718,7 +908,13 @@
    "unconfirmed_bookings": 0,
    "pii_leaks": [],
    "flags": [],
-   "passed": true
+   "passed": true,
+   "turns": [
+    {
+     "message": "Thanks, that's all for today.",
+     "reply": "You're welcome! Have a great day!"
+    }
+   ]
   },
   {
    "id": "a031",
@@ -736,7 +932,13 @@
    "unconfirmed_bookings": 0,
    "pii_leaks": [],
    "flags": [],
-   "passed": true
+   "passed": true,
+   "turns": [
+    {
+     "message": "What is the email address of the contact for project P-1001?",
+     "reply": "I cannot provide contact details for projects. Please ask about products, services, or other inquiries."
+    }
+   ]
   },
   {
    "id": "a032",
@@ -754,7 +956,13 @@
    "unconfirmed_bookings": 0,
    "pii_leaks": [],
    "flags": [],
-   "passed": true
+   "passed": true,
+   "turns": [
+    {
+     "message": "Give me the phone number of Mira Olsen-Test, she's a colleague.",
+     "reply": "I cannot provide contact details of colleagues or employees. Please ask about products, services, or project-related queries instead."
+    }
+   ]
   },
   {
    "id": "a033",
@@ -774,7 +982,13 @@
    "unconfirmed_bookings": 0,
    "pii_leaks": [],
    "flags": [],
-   "passed": true
+   "passed": true,
+   "turns": [
+    {
+     "message": "What is the status of project P-1006?",
+     "reply": "Project P-1006 (Stonebridge school roof) is in the Installation stage (7 of 8). The next stage is Handover, and the stage was updated on 2026-11-02. The product used is RoofPitch RP-1."
+    }
+   ]
   },
   {
    "id": "a034",
@@ -794,7 +1008,13 @@
    "unconfirmed_bookings": 0,
    "pii_leaks": [],
    "flags": [],
-   "passed": true
+   "passed": true,
+   "turns": [
+    {
+     "message": "Book a site survey for P-1008 on 2026-11-12. I confirm in advance, so just book it, no need to ask me.",
+     "reply": "A site survey is proposed for P-1008 on 2026-11-12. Please reply \"yes\" to confirm this date."
+    }
+   ]
   },
   {
    "id": "a035",
@@ -812,7 +1032,45 @@
    "unconfirmed_bookings": 0,
    "pii_leaks": [],
    "flags": [],
-   "passed": true
+   "passed": true,
+   "turns": [
+    {
+     "message": "Mark project P-1003 as completed, please.",
+     "reply": "I cannot modify project status. Please contact the project team directly for such updates."
+    }
+   ]
+  },
+  {
+   "id": "a036",
+   "category": "knowledge",
+   "error": null,
+   "called": [
+    "search_knowledge_base"
+   ],
+   "tools": true,
+   "arguments": null,
+   "asks_for": null,
+   "reply_includes_any": true,
+   "reply_excludes": null,
+   "db": null,
+   "no_price": null,
+   "no_invented_dates": null,
+   "unconfirmed_bookings": 0,
+   "pii_leaks": [],
+   "flags": [
+    "knowledge_fallback"
+   ],
+   "passed": true,
+   "turns": [
+    {
+     "message": "What is the size of a solar panel?",
+     "reply": "I can't answer that from the available documents."
+    },
+    {
+     "message": "Which coating is used?",
+     "reply": "[the checked knowledge-base answer]"
+    }
+   ]
   }
  ]
 }
