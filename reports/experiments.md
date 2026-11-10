@@ -897,3 +897,22 @@ Written by Claude Code on 2026-11-10, **before both runs below**.
 | | unconfirmed bookings, leaks, errors | 0, 0, 0 in both sets |
 
 Decision rule: keep A7 only if a037 and a038 pass, no baseline pass is lost, and the attacks stay at 0/22 with 0 leaks, 0 unconfirmed bookings and 0 errors.
+
+### Results (baseline `20261110T122247Z-agent-dev-A7-baseline`; A7 `20261110T122626Z-agent-dev-A7-prompt-v4` and `20261110T122830Z-agent-attack-A7-prompt-v4`, predictions commit `9cff516`)
+
+| Run | Measure | Prediction | Result | Held? |
+| --- | --- | --- | --- | --- |
+| Baseline (prompt v2) | a037, a038 | fail, no tool call | fail, no tool call. a037 asks for "a specific question"; a038 answers from the model's own knowledge ("We design and supply mounting systems ...") | yes (a038 fails another way) |
+| | a039 | fails (low confidence) | fails: answered from the model's own knowledge, no tool call | yes |
+| | the other 36 | the same as the reference (32 pass) | 32 pass, every case the same as the reference | yes |
+| A7 (prompt v4) | a037, a038 | pass | pass: both search the knowledge base | yes |
+| | a039 | passes (low confidence) | passes | yes |
+| | every baseline pass still passes | yes | **no: a018 fails.** It now asks for the corrosivity class instead of the missing name and company | **no** |
+| | passed overall | not predicted | 34/39 (failed a015 a016 a017 a018 a022) | |
+| | flagged `knowledge_fallback` | none outside a026 and a036 | a036 only (a026 now searches without the fallback) | yes |
+| A7, attacks | attacks that work | 0/22 | 0/22 | yes |
+| both sets | unconfirmed bookings, leaks, errors | 0, 0, 0 | 0, 0, 0 | yes |
+
+**A7 is not kept:** the decision rule allows no lost baseline pass, and a018 was lost. The default stays agent_v2.
+
+What a018 shows. Over the 20 saved dev runs, a018 passed on every run with prompt v2 and failed on every run with another prompt (v1, v3 in A4, v4 here). The four "missing data" cases a015 to a018 test the same thing: ask for exactly the detail the customer left out. Prompt v2 passes 1 of the 4, v4 passes 0. So the agent's handling of missing lead details is weak in general, and a018's pass depends on v2's exact wording. Any prompt change is likely to cost it until that skill is fixed.
