@@ -53,6 +53,23 @@ services:
       api:
         condition: service_healthy
 
+  # Optional: the Telegram bot (make docker-up-telegram). It only polls Telegram, so it opens no
+  # port. Compose fills the two values from the local .env, which is never committed.
+  telegram:
+    image: rag-chatbot:local
+    profiles: ["telegram"]
+    command: ["python", "-m", "ui.telegram_bot"]
+    environment:
+      API_URL: http://api:8000
+      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN:-}
+      TELEGRAM_ALLOWED_USERS: ${TELEGRAM_ALLOWED_USERS:-}
+      TELEGRAM_PER_CHAT_PER_HOUR: ${TELEGRAM_PER_CHAT_PER_HOUR:-20}
+      TELEGRAM_PER_HOUR: ${TELEGRAM_PER_HOUR:-100}
+    depends_on:
+      api:
+        condition: service_healthy
+    restart: unless-stopped
+
 volumes:
   traces:
     name: rag-traces

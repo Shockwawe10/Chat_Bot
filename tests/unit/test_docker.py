@@ -88,6 +88,13 @@ def test_the_containers_use_the_committed_settings_and_the_desktop_ollama_the_ev
     assert compose("docker-compose.ollama.yml")["services"]["api"]["environment"] == {"OLLAMA_URL": "http://ollama:11434"}
 
 
+def test_the_telegram_bot_is_optional_and_its_token_comes_only_from_the_local_env():
+    telegram = compose()["services"]["telegram"]
+    assert telegram["profiles"] == ["telegram"] and "ports" not in telegram
+    assert telegram["environment"]["TELEGRAM_BOT_TOKEN"] == "${TELEGRAM_BOT_TOKEN:-}"
+    assert dotenv_values(ROOT / ".env.example")["TELEGRAM_BOT_TOKEN"] == ""
+
+
 class Reply:
     def __init__(self, body):
         self.body = body

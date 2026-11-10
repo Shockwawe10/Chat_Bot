@@ -33,6 +33,14 @@ run:
 docker-up:
 	docker compose up --build --detach --wait
 
+# The Telegram bot next to the demo (TELEGRAM_BOT_TOKEN in .env); telegram runs it outside Docker
+# against make run.
+docker-up-telegram:
+	docker compose --profile telegram up --build --detach --wait
+
+telegram:
+	$(PYTHON) -m ui.telegram_bot
+
 docker-up-ollama:
 	docker compose -f docker-compose.yml -f docker-compose.ollama.yml up --build --detach --wait
 
@@ -40,7 +48,7 @@ docker-models:
 	$(PYTHON) docker/copy_models.py
 
 docker-down:
-	docker compose -f docker-compose.yml -f docker-compose.ollama.yml down
+	docker compose -f docker-compose.yml -f docker-compose.ollama.yml --profile telegram down
 
 test:
 	$(PYTHON) -m pytest
