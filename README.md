@@ -16,6 +16,7 @@ An AI QA portfolio project: an English-language customer support chatbot that an
 
 - [Why this project](#why-this-project)
 - [Demo domain](#demo-domain)
+- [Demo](#demo)
 - [Results](#results)
 - [Architecture](#architecture)
 - [Tech stack](#tech-stack)
@@ -59,6 +60,21 @@ This domain is a good test bed because a wrong answer there causes real harm:
 - Requests turn into actions (a lead, a site survey booking) that must not happen without confirmation.
 
 The company, its products, projects and customers are invented for this project. Any resemblance to a real company is unintended.
+
+---
+
+## Demo
+
+![The chat window: a product question answered from the knowledge base with its sources, and a project status from the database](docs/demo-chat.png)
+
+```bash
+make docker-up      # then open http://127.0.0.1:8501
+make docker-down    # stop it
+```
+
+It needs Docker Desktop and the desktop Ollama 0.40.15 with the three models in `.env.example` (`ollama pull` each). The API refuses to start on another Ollama version. The demo is the system the evals measured: on 2026-11-10 its 21 smoke answers came out word for word the same as the committed run (`reports/runs/20261110T114458Z-http-dev-smoke-docker-desktop-ollama.json`). The demo database and the index are rebuilt on every start, so leads and bookings made in the demo do not outlive a restart. The chat window is reachable only from this PC.
+
+A public link is postponed (owner's decision, 2026-11-10). The Telegram bot that would give one, without opening a port on the PC, is parked on the `later/telegram-bot` branch.
 
 ---
 
@@ -211,6 +227,7 @@ Chat_Bot/
 ├── docker-compose.ollama.yml  # optional: Ollama in Docker on the GPU
 ├── .dockerignore            # keeps .env, the database and the index out of the image
 ├── docker/                  # start_api.py (version check, seed, index, server), copy_models.py
+├── docs/demo-chat.png       # the README demo screenshot
 ├── Makefile
 ├── .env.example
 ├── .gitignore
@@ -656,9 +673,9 @@ Personal data leakage (LLM02) needs the agent and its customer data, so it is te
 - [x] Streamlit UI on `/chat` (`ui/app.py`, `make ui`): question, answer, sources, and booking proposals with the confirmation step
 - [x] Playwright tests (`tests/e2e`, `make e2e`, on every push): happy path, empty input, long answer, API error, sources displayed, plus the API being down, the booking confirmation and a new conversation, against a stand-in API. `python -m tests.e2e.breaks` shows each test catching its break
 - [x] Dockerfile and a compose file (`make docker-up`): the API and the chat window on `127.0.0.1:8501`, using the desktop Ollama the evals ran on, which the API checks is the pinned version; fresh database and index on every start. With it, the 21 smoke answers came out word for word the same as the committed run (`reports/runs/20261110T114458Z-http-dev-smoke-docker-desktop-ollama.json`). Ollama in Docker on the GPU is optional (`docker-compose.ollama.yml`, `make docker-up-ollama`): 20 of 21 the same, g032 refused, cause not measured (`reports/runs/20261110T112859Z-http-dev-smoke-docker.json`). CI builds the image from a clean clone and imports and seeds it
-- [ ] Optional public link through a tunnel from the owner's PC, only with a password, a request limit and a database reset on each start; switched off when not needed
+- [ ] Optional public link from the owner's PC. **Postponed** (owner's decision, 2026-11-10). The plan changed from a tunnel to a Telegram bot, which polls Telegram and so opens no port; it is written and tested against a stand-in Telegram (per-chat and hourly limits, optional allowed users, the token never logged) and parked on the `later/telegram-bot` branch until a bot token is set up. The database reset on each start is already in the Docker demo
 
-**Exit criteria:** E2E suite green in CI; Docker image builds from a clean clone; a README demo section with screenshots and the command for a live link.
+**Exit criteria:** E2E suite green in CI; Docker image builds from a clean clone; a README [demo section](#demo) with a screenshot and the command to run it. The live link is postponed (owner's decision, 2026-11-10): the Telegram bot that would give it is parked on the `later/telegram-bot` branch.
 
 **Changed on 2026-11-10 (owner's decision): local Docker instead of AWS.** The demo would need a GPU server: about $0.53 per hour in the US while it runs, plus about $4.00 a month for its disk, or $391.63 a month if left on (third-party price trackers, November 2026). A cheap server with the Claude API instead would make the demo a different system from the one the evals measured. So the demo runs in Docker on the owner's PC, with an optional tunnel for a public link while it is on.
 
