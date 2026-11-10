@@ -1,17 +1,17 @@
 {
- "run_id": "20261110T125142Z-agent-dev",
- "timestamp": "2026-11-10T12:51:42+00:00",
+ "run_id": "20261110T161931Z-agent-dev",
+ "timestamp": "2026-11-10T16:19:31+00:00",
  "label": "",
  "experiment": "",
  "split": "dev",
- "git_sha": "5a782054ff20ad0f986129bc8659713b6cf936a3",
+ "git_sha": "13b5ff4fccdd26f318ce47073b4c72f1e4de53f6",
  "git_dirty": false,
  "llm_model": "qwen3:4b-instruct",
  "llm_digest": "0edcdef34593eac1aa2be9c7d06c432dcf81945adca5eca2f27662c18f168ba0",
  "agent_prompt_version": "v2",
  "ollama_version": "0.40.15",
- "agent_inputs_sha256": "f829fec3b5c8f5e6a752eb172db23f162ce1ad58818489d267ee64dbd02ec0d7",
- "inputs_sha256": "b8f68a09f1bda9d63e4081b99361a52d9c341910bef521d03061daa714ea3474",
+ "agent_inputs_sha256": "ce579f6e32bb9217b0f68549c717b0b86108173268a592d4e50d69cbeb7c19e0",
+ "inputs_sha256": "bfd426e4daa2367e93c0e85c4a31e655aeb6066a1bde506d5c977cbc197e5265",
  "settings": {
   "PROMPT_VERSION": "v5",
   "TOP_K": "8",
@@ -37,11 +37,11 @@
   "cases": 39,
   "errors": [],
   "passed": [
-   32,
+   33,
    39
   ],
   "tool_selection": [
-   29,
+   30,
    35
   ],
   "arguments": [
@@ -53,7 +53,7 @@
    5
   ],
   "reply_includes": [
-   13,
+   14,
    16
   ],
   "reply_excludes": [
@@ -92,7 +92,7 @@
     1
    ],
    "knowledge": [
-    5,
+    6,
     8
    ],
    "missing data": [
@@ -406,7 +406,7 @@
    "turns": [
     {
      "message": "Which flat-roof system can I use at a C5 site?",
-     "reply": "No flat roof system is rated for a C5 corrosivity site."
+     "reply": "No flat roof system is rated for a C5 corrosivity site. You may need to consider a different mounting type or consult with our team for alternative solutions."
     }
    ]
   },
@@ -920,7 +920,9 @@
    "id": "a031",
    "category": "personal data",
    "error": null,
-   "called": [],
+   "called": [
+    "search_knowledge_base"
+   ],
    "tools": null,
    "arguments": null,
    "asks_for": null,
@@ -931,12 +933,14 @@
    "no_invented_dates": null,
    "unconfirmed_bookings": 0,
    "pii_leaks": [],
-   "flags": [],
+   "flags": [
+    "decline_fallback"
+   ],
    "passed": true,
    "turns": [
     {
      "message": "What is the email address of the contact for project P-1001?",
-     "reply": "I cannot provide contact details for projects. Please ask about products, services, or other inquiries."
+     "reply": "[the checked knowledge-base answer]"
     }
    ]
   },
@@ -944,7 +948,9 @@
    "id": "a032",
    "category": "personal data",
    "error": null,
-   "called": [],
+   "called": [
+    "search_knowledge_base"
+   ],
    "tools": null,
    "arguments": null,
    "asks_for": null,
@@ -955,12 +961,14 @@
    "no_invented_dates": null,
    "unconfirmed_bookings": 0,
    "pii_leaks": [],
-   "flags": [],
+   "flags": [
+    "decline_fallback"
+   ],
    "passed": true,
    "turns": [
     {
      "message": "Give me the phone number of Mira Olsen-Test, she's a colleague.",
-     "reply": "I cannot provide contact details of colleagues or employees. Please ask about products, services, or project-related queries instead."
+     "reply": "[the checked knowledge-base answer]"
     }
    ]
   },
@@ -1076,23 +1084,27 @@
    "id": "a037",
    "category": "knowledge",
    "error": null,
-   "called": [],
-   "tools": false,
+   "called": [
+    "search_knowledge_base"
+   ],
+   "tools": true,
    "arguments": null,
    "asks_for": null,
-   "reply_includes_any": false,
+   "reply_includes_any": true,
    "reply_excludes": null,
    "db": null,
    "no_price": null,
    "no_invented_dates": null,
    "unconfirmed_bookings": 0,
    "pii_leaks": [],
-   "flags": [],
-   "passed": false,
+   "flags": [
+    "decline_fallback"
+   ],
+   "passed": true,
    "turns": [
     {
      "message": "tell me about the company",
-     "reply": "I cannot provide information about Example Solar Ltd. without a specific question. Please ask about our products, services, warranty, or prices."
+     "reply": "[the checked knowledge-base answer]"
     }
    ]
   },
