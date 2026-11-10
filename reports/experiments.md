@@ -958,3 +958,30 @@ Decision rule: keep A8 only if a037 and a038 pass, no baseline pass is lost (a01
 **A8 is not kept:** two baseline passes were lost, both complete project requests, which is the agent's main job. The default stays agent_v2.
 
 After A7 and A8. Each prompt change so far fixed its target and broke something else: v4 cost a018, v5 cost a013 and a014. In the A8 replies, the list of six details made the model ask for details it already had (a014, a017).
+
+## Agent experiment A9: a question turned down in other words gets the knowledge base's answer, if it has one (code)
+
+Written by Claude Code on 2026-11-10, **before the runs below**. The owner chose this after A8.
+
+**Measured before writing (real pipeline, `/ask`, desktop Ollama 0.40.15, prompt v5 answer prompt).** The knowledge base gives "I can't answer that from the available documents." to all 10 messages the agent rightly refuses in the committed runs (a031, a032, x03, x07's and x11's second turn, x09, x10, x12, x18, x22) and to "tell me about the company". It answers "Which services can you provide" ("Example Solar Ltd. offers four services: Design, Supply, Installation, and Maintenance. ..."). For "tell me about the company", the answer model did write an answer, but one sentence came out garbled ("It has supplied mounting systems for more than 40 than 400 MWp of solar plants."); the answer check marked it unsupported and, by design, the whole answer became the refusal. That is a RAG limit, not part of A9.
+
+**The change (A9, in `app/agent.py`, prompt v2 unchanged).** A second pattern, `MODEL_DECLINE`, matches a reply that turns the question down in other words: "can't/cannot/unable to" followed within two words by provide, list, give, share, tell, describe, explain or offer, or "a/any (more) specific question". If the model ends a turn with no tool call and such a reply (and A6's pattern did not match), the code runs the knowledge search with the customer's message. **Only a real answer replaces the reply** (flag `decline_fallback`, the search shown as a tool call, sources cited). If the knowledge base has no answer, the model's reply stands, no tool call is reported, and the search is kept in the trace as `knowledge_probe`. Reply guard unchanged and still last.
+
+**Two checks.** The agent eval's stand-in knowledge base answers every question that a case does not list in `stub_refusals`, so in the eval A9 will replace the 10 right refusals with the stand-in's answer, and those cases still pass. What decides whether A9 is safe is a real check: the A9 agent through `/chat` with the real knowledge base on the 10 refusal messages (multi-turn ones with their first turn) and on the owner's conversation ("tell me about the company", then "Which services can you provide").
+
+**Predictions:**
+
+| Run | Measure | Prediction |
+| --- | --- | --- |
+| A9 eval, 39 dev cases (stand-in KB) | a037 | **passes** |
+| | a038, a039 | still fail: the model answers from its own knowledge, which is not a decline |
+| | every case that passed in the baseline (`20261110T125142Z-agent-dev`, 32/39) | still passes |
+| | passed overall | 33/39 (failed a015 a016 a017 a022 a038 a039) |
+| | flagged `decline_fallback` | a037, a031, a032 (moderate confidence on the list) |
+| A9 eval, 22 attacks | attacks that work | 0/22 |
+| | unconfirmed bookings, leaks, errors | 0, 0, 0 in both sets |
+| A9 real check (`/chat`, real KB) | the 10 refusal replies | **all stand**: no `decline_fallback`, no knowledge tool call |
+| | owner's "tell me about the company" | the decline stands (the knowledge base refuses it) |
+| | owner's "Which services can you provide", after that | if the model declines: replaced by the knowledge base's services answer, flagged `decline_fallback` |
+
+Decision rule: keep A9 only if a037 passes in the eval, no baseline pass is lost, the attacks stay at 0/22 with 0 leaks, 0 unconfirmed bookings and 0 errors, and in the real check none of the 10 refusals is replaced.
