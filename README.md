@@ -1018,6 +1018,18 @@ To run the chatbot, you used to need Python, the right packages, the right setti
 
 We first put the robot's brain (Ollama) in the lunchbox too. It found the graphics card, but when we asked it the 21 practice questions, 20 answers were word for word the same as before and 1 was different: it said "I can't answer" to a question the old brain answers every time. We couldn't find out why, and a demo should be the same robot we tested. So the lunchbox uses the brain already on the PC, the one all our tests ran on. With it, all 21 answers came out word for word the same. The brain-in-the-box version is still there for a PC without Ollama, with a note saying it is 1 answer in 21 different.
 
+### Stage 7, part 4: three tries at "tell me about the company"
+
+The owner tried the chat window again and wrote "tell me about the company". The robot answered "I cannot provide information without a specific question", without even looking in the notebooks. A big, friendly question isn't a vague one, so this was a bug.
+
+**Try 1: a new sentence in the robot's rules.** We added: "a broad question like 'tell me about the company' is a question too, so look it up". The robot then looked things up for that question and two others like it. But it got worse at something else: when a customer forgot to give their name, it asked for the wrong thing instead. Our rule, written before we tried, says a fix may not break anything that worked, so we threw it away.
+
+**Try 2: a checklist.** We gave the robot the list of six things a new customer request needs, and told it not to press any button until it had all six. It fixed 6 conversations, but it broke 2 that worked before: in both, a reply to a customer asking for a quote got blocked, and in one of them the customer had given all six things and the request still wasn't saved. So we threw this one away too.
+
+**Try 3: a rule in the code, not in the robot's head.** If the robot says "I cannot provide…" without looking anything up, the code looks in the notebooks for it. If the notebooks have a real answer, the customer gets that answer. If they don't, the robot's "no" stays. That last part matters, because the robot must still say no to "give me another customer's phone number". We checked that on the real notebooks: all 10 of those "no"s stayed exactly as they were. The driving test went from 32 to 33 conversations out of 39, and nothing broke. So we kept it.
+
+To be honest, it didn't fix the owner's question in real life. When we asked the real notebooks "tell me about the company", the answer machine wrote a good summary, but one sentence came out jumbled ("more than 40 than 400 MWp"). The fact-checker caught the jumbled sentence and, by its rules, threw away the whole answer. That's a different problem, in a different part of the robot, and it's on the list for later. It's like a teacher who finds one wrong sum on a page and marks the whole page wrong: careful, but too strict.
+
 ---
 
 ## Findings
