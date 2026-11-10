@@ -205,7 +205,12 @@ Chat_Bot/
 ├── promptfooconfig.yaml
 ├── pytest.ini
 ├── requirements.txt
-├── Dockerfile
+├── requirements-app.txt     # the subset the Docker image installs, same pins
+├── Dockerfile               # the API and the chat window
+├── docker-compose.yml       # make docker-up: API and chat window, desktop Ollama
+├── docker-compose.ollama.yml  # optional: Ollama in Docker on the GPU
+├── .dockerignore            # keeps .env, the database and the index out of the image
+├── docker/                  # start_api.py (version check, seed, index, server), copy_models.py
 ├── Makefile
 ├── .env.example
 ├── .gitignore
@@ -264,6 +269,10 @@ make seed                       # build data/app.db from the CSV files
 # Stage 7
 make ui                         # Streamlit
 make e2e                        # Playwright
+make docker-up                  # API and chat window in Docker on http://127.0.0.1:8501, using the desktop Ollama
+make docker-down                # stop it
+make docker-models              # once, for Ollama in Docker: copy the three models from the PC's Ollama
+make docker-up-ollama           # Ollama in Docker on the GPU instead (quit the desktop Ollama first)
 ```
 
 The app reads `.env` itself, so you do not need to export the variables in your shell.
@@ -646,7 +655,7 @@ Personal data leakage (LLM02) needs the agent and its customer data, so it is te
 
 - [x] Streamlit UI on `/chat` (`ui/app.py`, `make ui`): question, answer, sources, and booking proposals with the confirmation step
 - [x] Playwright tests (`tests/e2e`, `make e2e`, on every push): happy path, empty input, long answer, API error, sources displayed, plus the API being down, the booking confirmation and a new conversation, against a stand-in API. `python -m tests.e2e.breaks` shows each test catching its break
-- [ ] Dockerfile and a compose file with Ollama on the local GPU; the image builds from a clean clone in CI
+- [x] Dockerfile and a compose file (`make docker-up`): the API and the chat window on `127.0.0.1:8501`, using the desktop Ollama the evals ran on, which the API checks is the pinned version; fresh database and index on every start. With it, the 21 smoke answers came out word for word the same as the committed run (`reports/runs/20261110T114458Z-http-dev-smoke-docker-desktop-ollama.json`). Ollama in Docker on the GPU is optional (`docker-compose.ollama.yml`, `make docker-up-ollama`): 20 of 21 the same, g032 refused, cause not measured (`reports/runs/20261110T112859Z-http-dev-smoke-docker.json`). CI builds the image from a clean clone and imports and seeds it
 - [ ] Optional public link through a tunnel from the owner's PC, only with a password, a request limit and a database reset on each start; switched off when not needed
 
 **Exit criteria:** E2E suite green in CI; Docker image builds from a clean clone; a README demo section with screenshots and the command for a live link.
@@ -996,6 +1005,18 @@ Until now, only programmers could talk to the chatbot, by sending it messages fr
 Then we taught a robot to use the window like a person. It's called Playwright: it opens a real browser, types questions, presses Enter and checks what appears. It tries 9 things, among them a normal question, an empty message, a very long answer, the sources box, a booking with a "yes", and what happens when the chatbot's brain is switched off. It talks to a pretend chatbot that always gives the same answers, so the test is the same every time and GitHub can run it on every change.
 
 Of course we tested the tester too. We broke the window on purpose four times: hid the sources, showed a scary error message instead of a friendly one, showed a booking as done before the "yes", and let empty messages through. Each time, the clicking robot noticed.
+
+### Stage 7, part 2: a robot that copied its own "I don't know"
+
+The owner tried the new window and found a bug. They asked a question the notebooks can't answer, and the robot said "I can't answer that". Fine. Then they asked a question the notebooks *can* answer, and the robot said "I can't answer that" again, without even looking. It had copied its last reply, like a pupil who wrote "don't know" once and then writes it under every question without reading them.
+
+The fix is a rule in the code, not a polite request to the robot: if it says "I can't" or "I don't know" without looking anything up, the code looks in the notebooks for it, with the customer's own question, and gives the checked answer. If it did look and still found nothing, its "I don't know" stands. We wrote down what we expected before we tried it, and it came true: the driving test went from 30 to 32 conversations out of 36, the two fixed ones were exactly the two with this bug, the new rule switched on in no other conversation, and 0 of 22 tricks worked.
+
+### Stage 7, part 3: the chatbot in a lunchbox
+
+To run the chatbot, you used to need Python, the right packages, the right settings and a few commands in the right order. Now it's packed into Docker, like a lunchbox with everything inside: one command, `make docker-up`, starts the chatbot and the chat window, and you open the window in your browser. Every time it starts, it puts the pretend company's data back the way it was, so nothing a visitor typed stays behind.
+
+We first put the robot's brain (Ollama) in the lunchbox too. It found the graphics card, but when we asked it the 21 practice questions, 20 answers were word for word the same as before and 1 was different: it said "I can't answer" to a question the old brain answers every time. We couldn't find out why, and a demo should be the same robot we tested. So the lunchbox uses the brain already on the PC, the one all our tests ran on. With it, all 21 answers came out word for word the same. The brain-in-the-box version is still there for a PC without Ollama, with a note saying it is 1 answer in 21 different.
 
 ---
 

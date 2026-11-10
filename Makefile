@@ -27,6 +27,21 @@ e2e:
 run:
 	$(PYTHON) -m uvicorn app.api:create_default_app --factory --port 8000
 
+# The demo in Docker (docker-compose.yml): the API and the chat window on http://127.0.0.1:8501,
+# using the desktop Ollama the evals ran on. The -ollama variants run Ollama in Docker instead
+# (docker-compose.ollama.yml); docker-models copies the three models into it once.
+docker-up:
+	docker compose up --build --detach --wait
+
+docker-up-ollama:
+	docker compose -f docker-compose.yml -f docker-compose.ollama.yml up --build --detach --wait
+
+docker-models:
+	$(PYTHON) docker/copy_models.py
+
+docker-down:
+	docker compose -f docker-compose.yml -f docker-compose.ollama.yml down
+
 test:
 	$(PYTHON) -m pytest
 

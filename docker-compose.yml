@@ -1,0 +1,58 @@
+# The demo on this PC: make docker-up, then open http://127.0.0.1:8501.
+#
+#   api  The FastAPI app with the agent; fresh demo database and index on every start.
+#   ui   The Streamlit chat window, the only port open, and only on 127.0.0.1.
+#
+# Both use the desktop Ollama on this PC (host.docker.internal:11434), the one every committed
+# eval ran on, so the demo answers exactly as measured. The api refuses to start on another
+# Ollama version than OLLAMA_VERSION in .env.example.
+#
+# Ollama inside Docker instead: docker-compose.ollama.yml (make docker-up-ollama). It is not an
+# exact copy: on 2026-11-10 it gave 20 of 21 smoke answers word for word, and refused g032.
+name: rag
+
+services:
+  api:
+    build: .
+    image: rag-chatbot:local
+    # The committed defaults the evals ran on; the local .env is not used.
+    env_file: .env.example
+    environment:
+      OLLAMA_URL: http://host.docker.internal:11434
+    extra_hosts:
+      # Docker Desktop knows this name already; on Linux it needs this line.
+      - "host.docker.internal:host-gateway"
+    volumes:
+      - traces:/srv/runs
+    healthcheck:
+      test: ["CMD", "python", "-c", "import socket; socket.create_connection(('127.0.0.1', 8000), 2)"]
+      interval: 5s
+      timeout: 5s
+      retries: 60
+      start_period: 30s
+
+  ui:
+    image: rag-chatbot:local
+    command:
+      - python
+      - -m
+      - streamlit
+      - run
+      - ui/app.py
+      - --server.address=0.0.0.0
+      - --server.port=8501
+      - --server.headless=true
+      - --browser.gatherUsageStats=false
+      # Hides Streamlit's Deploy button and developer menu from customers.
+      - --client.toolbarMode=minimal
+    environment:
+      API_URL: http://api:8000
+    ports:
+      - "127.0.0.1:8501:8501"
+    depends_on:
+      api:
+        condition: service_healthy
+
+volumes:
+  traces:
+    name: rag-traces

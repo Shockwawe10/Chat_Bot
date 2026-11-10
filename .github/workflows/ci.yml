@@ -28,3 +28,16 @@ jobs:
       - name: Nightly runs are fresh (warning only)
         continue-on-error: true
         run: python -m pytest -m nightly
+
+  # The image builds from a clean clone, imports the app, the MCP server and the chat window,
+  # and seeds its database as the non-root user. No GPU or model here: Ollama runs on the PC.
+  docker:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - run: docker compose config --quiet
+      - run: docker compose -f docker-compose.yml -f docker-compose.ollama.yml config --quiet
+      - run: docker build --tag rag-chatbot:ci .
+      - run: docker run --rm rag-chatbot:ci python -c "import app.api, mcp_server.server, streamlit"
+      - run: docker run --rm rag-chatbot:ci python -m mcp_server.seed
