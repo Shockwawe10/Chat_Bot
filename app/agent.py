@@ -367,6 +367,19 @@ class Turn:
     flags: list
     booking: dict | None
     record: dict
+    sources: list = field(default_factory=list)  # the passages a knowledge answer cited
+
+
+def cited_sources(result, hits):
+    """The passages an answer cited, for the chat window: document, section and chunk id.
+    A refused or blocked answer cites none."""
+    if result.abstained:
+        return []
+    return [
+        {"doc_id": hits[n - 1]["doc_id"], "heading_path": hits[n - 1]["heading_path"], "chunk_id": hits[n - 1]["chunk_id"]}
+        for n in result.citations
+        if 1 <= n <= len(hits)
+    ]
 
 
 class Agent:
@@ -400,7 +413,7 @@ class Agent:
 
         system = self.prompt.substitute(today=self.today().isoformat())
         messages = [{"role": "system", "content": system}, *session.history, {"role": "user", "content": message}]
-        calls, flags, booking = [], [], None
+        calls, flags, booking, sources = [], [], None, []
         reply = None
         for _ in range(MAX_STEPS):
             answer = self.llm.chat(messages, self.schemas())
@@ -420,6 +433,7 @@ class Agent:
                     calls.append({"name": name, "arguments": {"question": question}, "result": {"answer": result.answer, "abstained": result.abstained}})
                     record["knowledge"] = rag_record
                     reply = result.answer
+                    sources = cited_sources(result, rag_record.get("hits", []))
                     break
                 if name == "book_site_survey":
                     arguments.pop(SESSION_ARGUMENT, None)
@@ -457,7 +471,9 @@ class Agent:
             reply = BLOCKED
             flags = sorted({*flags, "output_blocked"})
         record["tool_calls"] = calls
-        return Turn(reply, calls, flags, booking, record)
+        if problems:
+            sources = []  # a blocked reply cites nothing
+        return Turn(reply, calls, flags, booking, record, sources)
 
     def _confirm(self, session, record):
         result = self.confirm(session.session_id)

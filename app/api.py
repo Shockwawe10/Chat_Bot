@@ -121,12 +121,19 @@ class Booking(BaseModel):
     status: str
 
 
+class Source(BaseModel):
+    doc_id: str
+    heading_path: str
+    chunk_id: str
+
+
 class ChatResponse(BaseModel):
     session_id: str
     reply: str
     tool_calls: list[ToolCall]
     flags: list[str]
     booking: Booking | None
+    sources: list[Source]
     total_ms: float
 
 
@@ -324,6 +331,7 @@ def create_app(make_retriever, llm, prompt, trace_dir=TRACE_DIR, checker=None, g
             tool_calls=turn.tool_calls,
             flags=turn.flags,
             booking=turn.booking,
+            sources=turn.sources,
             total_ms=total,
         )
 

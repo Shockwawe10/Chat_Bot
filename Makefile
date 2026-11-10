@@ -7,7 +7,7 @@ PYTHON ?= .venv/bin/python
 PHOENIX_BIN = .venv-phoenix/bin
 endif
 
-.PHONY: ingest seed run test test-real lint mutation eval eval-smoke smoke smoke-accept nightly results chart holdout phoenix agent-eval agent-attacks agent-accept judge-labels calibrate attacks redteam
+.PHONY: ingest seed run test test-real lint mutation eval eval-smoke smoke smoke-accept nightly results chart holdout phoenix agent-eval agent-attacks agent-accept ui e2e judge-labels calibrate attacks redteam
 
 # Build data/app.db from data/products.csv, leads.csv and projects.csv (drops leads the agent saved).
 seed:
@@ -15,6 +15,14 @@ seed:
 
 ingest:
 	$(PYTHON) -m app.index build
+
+# The chat window at http://localhost:8501, talking to the API on API_URL (default http://127.0.0.1:8000).
+ui:
+	$(PYTHON) -m streamlit run ui/app.py --browser.gatherUsageStats false
+
+# Browser tests of the chat window against the stand-in API (tests/e2e). Needs: python -m playwright install chromium.
+e2e:
+	$(PYTHON) -m pytest tests/e2e -m e2e
 
 run:
 	$(PYTHON) -m uvicorn app.api:create_default_app --factory --port 8000

@@ -164,7 +164,7 @@ The LLM provider is a single configuration value, so the same evals can run on d
 Chat_Bot/
 ├── app/                     # chunking, retrieval, generation, FastAPI
 ├── mcp_server/              # tools: leads, projects, products, site surveys (Stage 6)
-├── ui/                      # Streamlit
+├── ui/app.py                # the Streamlit chat window (make ui)
 ├── prompts/                 # versioned prompt templates, like answer_v2.txt
 ├── data/
 │   ├── kb/                  # demo knowledge base (*.md with front matter)
@@ -188,7 +188,7 @@ Chat_Bot/
 │   ├── security/            # injection, jailbreak, prompt leakage
 │   ├── agent/               # tool selection, excessive agency, PII
 │   ├── integration/         # real models, needs Ollama: pytest -m real
-│   └── e2e/                 # Playwright
+│   └── e2e/                 # Playwright browser tests against a stand-in API (make e2e)
 ├── reports/
 │   ├── runs/                # one manifest per dev run
 │   ├── holdout/             # holdout runs, end of stage only
@@ -644,12 +644,14 @@ Personal data leakage (LLM02) needs the agent and its customer data, so it is te
 
 **Goal:** a live demo and browser tests.
 
-- [ ] Streamlit UI: question, answer, sources
-- [ ] Playwright tests: happy path, empty input, long answer, API error, sources displayed
-- [ ] Dockerfile; deploy to AWS
-- [ ] Spending alert configured; demo switched off when not needed
+- [x] Streamlit UI on `/chat` (`ui/app.py`, `make ui`): question, answer, sources, and booking proposals with the confirmation step
+- [x] Playwright tests (`tests/e2e`, `make e2e`, on every push): happy path, empty input, long answer, API error, sources displayed, plus the API being down, the booking confirmation and a new conversation, against a stand-in API. `python -m tests.e2e.breaks` shows each test catching its break
+- [ ] Dockerfile and a compose file with Ollama on the local GPU; the image builds from a clean clone in CI
+- [ ] Optional public link through a tunnel from the owner's PC, only with a password, a request limit and a database reset on each start; switched off when not needed
 
-**Exit criteria:** E2E suite green in CI; Docker image builds from a clean clone; demo URL in the README.
+**Exit criteria:** E2E suite green in CI; Docker image builds from a clean clone; a README demo section with screenshots and the command for a live link.
+
+**Changed on 2026-11-10 (owner's decision): local Docker instead of AWS.** The demo would need a GPU server: about $0.53 per hour in the US while it runs, plus about $4.00 a month for its disk, or $391.63 a month if left on (third-party price trackers, November 2026). A cheap server with the Claude API instead would make the demo a different system from the one the evals measured. So the demo runs in Docker on the owner's PC, with an optional tunnel for a public link while it is on.
 
 ### Stage 8. Packaging (week 8)
 
@@ -986,6 +988,14 @@ GitHub already checked the chatbot's answers on every change. Now it checks the 
 Then it marks them. A driving-test conversation that went right on the accepted paper must still go right. Not a single trick may work. And across both papers there must be no booking without the customer's own "yes", no other customer's details in any reply, and no conversation that crashed.
 
 We checked GitHub's marking too: a pretend robot that never presses a button loses conversations the real one won, a robot with no defences loses every kind of trick, and breaking each rule on purpose, 6 times, was caught every time. Like a referee who has watched the replays, so we know they'd blow the whistle.
+
+### Stage 7, part 1: a chat window, and a robot that clicks it
+
+Until now, only programmers could talk to the chatbot, by sending it messages from code. So we built a chat window, like the ones on shopping websites: type a question, press Enter, get an answer. Under each answer there's a little "Sources" box that shows which page of the company's notebooks the answer came from. When you ask for an engineer's visit, a blue box says "proposed, not booked until you reply yes", and after your "yes" it turns green: "booked".
+
+Then we taught a robot to use the window like a person. It's called Playwright: it opens a real browser, types questions, presses Enter and checks what appears. It tries 9 things, among them a normal question, an empty message, a very long answer, the sources box, a booking with a "yes", and what happens when the chatbot's brain is switched off. It talks to a pretend chatbot that always gives the same answers, so the test is the same every time and GitHub can run it on every change.
+
+Of course we tested the tester too. We broke the window on purpose four times: hid the sources, showed a scary error message instead of a friendly one, showed a booking as done before the "yes", and let empty messages through. Each time, the clicking robot noticed.
 
 ---
 

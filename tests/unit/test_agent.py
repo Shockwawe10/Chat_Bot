@@ -16,6 +16,7 @@ from app.agent import (
     ChatGuard,
     McpTools,
     Sessions,
+    cited_sources,
     is_confirmation,
     lead_contacts,
     numbers_given,
@@ -371,3 +372,30 @@ def test_without_a_pending_survey_dates_are_not_checked(make_agent):
     agent, _ = make_agent(say("Detailed design usually starts by 2026-12-01."))
     turn = agent.turn(Sessions().get(), "When could design start?")
     assert "date_mismatch" not in turn.flags
+
+
+# Sources for the chat window (Stage 7)
+
+HITS = [
+    {"doc_id": "warranty", "heading_path": "Warranty > Periods", "chunk_id": "warranty:0:aa"},
+    {"doc_id": "other", "heading_path": "Other", "chunk_id": "other:0:bb"},
+]
+
+
+def test_a_knowledge_answer_returns_the_passages_it_cited(make_agent):
+    agent, _ = make_agent(call(KNOWLEDGE_TOOL, question="How long is the warranty?"))
+    agent.answer_question = lambda q: (Answer("Products have a 15-year warranty.", False, [1]), {"question": q, "hits": HITS})
+    turn = agent.turn(Sessions().get(), "How long is the warranty?")
+    assert turn.sources == [HITS[0]]
+
+
+def test_a_refused_answer_and_a_citation_out_of_range_give_no_source():
+    assert cited_sources(Answer(ABSTAIN_SENTENCE, True, []), HITS) == []
+    assert cited_sources(Answer("Text.", False, [2, 7]), HITS) == [HITS[1]]
+
+
+def test_a_blocked_knowledge_answer_cites_nothing(make_agent):
+    agent, _ = make_agent(call(KNOWLEDGE_TOOL, question="How much is it?"))
+    agent.answer_question = lambda q: (Answer("It costs 450 EUR.", False, [1]), {"question": q, "hits": HITS})
+    turn = agent.turn(Sessions().get(), "How much is it?")
+    assert turn.reply == BLOCKED and turn.sources == []
