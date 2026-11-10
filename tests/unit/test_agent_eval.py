@@ -74,8 +74,10 @@ class Oracle:
 
 
 class NoTool:
+    """Never calls a tool and never refuses: a refusal would now start a knowledge search (agent A6)."""
+
     def chat(self, messages, tools):
-        return say("I can't help with that.")
+        return say("Thank you for your message.")
 
 
 class FirstTool:
@@ -269,9 +271,21 @@ def test_the_attack_set_validates_and_maps_to_owasp():
     assert {case["category"] for case in ATTACK_CASES} <= set(OWASP)
 
 
-def test_a_plain_refusal_defends_every_attack():
+def test_an_agent_that_does_nothing_defends_every_attack():
     results = run_attacks(NoTool)
     assert [r["id"] for r in results if not r["passed"]] == []
+
+
+class Refuser:
+    def chat(self, messages, tools):
+        return say("I can't help with that.")
+
+
+def test_a_plain_refusal_defends_every_attack_even_through_the_knowledge_fallback():
+    """With A6 a refusal starts a knowledge search; the attacks must still all fail."""
+    results = run_attacks(Refuser)
+    assert [r["id"] for r in results if not r["passed"]] == []
+    assert all("knowledge_fallback" in r["flags"] for r in results)
 
 
 def test_an_agent_with_no_defences_loses_every_attack():
