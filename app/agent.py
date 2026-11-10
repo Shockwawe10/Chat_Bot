@@ -51,6 +51,9 @@ CONFIRMATION = re.compile(
     r"that works|book it|yes,? book it|go ahead)$",
     re.IGNORECASE,
 )
+# A model reply that refuses or does not know. Without a tool call this turn, the knowledge base
+# answers instead (agent experiment A6).
+MODEL_REFUSAL = re.compile(r"\b(?:can't|cannot|can not)\s+(?:answer|help)\b|\b(?:don't|do not)\s+know\b", re.IGNORECASE)
 DATE = re.compile(r"\d{4}-\d{2}-\d{2}")
 PHONE = re.compile(r"\+?\d[\d ().-]{5,}\d")
 
@@ -454,6 +457,18 @@ class Agent:
         else:
             reply = NOT_FINISHED
             flags.append("too_many_steps")
+
+        if not calls and MODEL_REFUSAL.search(reply):
+            # A refusal must come from the knowledge base, never from the model alone (agent experiment
+            # A6): after one refusal in the conversation, the model copied it for a question the
+            # knowledge base answers. Search with the customer's own message instead.
+            result, rag_record = self.answer_question(message)
+            record["knowledge"] = rag_record
+            record["model_refusal"] = reply
+            calls.append({"name": KNOWLEDGE_TOOL, "arguments": {"question": message}, "result": {"answer": result.answer, "abstained": result.abstained}})
+            reply = result.answer
+            sources = cited_sources(result, rag_record.get("hits", []))
+            flags.append("knowledge_fallback")
 
         if session.pending:
             # The customer is never told a survey date the records do not hold (agent experiment A5).

@@ -399,3 +399,41 @@ def test_a_blocked_knowledge_answer_cites_nothing(make_agent):
     agent.answer_question = lambda q: (Answer("It costs 450 EUR.", False, [1]), {"question": q, "hits": HITS})
     turn = agent.turn(Sessions().get(), "How much is it?")
     assert turn.reply == BLOCKED and turn.sources == []
+
+
+# A refusal must come from the knowledge base, not from the model alone (agent experiment A6)
+
+
+def test_a_refusal_copied_from_the_history_is_replaced_by_a_knowledge_search(make_agent):
+    agent, _ = make_agent(call(KNOWLEDGE_TOOL, question="What is the size of a solar panel?"), say(ABSTAIN_SENTENCE))
+    answers = iter([Answer(ABSTAIN_SENTENCE, True, []), Answer("Coatings are hot-dip galvanising and zinc-magnesium.", False, [1])])
+    agent.answer_question = lambda q: (next(answers), {"question": q, "hits": HITS})
+    session = Sessions().get()
+    assert agent.turn(session, "What is the size of a solar panel?").reply == ABSTAIN_SENTENCE
+    turn = agent.turn(session, "Which coating is used?")
+    assert turn.reply == "Coatings are hot-dip galvanising and zinc-magnesium."
+    assert turn.flags == ["knowledge_fallback"] and turn.record["model_refusal"] == ABSTAIN_SENTENCE
+    assert turn.tool_calls[0]["arguments"] == {"question": "Which coating is used?"} and turn.sources == [HITS[0]]
+
+
+@pytest.mark.parametrize(
+    "reply, falls_back",
+    [
+        ("I don't know whether the site survey is free.", True),
+        ("I cannot answer that.", True),
+        ("I can't help with that question.", True),
+        ("Could you tell me your email address?", False),
+        ("I can't share another customer's details.", False),
+        ("Hello! How can I help you today?", False),
+    ],
+)
+def test_only_a_refusal_without_a_tool_call_falls_back(make_agent, reply, falls_back):
+    agent, _ = make_agent(say(reply))
+    turn = agent.turn(Sessions().get(), "Some question?")
+    assert ("knowledge_fallback" in turn.flags) is falls_back
+
+
+def test_a_refusal_after_a_tool_call_stands(make_agent):
+    agent, _ = make_agent(call("get_project_status", project_id="P-9999"), say("I can't answer that: there is no project P-9999."))
+    turn = agent.turn(Sessions().get(), "Status of P-9999?")
+    assert "knowledge_fallback" not in turn.flags and "P-9999" in turn.reply
