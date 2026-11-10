@@ -579,6 +579,8 @@ BREAKS = {
     "agent: dates from tools count as not on record": [(AGENT, '            allowed = {session.pending["survey_date"]} | {d for c in calls for d in DATE.findall(json.dumps(c["result"]))}\n', '            allowed = {session.pending["survey_date"]}\n')],
     "agent: a model refusal stands": [(AGENT, "        if not calls and MODEL_REFUSAL.search(reply):\n", "        if False:\n")],
     "agent: a refusal after a tool call is overruled": [(AGENT, "        if not calls and MODEL_REFUSAL.search(reply):\n", "        if MODEL_REFUSAL.search(reply):\n")],
+    "agent: a declined question is never searched": [(AGENT, "        elif not calls and MODEL_DECLINE.search(reply):\n", "        elif False:\n")],
+    "agent: an empty search replaces a decline": [(AGENT, "            if result.abstained:\n                record[\"knowledge_probe\"]", "            if False:\n                record[\"knowledge_probe\"]")],
     "api: chat traces look like ask traces": [(API, '{"endpoint": "chat", **turn.record, "status": 200,', '{"endpoint": "chat", "question": request.message, **turn.record, "status": 200,')],
     # The agent eval's scorer (evals/agent_eval.py)
     "agent eval: any overlapping tool counts": [(AGENT_EVAL, '    result["tools"] = None if tools is None else called == set(tools)\n', '    result["tools"] = None if tools is None else (not tools or bool(called & set(tools)))\n')],

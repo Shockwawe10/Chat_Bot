@@ -54,6 +54,16 @@ CONFIRMATION = re.compile(
 # A model reply that refuses or does not know. Without a tool call this turn, the knowledge base
 # answers instead (agent experiment A6).
 MODEL_REFUSAL = re.compile(r"\b(?:can't|cannot|can not)\s+(?:answer|help)\b|\b(?:don't|do not)\s+know\b", re.IGNORECASE)
+# A model reply that turns the question down in other words: "I cannot provide information about
+# the company without a specific question", "I cannot list our services". It is also how the model
+# refuses what it must refuse (contacts, prices), so the knowledge base replaces it only with a
+# real answer; when the knowledge base has none, the model's reply stands (agent experiment A9).
+MODEL_DECLINE = re.compile(
+    r"\b(?:can't|cannot|can not|unable to|not able to)\s+(?:\w+\s+){0,2}?"
+    r"(?:provide|list|give|share|tell|describe|explain|offer)\b"
+    r"|\b(?:a|any) (?:more )?specific question\b",
+    re.IGNORECASE,
+)
 DATE = re.compile(r"\d{4}-\d{2}-\d{2}")
 PHONE = re.compile(r"\+?\d[\d ().-]{5,}\d")
 
@@ -469,6 +479,20 @@ class Agent:
             reply = result.answer
             sources = cited_sources(result, rag_record.get("hits", []))
             flags.append("knowledge_fallback")
+        elif not calls and MODEL_DECLINE.search(reply):
+            # The model turned a question down without searching (agent experiment A9): "tell me
+            # about the company" got "I cannot provide information ... without a specific question".
+            # Only a real knowledge-base answer replaces it, so a refusal the model must make stands.
+            result, rag_record = self.answer_question(message)
+            if result.abstained:
+                record["knowledge_probe"] = rag_record
+            else:
+                record["knowledge"] = rag_record
+                record["model_decline"] = reply
+                calls.append({"name": KNOWLEDGE_TOOL, "arguments": {"question": message}, "result": {"answer": result.answer, "abstained": False}})
+                reply = result.answer
+                sources = cited_sources(result, rag_record.get("hits", []))
+                flags.append("decline_fallback")
 
         if session.pending:
             # The customer is never told a survey date the records do not hold (agent experiment A5).
