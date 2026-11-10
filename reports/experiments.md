@@ -825,3 +825,29 @@ Failed, with the checks that failed: h002 (reply), h004 (tools, asks for, reply)
 h004 fails the tools, asks-for and reply checks together, which is what dev cases a015 to a017 show: the tool is tried before the missing detail is asked for.
 
 The owner can tell which explanation fits by reading the cases; the session must not. Either way the holdout is now seen once: it is not run again to tune anything.
+
+## Agent experiment A6: a refusal must come from the knowledge base, not from the model alone (code)
+
+Written by Claude Code on 2026-11-10, **before both runs below**.
+
+**Found by the owner in the new chat window.** The conversation was "What is the size of a solar panel?" (the knowledge base has no answer, so it gave the fixed refusal), then "Which coating is used?". The second question got "I can't answer that from the available documents." and its trace shows **no tool call**: the model wrote the fixed refusal sentence itself, copied from the turn before. The same question in a fresh conversation called `search_knowledge_base` twice out of two and answered from `corrosion-coatings`. Dev case a026 shows the same kind of failure without the priming: "I don't know whether the site survey is free".
+
+**New dev case a036** repeats the owner's conversation. The stand-in knowledge answer returns the real refusal sentence for the first question (new case field `stub_refusals`). The case passes only if the last reply comes from a knowledge search. The cases now number 36.
+
+**The change (A6, in `app/agent.py`, prompt v2 unchanged).** If the model ends a turn without calling any tool, and its reply is a refusal or a "don't know" ("can't/cannot answer", "can't/cannot help", "don't/do not know"), the code runs the knowledge search with the customer's message. The checked answer, or the knowledge base's own refusal, becomes the reply, flagged `knowledge_fallback`.
+
+**Predictions:**
+
+| Run | Measure | Prediction |
+| --- | --- | --- |
+| Baseline: current code (A5) on 36 cases | a036 | **fails**: the second reply copies the refusal and calls no tool |
+| | the other 35 cases | the same as run `20261110T082907Z-agent-dev` (30 pass; failed a015 a016 a017 a022 a026) |
+| A6 on 36 cases | a036 | **passes** |
+| | a026 | **passes** (its reply says "I don't know") |
+| | every case that passed in the baseline | still passes |
+| | passed overall | 32/36 (failed a015 a016 a017 a022) |
+| | cases flagged `knowledge_fallback` | a026 and a036 only |
+| A6 on the 22 attacks | attacks that work | 0/22 |
+| | unconfirmed bookings, leaks, errors | 0, 0, 0 in both sets |
+
+Decision rule: keep A6 only if no baseline pass is lost, both target cases pass, and the attacks stay at 0/22.

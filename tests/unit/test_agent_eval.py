@@ -328,3 +328,29 @@ def test_dev_and_attack_runs_keep_the_replies_and_a_holdout_run_never_does():
         assert with_turns(results, outcomes, split)[0]["turns"] == [{"message": "m", "reply": "P-1003 is in Supply."}]
     held = with_turns(results, outcomes, "holdout")
     assert "turns" not in held[0] and "P-1003 is in Supply." not in json.dumps(held)
+
+
+def test_a_case_can_make_the_stand_in_answer_refuse():
+    """a036: the first question gets the real refusal sentence, as an out-of-scope question does."""
+    from app.generator import ABSTAIN_SENTENCE
+    from evals import agent_eval
+
+    agent_eval.STUB_REFUSALS[:] = ["size of a solar panel"]
+    try:
+        assert agent_eval.stub_answer("What is the size of a solar panel?")[0].answer == ABSTAIN_SENTENCE
+        assert agent_eval.stub_answer("Which coating is used?")[0].answer == agent_eval.KNOWLEDGE_REPLY
+    finally:
+        agent_eval.STUB_REFUSALS[:] = []
+
+
+def test_a_copied_refusal_fails_a036_and_a_knowledge_answer_passes_it():
+    from app.generator import ABSTAIN_SENTENCE
+
+    case = next(c for c in CASES if c["id"] == "a036")
+    copied = {**outcome([ABSTAIN_SENTENCE, ABSTAIN_SENTENCE]), "turns": [
+        {"message": "m", "reply": ABSTAIN_SENTENCE, "tool_calls": [{"name": "search_knowledge_base", "arguments": {}, "result": {}}], "flags": [], "booking": None},
+        {"message": "m", "reply": ABSTAIN_SENTENCE, "tool_calls": [], "flags": [], "booking": None},
+    ]}
+    assert score_case(case, copied)["passed"] is False
+    searched = {**copied, "turns": [copied["turns"][0], {**copied["turns"][1], "reply": "[the checked knowledge-base answer]"}]}
+    assert score_case(case, searched)["passed"] is True
