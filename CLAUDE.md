@@ -34,7 +34,9 @@ Try a new Python package in a throwaway virtual environment first, and run pip c
 
 A run that measures a rate (eval, attack run, gate) counts a non-200 reply as an error: reported, and left out of the rate. Never count it as a pass or a fail.
 
-Before giving the owner a PR description, push every commit and name the head commit the PR must contain. After they merge, check it with git merge-base --is-ancestor <head> origin/main.
+Before starting a run longer than 10 minutes, say what result it could change. If evals/freshness.py's digest still matches the committed run and no answer-shaping input changed, reuse the committed run and write down why instead of running it again. Never re-run a holdout without a change to test.
+
+Before giving the owner a PR description, push every commit and name the head commit the PR must contain. After they merge, check it with git merge-base --is-ancestor <head> origin/main. For a stage PR, first check the stage's Definition of Done: a LEARNING_LOG.md entry for each merged PR (a draft marked as not reviewed is fine), make results run, and a part in docs/EXPLAINED_SIMPLY.md.
 
 Stage files by name, never with git add <folder>. Before every commit, run git status --short and check that each new or changed file is one this session made or the owner asked for; ask about anything else.
 

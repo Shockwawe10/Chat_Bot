@@ -235,3 +235,39 @@ Written by /aar-loop after each session's After Action Review. Read this file be
 - Actual: holdout_compare.py already existed from an earlier stage; the Write failed and the same message ran the old script, which crashed before printing anything.
 - Why: Tool calls in one message run in order regardless of an earlier failure. Context only; no holdout text was printed.
 - tags: tooling,scratchpad
+
+## 2026-11-11 -- Nothing read the README, so its settings, models and Quick start drifted from .env.example for several stages; tests/unit/test_readme_facts.py now fails make test when the Configuration table, the Quick start ollama pull lines or the Models and Local models tables disagree with .env.example.
+- Expected: The README describes the system as it is: the settings, the models and the commands a newcomer runs.
+- Actual: Found in Stage 8: Quick start pulled phi4-mini:3.8b and not bespoke-minicheck:7b; the Configuration table had JUDGE_MODEL phi4-mini, TOP_K 5, PROMPT_VERSION v2 and lacked 6 settings; the tech stack named Claude for paid runs (never implemented), DeepEval and Docker on AWS; the agent rows of the Results table said not measured for two stages.
+- Why: Each change updated code and evals, and no test reads the README. Fix applied: the test (6 tests); run on the README at b5a8b86 it reports 15 problems, at fcdc40e 16, including the wrong Quick start pulls; render_results now fills the agent rows.
+- tags: docs,readme,tests,fix-applied
+
+## 2026-11-11 -- Before a run longer than 10 minutes, say what it could change: if evals/freshness.py's digest still matches the committed run and nothing answer-shaping changed, reuse the committed run and record why; never re-run a holdout without a change to test.
+- Expected: Stage 8's roadmap item 'final full run and holdout run' would be met usefully.
+- Actual: make nightly (about 70 minutes on the 4 GB GPU) was started because the roadmap said so; the owner asked why, and the fingerprint showed nothing answer-shaping had changed since the Stage 7 runs, so it was stopped and those runs were reused (tests/ai and pytest -m nightly passed on them).
+- Why: The plan's wording was followed without asking what the run could show. Fix applied: CLAUDE.md rule after the run rules.
+- tags: evals,runs,holdout,fix-applied
+
+## 2026-11-11 -- Before giving the owner a stage PR description, check the Definition of Done: a LEARNING_LOG.md entry for each merged PR (a draft marked as not reviewed is fine), make results run, and a part in docs/EXPLAINED_SIMPLY.md.
+- Expected: LEARNING_LOG.md has one entry per merged PR, as the Definition of Done asks.
+- Actual: It stopped after Stage 2: Stages 3 to 7 (PRs 5, 6, 8, 10 and 13) had no entries until Stage 8 drafted them from the saved records.
+- Why: The Definition of Done is a checklist in a document and nothing checked it when a stage PR was prepared. Fix applied: CLAUDE.md, in the PR-description rule.
+- tags: workflow,learning-log,fix-applied
+
+## 2026-11-11 -- What worked in Stage 8: follow Quick start word for word in a fresh clone from GitHub; check what ollama pull would get by hashing the registry manifest (https://registry.ollama.ai/v2/library/<name>/manifests/<tag>; its sha256 is Ollama's model ID) instead of pulling over pinned models; render a Mermaid diagram with mermaid.js in Chromium and check every Markdown link before pushing docs.
+- Expected: Quick start would work for a newcomer.
+- Actual: The fresh clone found 3 failures the owner's PC hid (wrong model list, /chat HTTP 500 from make seed after make run, python 3.8 default); the rewritten Quick start passed every step in a second clone with 21/21 smoke answers identical.
+- Why: A machine that built the project has the models, caches and database already, so a missing step never shows there. Context only.
+- tags: quickstart,docs,worked
+
+## 2026-11-11 -- Compute a count after the last edit that can change it: a README line count written before a later edit (650) went into a pushed commit message while the file ended at 644.
+- Expected: Every number in a commit message or document is true when written.
+- Actual: The count was taken, the Quality checks box was then removed from the diagram, and the count was not taken again.
+- Why: Extends the 2026-10-31 lesson (compute counts from the data) to timing: the data changed after the count. Context only; the document was corrected in a follow-up commit.
+- tags: claims,counts
+
+## 2026-11-11 -- Append long prose to a file by writing it with the Write tool to a scratchpad file and then cat scratch >> target, not with a bash heredoc: a 70-line heredoc of learning-log text failed to parse ('unexpected EOF while looking for matching quote') and nothing was written.
+- Expected: The learning-log drafts would be appended in one command.
+- Actual: bash refused the whole command before running it; the same text written with Write and appended with cat worked.
+- Why: Cause not found: the heredoc delimiter was quoted, and shorter heredocs with apostrophes worked in the same session. Context only.
+- tags: tooling,bash
