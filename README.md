@@ -708,7 +708,7 @@ Personal data leakage (LLM02) needs the agent and its customer data, so it is te
 **Goal:** a recruiter understands the project in 2 minutes; a technical interviewer finds the depth.
 
 - [ ] Final full run and holdout run; Results table regenerated with `make results`
-- [ ] [Findings](#findings) section with the 5–7 most interesting defects
+- [x] [Findings](#findings) section with the 5–7 most interesting defects: seven told as short stories, eleven in the table, one of them (F7's negation blind spot) still open
 - [ ] Demo GIF at the top of the README
 - [ ] 3–5 minute demo video: a question, an eval run, a red CI after a bad change
 - [ ] A short post about one finding, for example how well the LLM judge agreed with my labels
@@ -1079,10 +1079,32 @@ So we pretended to be a stranger. We downloaded the project into an empty folder
 
 We rewrote the recipe and tried again in a brand-new empty folder. This time every step worked: 1561 tests passed, the chatbot answered, the browser tests passed, and the 21 practice questions got exactly the same answers as in our saved tests, word for word.
 
+### Stage 8, part 2: the seven best mistakes
+
+Every project has bugs. What matters is how you found them and what you did about them, so we picked the seven most interesting ones and wrote each one down as a short story. Here are three.
+
+The robot's engine (Ollama) updated itself one night. Nothing else changed, but one answer turned from "I can't answer that" into a wrong fact, and every one of our checks still said "all good". Even a score went up. Now the engine's version is locked, so it can't change without us noticing. The fact-checker's weak spot, which let the wrong fact through, is still there, and we say so.
+
+We tried a fact-checking robot that got 4 easy examples right. On 30 real answers it did worse than flipping a coin. So now no checker is trusted until it has been tested on real answers.
+
+And our practice test for the helper robot used pretend notebooks that know the answer to everything. That made the robot look better on one question and worse on another than it really is. The fix is to check such changes with the real notebooks too.
+
 
 ## Findings
 
-Filled in as defects are found. Each finding has a test that guards it.
+The seven most interesting defects, out of eleven so far. Each one was found by a check, a deliberately broken input or a person using the system, and each says where it stands now.
+
+1. **An Ollama update put a false claim in front of the customer, and every gate stayed green (F7, open).** Ollama updated itself from 0.40.14 to 0.40.15 between two full dev runs; nothing else changed. g066 had been refused; it became "systems are rated for … C1 to C5 and CX", while the knowledge base says the company offers no system for CX. The answer check said "Yes": the passages contain the same words, and it misses the "not". Refusal accuracy even rose, from 0.75 to 0.77. The Ollama version is now pinned, and a run on another version is refused. The negation blind spot is not fixed: the claim is still in the latest dev run (`20261110T162826Z-pipeline-dev`). Details: `reports/drift.md`.
+2. **A judge that got 4 of 4 obvious cases right scored κ −0.19 on real answers (F8).** IBM's `granite3-guardian:2b`, trained to check groundedness, passed all 3 unsupported answers and rejected 12 of the 27 supported ones: worse than chance. A judge is now adopted only after calibration on labelled answers. `bespoke-minicheck:7b` passed with κ 0.78, on 30 labels written by Claude and confirmed by the owner, so that is agreement between two models, not with a person.
+3. **A system that answers "Yes." to every question scored 0.38 behaviour accuracy (F9).** The scorer counted "cannot decide" as a pass. Undecided cases now go to the judge, and every scorer is first run on the always-abstain and always-answer reference systems.
+4. **A refusal came back as an answer with citations (F4).** `{"answer": "abstain", "citations": [1, 2], "status": "answer"}`: Ollama writes JSON keys in alphabetical order, so the model chose the answer form before it reached `status`. The prompt now shows each form in the order the model writes it.
+5. **A prompt that sends the model no passages passed every check that runs without a model (F5).** `string.Template` leaves a placeholder it cannot find as text, so `{context}` instead of `$context` silently dropped the passages. The canary PR found it; now every answer prompt must contain both placeholders.
+6. **The agent copied its own "I can't answer that" into the next turn (F10).** Found by the owner in the chat window: after one refusal, "Which coating is used?" got the same refusal, with no tool call in the trace. A refusal without a tool call is now replaced by a knowledge search (agent experiment A6: 30/36 to 32/36 dev cases).
+7. **The eval's stand-in knowledge base made the agent look better and worse than it is (F11).** It answers every question, so "tell me about the company" passed in the eval while the real knowledge base refuses it, and agent experiment A9 failed holdout h008 in the eval while it passes in real use (checked by the owner). A change that depends on what the knowledge base answers is now also checked against the real pipeline. This one is guarded by a rule in `CLAUDE.md`, not yet by a test.
+
+### All findings
+
+Each finding has a test that guards it, except F11, which has a rule.
 
 | ID | What happened | Root cause | Fix | Guarding test |
 | --- | --- | --- | --- | --- |
@@ -1092,6 +1114,11 @@ Filled in as defects are found. Each finding has a test that guards it.
 | F4 | A refusal came back as an answer with citations: `{"answer": "abstain", "citations": [1, 2], "status": "answer"}` | Ollama writes keys alphabetically, so `status` comes last and the model had already chosen the `answer` form before reaching it | The prompt shows each form in the order the model writes it | `test_prompt_shows_each_form_in_the_order_the_model_writes_it` |
 | F5 | A prompt that sends the model no passages passed every check that runs without a model | `string.Template` leaves a placeholder it cannot find as text, so `{context}` for `$context` drops the passages without an error. Found by the canary PR | Every answer prompt must have exactly the `$context` and `$question` placeholders, and a rendered prompt must hold the passage before the question | `test_every_answer_prompt_puts_the_passages_and_the_question_in` |
 | F6 | A bad smoke run failed the unit tests of the gate logic as well as the smoke gates | Those unit tests built their cases from the committed smoke run, not from a known-good one. Found by the canary PR | They use the accepted reference, `reports/smoke/reference.json` | `test_the_reference_is_a_smoke_run_that_passes_against_itself` |
+| F7 | After an Ollama update (0.40.14 to 0.40.15), g066 answered "rated … C1 to C5 and CX", which the knowledge base contradicts, and every gate passed | The runtime was not pinned, and the answer check misses a reversed "not" when the passages contain the same words | Ollama version pinned; runs and the Docker API refuse another. **The negation blind spot is open** | `test_a_run_on_another_ollama_version_than_the_pin_is_refused`, `test_the_api_starts_only_on_the_pinned_ollama_version` |
+| F8 | `granite3-guardian:2b` scored κ −0.19 on 30 labelled answers after getting 4 of 4 obvious cases right | A few obvious cases say little about a judge | A judge is adopted only after calibration; `bespoke-minicheck:7b` passed (κ 0.78) | `test_high_agreement_with_no_kappa_does_not_pass` |
+| F9 | The always-answer system scored 0.38 behaviour accuracy | The scorer counted "cannot decide" as a pass | Undecided cases go to the judge; scorers are run on the reference systems first | `test_always_answer_fails_the_out_of_scope_gate` |
+| F10 | After one refusal, the agent refused the next question with no tool call | The model copied its last reply from the conversation history | A refusal without a tool call becomes a knowledge search (agent experiment A6) | `test_a_refusal_copied_from_the_history_is_replaced_by_a_knowledge_search` |
+| F11 | The agent eval passed a037 and failed holdout h008, the opposite of real use | Its stand-in knowledge base answers every question not listed in `stub_refusals` | Changes that depend on the knowledge base's answer are also checked against the real pipeline | none yet: a rule in `CLAUDE.md` |
 
 ---
 
