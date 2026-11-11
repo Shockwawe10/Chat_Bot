@@ -1089,6 +1089,10 @@ We tried a fact-checking robot that got 4 easy examples right. On 30 real answer
 
 And our practice test for the helper robot used pretend notebooks that know the answer to everything. That made the robot look better on one question and worse on another than it really is. The fix is to check such changes with the real notebooks too.
 
+### Stage 8, part 3: catching up on the diary
+
+The project has a diary, the learning log, where the owner writes after each big step: what changed, how they checked it, and what they learned. After Stage 2 the diary went quiet, for five stages. So we wrote first drafts for Stages 3 to 7 from the saved test results, with every number copied from those records. Each draft is marked "not reviewed yet", because a diary is only useful if it's in the owner's own words. The two parts that must be the owner's own, "how it works, in my own words" and "what I did by hand", are left for the owner to fill in.
+
 
 ## Findings
 

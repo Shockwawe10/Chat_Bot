@@ -195,3 +195,99 @@ I reviewed all 75 golden cases against the knowledge base.
 - Retrieval is better than the answers: the right chunk was in the top 5 for 17 of the 22 wrongly refused questions.
 
 Still unclear: Ragas metrics and the judge are not set up, so faithfulness and the 8 cases left for the judge are not scored yet. The blind check needs a person. The thresholds in the Results table still need reviewing against this baseline in `reports/thresholds.md`.
+
+## 2026-11-05: Stage 3, hallucinations and experiments (PR #5)
+
+*Drafted by Claude Code at my request from the saved records. I have not reviewed and edited it yet.*
+
+**What changed:**
+A hallucination suite in CI (`tests/ai`, gates in `evals/gates.py`): out-of-scope refusals, unsupported language, false premises, numeric fidelity and a citation check. 8 experiments in `reports/experiments.md`; the adopted setup is prompt v5, top-k 8, example questions per chunk (`RETRIEVAL=questions`) and an answer check by `bespoke-minicheck:7b`, confirmed once on holdout. An English-only reply in code. Failures counted by cause in `reports/error_analysis.md`.
+**How it works, in my own words:**
+*(for me to write)*
+**How I checked it:**
+Every experiment had its predictions committed before it ran, and was compared on the 52 dev cases; the winner ran once on holdout. The suite's gates were run on the reference systems before they were trusted.
+**Manual change of the day:**
+*(for me to write)*
+**What I learned / what is still unclear:**
+- Failed dev cases went from 30 to 21 of 52 (`reports/error_analysis.md`).
+- A parameter with a silent default can wreck a result: hybrid search ranked with an empty query (19 of 42 instead of 31 of 42) until it was made to raise an error without its question.
+- A long run can die when three models swap on the 4 GB GPU ("timed out waiting for llama-server to start"); rerun the identical command once before changing anything.
+
+Still unclear: chunk size was not tried.
+
+## 2026-11-06: Stage 4, security: prompt injection and jailbreak (PR #6)
+
+*Drafted by Claude Code at my request from the saved records. I have not reviewed and edited it yet.*
+
+**What changed:**
+42 own attacks mapped to OWASP Top 10 for LLM Applications 2025 (`evals/attacks.jsonl`, `python -m evals.attack_run`), promptfoo red teaming (96 attacks, `make redteam`) and a garak scan of the bare model. Defences: a scan of documents before indexing and an answer guard (`app/guards.py`). `reports/SECURITY_REPORT.md` with the before and after table; CI gates the committed attack run.
+**How it works, in my own words:**
+*(for me to write)*
+**How I checked it:**
+All attacks were run before and after the defences, with the dev answers checked to be unchanged. The 6 attacks promptfoo's grader failed were read by hand.
+**Manual change of the day:**
+*(for me to write)*
+**What I learned / what is still unclear:**
+- 3 of 59 attempts worked before the defences, all indirect injection through a poisoned document; 0 of 61 after.
+- The bare model prints an injected line in 118 of 192 garak prompt-injection attempts: the defences carry the app, not the model.
+- None of promptfoo's 6 failures was a real one when read by hand. An automatic grader needs reading too.
+
+Still unclear: personal-data leakage needed the agent's customer data, so it moved to Stage 6.
+
+## 2026-11-07: Stage 5, CI/CD, regression and drift (PR #8)
+
+*Drafted by Claude Code at my request from the saved records. I have not reviewed and edited it yet.*
+
+**What changed:**
+CI checks committed runs, because the models run only on the local GPU: every run is stamped with a digest of what shapes an answer and must match its commit (`evals/freshness.py`). The smoke run (21 dev cases) is gated case by case against an accepted reference. `make nightly`, the manual "Holdout" workflow, a metric history chart, Phoenix traces, and a drift comparison of qwen3 against phi4-mini (`reports/drift.md`). The canary PR (#7) with a broken prompt.
+**How it works, in my own words:**
+*(for me to write)*
+**How I checked it:**
+The canary PR failed CI exactly as predicted. The final runs: dev answers identical to the previous run in 52/52 cases, 0 of 62 attacks worked, holdout 8 behaviour failures against 10 at the end of Stage 3.
+**Manual change of the day:**
+*(for me to write)*
+**What I learned / what is still unclear:**
+- An Ollama self-update (0.40.14 to 0.40.15) made one answer false while every gate passed, and refusal accuracy rose from 0.75 to 0.77. The Ollama version is now pinned (Findings, F7).
+- phi4-mini kept every safety result but refused 39 of 42 answerable questions.
+- The canary exposed two test weaknesses: a prompt with no passages passed every model-free check (F5), and the gate's unit tests used the committed run instead of a known-good one (F6).
+
+Still unclear: the answer check's blind spot for a reversed "not" (F7) is not fixed.
+
+## 2026-11-09: Stage 6, MCP agent with tools (PR #10)
+
+*Drafted by Claude Code at my request from the saved records. I have not reviewed and edited it yet.*
+
+**What changed:**
+Demo company data with fake contacts (`make seed`, `data/app.db`), an MCP server with four tools over stdio (`create_lead`, `get_project_status`, `find_product`, `book_site_survey`), and the `/chat` agent. It reuses the checked RAG answer, and a booking is confirmed only by the customer's own "yes", in code the model cannot call. A reply guard stops other customers' details, prices and prompt quotes. The agent eval (35 dev cases, 22 attacks) runs on every push against a per-case reference.
+**How it works, in my own words:**
+*(for me to write)*
+**How I checked it:**
+Five experiments (A1 to A5) with committed predictions; the scorer was run on agents that do nothing, always press the first button, or have no defences before it was trusted; the owner's 10 holdout cases ran once at the end.
+**Manual change of the day:**
+*(for me to write. Done by me this stage: I wrote the 10 agent holdout cases.)*
+**What I learned / what is still unclear:**
+- Tool selection 27 of 31 and 30 of 35 cases passing on dev, but only 3 of 10 on my holdout. Tool choice held there (9/10), and the safety counts stayed at 0.
+- 0 of 22 attacks worked, with 0 unconfirmed bookings and 0 leaks. The model obeyed a note planted in project P-1006 three times out of three, until notes that address the assistant were withheld.
+- On a 4B model, a prompt sentence that fixes one case can break another; code checks broke nothing.
+
+Still unclear: why most holdout failures are on "the reply includes the expected words".
+
+## 2026-11-11: Stage 7, UI, Playwright and a Docker demo (PR #13)
+
+*Drafted by Claude Code at my request from the saved records. I have not reviewed and edited it yet.*
+
+**What changed:**
+A Streamlit chat window on `/chat` with the cited sources and the booking confirmation (`ui/app.py`), 9 Playwright browser tests against a stand-in API in CI, and a Docker demo (`make docker-up`) that uses the desktop Ollama the evals ran on. Agent experiments A6 and A9 kept, A7 and A8 measured and not kept. The README got a Demo section. The live link is postponed; its Telegram bot is parked on `later/telegram-bot`.
+**How it works, in my own words:**
+*(for me to write)*
+**How I checked it:**
+The browser tests were each broken on purpose 4 ways and caught all 4. The Docker demo gave 21/21 smoke answers word for word the same as the committed run. Every agent experiment had committed predictions. The end-of-stage runs: dev answers identical in 52/52, 0 of 62 RAG attacks and 0 of 22 agent attacks worked, the RAG holdout identical in 23/23.
+**Manual change of the day:**
+*(for me to write. Done by me this stage: chose local Docker over AWS after the cost comparison, installed Docker Desktop and enabled Virtual Machine Platform, found both chat-window bugs, and checked holdout case h008 by hand.)*
+**What I learned / what is still unclear:**
+- Ollama inside Docker, at the same version with the same models, gave 20 of 21 smoke answers word for word and refused g032; the cause was not measured. So the demo uses the desktop Ollama.
+- A prompt fix on a 4B model moved failures around: v4 cost a018, v5 cost a013 and a014. The code fix A9 broke nothing.
+- The agent eval's stand-in knowledge base answers everything, so it passed a037 and failed holdout h008, the opposite of real use (F11).
+- Agent holdout: 2 of 10 against 3 of 10 at the end of Stage 6; the one lost case, h008, passes in real use.
+
+Still unclear: "tell me about the company" is refused by the real knowledge base, because one garbled sentence makes the answer check throw away the whole answer.
