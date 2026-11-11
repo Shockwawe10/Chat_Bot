@@ -1002,3 +1002,25 @@ Decision rule: keep A9 only if a037 passes in the eval, no baseline pass is lost
 | | "Which services can you provide": replaced if the model declines | conditional | the model did not decline this time: it described what it can help with, from its own knowledge, with no tool call, so A9 did not act | not tested |
 
 **A9 is kept** under the decision rule: every prediction that could be checked held, and no right refusal was replaced in the real check. Its effect in use is narrow: in the real check it changed **neither** of the owner's messages. "tell me about the company" needs the knowledge base to answer it, which is a RAG change (one garbled sentence makes the answer check refuse the whole answer). "Which services can you provide" this time got an answer from the model's own knowledge, which A9 does not catch (a038, a039). The extra knowledge search on a decline adds time to those replies; how much was not measured.
+
+## Holdout at the end of Stage 7 (runs `20261111T071945Z-pipeline-holdout` and `20261111T072614Z-agent-holdout`)
+
+Run once, at commit `b09571a` (the Stage 7 nightly), prompt v2, Ollama 0.40.15. A first attempt on 2026-11-10 was stopped by the owner partway through the RAG holdout; it wrote no file and nothing of it was read. Reported as counts and case ids only.
+
+**RAG holdout: the same as at the end of Stage 6.** All 23 answers are word for word the answers of `20261109T142845Z-pipeline-holdout`, with the same pass or fail; Stage 7 did not change the pipeline. Behaviour: 10 passed, 8 failed (g008 g018 g034* g044 g045* g058 g061* g069), 5 for the judge; out of scope answered 0/3; non-200 replies 0. (* = exposed holdout case.)
+
+**Agent holdout: 2/10, against 3/10 at the end of Stage 6 (`20261109T143452Z-agent-holdout`).**
+
+| Measure | End of Stage 6 | End of Stage 7 |
+| --- | --- | --- |
+| Passed | 3/10 (h001 h003 h008) | **2/10** (h001 h003) |
+| Tool selection | 9/10 | 8/10 |
+| Arguments | 4/6 | 4/6 |
+| Asks for missing data | 0/1 | 0/1 |
+| Reply includes the expected words | 3/8 | 2/8 |
+| Database | 0/2 | 0/2 |
+| Unconfirmed bookings, leaks, errors | 0, 0, 0 | 0, 0, 0 |
+
+**One case changed: h008**, which passed and now fails the tools and reply checks. It is flagged `decline_fallback`, so A9 replaced the model's reply. The other 9 cases pass or fail exactly as before, on the same checks.
+
+What it can and cannot show. In the agent eval, the stand-in knowledge base answers every question a case does not list in `stub_refusals`, so A9 replaces every decline it matches. With the real knowledge base, A9 replaces a decline only when the knowledge base answers. Whether h008 fails in real use depends on what the real knowledge base says to its message; the session may not read or run the holdout outside `--split holdout`, so that is not measured. What is measured: A9 was kept on dev cases where it fired only on a031, a032 and a037, and on the first holdout case it met, it changed a pass into a fail in the eval. The A9 decision rule did not cover a decline that is the expected reply in a case that checks the tools.

@@ -1,0 +1,1123 @@
+{
+ "run_id": "20261111T071945Z-pipeline-holdout",
+ "timestamp": "2026-11-11T07:25:11+00:00",
+ "system": "pipeline",
+ "label": "",
+ "experiment": "",
+ "split": "holdout",
+ "smoke": false,
+ "git_sha": "b09571ae2ce3fa01b29a4d0a2ff63a1ca8c031ab",
+ "git_dirty": false,
+ "dataset_version": "1.2",
+ "cases_run": 23,
+ "drafts_skipped": 0,
+ "prompt_version": "v5",
+ "prompt_sha256": "2a5543496ba484d78c8696c3bde99a0e5de2455c2a077efbf4ab13f2085f8489",
+ "inputs_sha256": "bfd426e4daa2367e93c0e85c4a31e655aeb6066a1bde506d5c977cbc197e5265",
+ "settings": {
+  "PROMPT_VERSION": "v5",
+  "TOP_K": "8",
+  "RETRIEVAL": "questions",
+  "ANSWER_CHECK": "minicheck",
+  "ANSWER_CHECK_MODEL": "bespoke-minicheck:7b",
+  "ANSWER_CHECK_DIGEST": "66607904c165445540331c2f005bb5120edd939008ba1fe1e75151ed827a7a00",
+  "OUTPUT_GUARD": "on",
+  "LLM_MODEL": "qwen3:4b-instruct",
+  "LLM_DIGEST": "0edcdef34593eac1aa2be9c7d06c432dcf81945adca5eca2f27662c18f168ba0",
+  "LLM_SEED": "42",
+  "LLM_NUM_CTX": "4096",
+  "LLM_NUM_PREDICT": "512",
+  "TEMPERATURE": "0",
+  "EMBEDDING_MODEL": "nomic-embed-text:v1.5",
+  "EMBEDDING_DIGEST": "0a109f422b47e3a30ba2b10eca18548e944e8a23073ee3f3e947efcf3c45e59f",
+  "CHUNK_SIZE": "500",
+  "CHUNK_MAX": "800",
+  "CHUNK_MIN": "100"
+ },
+ "llm_provider": "ollama",
+ "llm_model": "qwen3:4b-instruct",
+ "llm_digest": "0edcdef34593eac1aa2be9c7d06c432dcf81945adca5eca2f27662c18f168ba0",
+ "ollama_version": "0.40.15",
+ "judge_provider": "ollama",
+ "judge_model": "bespoke-minicheck:7b",
+ "embedding_model": "nomic-embed-text:v1.5",
+ "embedding_digest": "0a109f422b47e3a30ba2b10eca18548e944e8a23073ee3f3e947efcf3c45e59f",
+ "temperature": "0",
+ "seed": "42",
+ "chunker_version": "v1",
+ "chunk_size": 500,
+ "chunk_max": 800,
+ "chunk_min": 100,
+ "top_k": 8,
+ "retrieval": "questions",
+ "answer_check": "minicheck",
+ "answer_check_model": "bespoke-minicheck:7b",
+ "index_fingerprint": "e5c2f46128e9deaf23b2720a78e917a8184a3f7375c61363c07b2cc604b8db8a",
+ "judge_passes": 0,
+ "judge_method": null,
+ "total_cost": 0.0,
+ "latency_p95_ms": 25914.2,
+ "metrics": {
+  "cases": 23,
+  "hit_rate": 0.7777777777777778,
+  "mrr": 0.5092592592592592,
+  "all_groups_recall": 0.7222222222222222,
+  "hit_rate_low_overlap": 0.6666666666666666,
+  "hit_rate_high_overlap": 0.8333333333333334,
+  "near_misses_with_distractor": 1,
+  "behaviour_accuracy": 0.5555555555555556,
+  "behaviour_decided": 18,
+  "behaviour_for_judge": 5,
+  "refusal_accuracy": 0.6521739130434783,
+  "over_refusal_rate": 0.4444444444444444,
+  "numeric_fidelity": 0.5,
+  "out_of_scope_answered": 0,
+  "errors": 0,
+  "behaviour_by_category": {
+   "ambiguous": [
+    0,
+    1,
+    1
+   ],
+   "false premise": [
+    0,
+    2,
+    0
+   ],
+   "multi-document": [
+    0,
+    2,
+    1
+   ],
+   "numeric": [
+    4,
+    1,
+    0
+   ],
+   "out of scope": [
+    3,
+    0,
+    0
+   ],
+   "single fact": [
+    1,
+    2,
+    3
+   ],
+   "unsupported language": [
+    2,
+    0,
+    0
+   ]
+  },
+  "latency_p95_ms": 25914.2,
+  "faithfulness": null,
+  "answer_relevancy": null,
+  "context_precision": null,
+  "context_recall": null,
+  "retried": [],
+  "exposure": {
+   "exposed_ids": [
+    "g019",
+    "g029",
+    "g034",
+    "g045",
+    "g051",
+    "g061",
+    "g070",
+    "g075"
+   ],
+   "all": {
+    "cases": 23,
+    "hit_at_k": [
+     14,
+     18
+    ],
+    "rank_1": [
+     7,
+     18
+    ],
+    "all_groups_found": [
+     13,
+     18
+    ],
+    "behaviour": {
+     "passed": 10,
+     "failed": 8,
+     "for_judge": 5
+    },
+    "over_refused": [
+     8,
+     18
+    ],
+    "out_of_scope_answered": [
+     0,
+     3
+    ],
+    "facts_ok": [
+     5,
+     10
+    ],
+    "behaviour_by_category": {
+     "ambiguous": {
+      "passed": 0,
+      "failed": 1,
+      "for_judge": 1
+     },
+     "false premise": {
+      "passed": 0,
+      "failed": 2,
+      "for_judge": 0
+     },
+     "multi-document": {
+      "passed": 0,
+      "failed": 2,
+      "for_judge": 1
+     },
+     "numeric": {
+      "passed": 4,
+      "failed": 1,
+      "for_judge": 0
+     },
+     "out of scope": {
+      "passed": 3,
+      "failed": 0,
+      "for_judge": 0
+     },
+     "single fact": {
+      "passed": 1,
+      "failed": 2,
+      "for_judge": 3
+     },
+     "unsupported language": {
+      "passed": 2,
+      "failed": 0,
+      "for_judge": 0
+     }
+    }
+   },
+   "unexposed": {
+    "cases": 15,
+    "hit_at_k": [
+     9,
+     12
+    ],
+    "rank_1": [
+     5,
+     12
+    ],
+    "all_groups_found": [
+     8,
+     12
+    ],
+    "behaviour": {
+     "passed": 7,
+     "failed": 5,
+     "for_judge": 3
+    },
+    "over_refused": [
+     5,
+     12
+    ],
+    "out_of_scope_answered": [
+     0,
+     2
+    ],
+    "facts_ok": [
+     4,
+     7
+    ],
+    "behaviour_by_category": {
+     "ambiguous": {
+      "passed": 0,
+      "failed": 1,
+      "for_judge": 0
+     },
+     "false premise": {
+      "passed": 0,
+      "failed": 1,
+      "for_judge": 0
+     },
+     "multi-document": {
+      "passed": 0,
+      "failed": 1,
+      "for_judge": 1
+     },
+     "numeric": {
+      "passed": 3,
+      "failed": 0,
+      "for_judge": 0
+     },
+     "out of scope": {
+      "passed": 2,
+      "failed": 0,
+      "for_judge": 0
+     },
+     "single fact": {
+      "passed": 1,
+      "failed": 2,
+      "for_judge": 2
+     },
+     "unsupported language": {
+      "passed": 1,
+      "failed": 0,
+      "for_judge": 0
+     }
+    }
+   }
+  }
+ },
+ "cases": [
+  {
+   "id": "g002",
+   "split": "holdout",
+   "category": "single fact",
+   "subtype": "fact",
+   "expected_behaviour": "answer",
+   "should_refuse": false,
+   "smoke": false,
+   "seen": false,
+   "question": "Once we've emailed you, how soon does someone come out to look at our land?",
+   "retrieved": [
+    "process-site-survey:1:4d8de16bf208",
+    "company-contacts:1:a43d0efe674b",
+    "warranty:3:beedd5aeabf1",
+    "process-quote-requirements:4:93baf54ab698",
+    "process-cooperation-stages:2:9fdd6a86f285",
+    "process-site-survey:2:119e1f468ab1",
+    "process-quote-requirements:3:7f0ff5c1edd2",
+    "pricing-commercial-offer:1:378da8d65414"
+   ],
+   "citations": [
+    "process-site-survey:1:4d8de16bf208"
+   ],
+   "cited_texts": [
+    "## When it happens\n\nThe survey is usually scheduled within 10 working days of the request. The customer confirms the date before the visit is booked."
+   ],
+   "status": 200,
+   "latency_ms": 17083.3,
+   "first_group_rank": 1,
+   "hit": true,
+   "all_groups_found": true,
+   "reciprocal_rank": 1.0,
+   "answer": "A site survey is usually scheduled within 10 working days of the request, and the customer confirms the date before the visit is booked.",
+   "refused": false,
+   "flags": [],
+   "facts": 1,
+   "missing_facts": [],
+   "behaviour_ok": true,
+   "refusal_ok": true
+  },
+  {
+   "id": "g005",
+   "split": "holdout",
+   "category": "single fact",
+   "subtype": "fact",
+   "expected_behaviour": "answer",
+   "should_refuse": false,
+   "smoke": false,
+   "seen": false,
+   "question": "Will your crews also wire up the inverters and get us connected to the grid?",
+   "retrieved": [
+    "company-overview:2:d20f72f4c794",
+    "services-installation:0:16ddba31591c",
+    "warranty:2:6f52d0242c9d",
+    "services-installation:1:f29b088e0d21",
+    "company-overview:0:7772405e2c96",
+    "company-overview:3:e737df5faf6e",
+    "services-supply:1:78e705e10f55",
+    "company-overview:1:b192d0918c28"
+   ],
+   "citations": [
+    "company-overview:2:d20f72f4c794"
+   ],
+   "cited_texts": [
+    "## What the company does not do\n\n- It does not sell PV modules, inverters, batteries or cables. The customer or their electrical contractor supplies these.\n- It does not do electrical installation or grid connection.\n- It does not work on private homes. The smallest project it accepts is 100 kWp."
+   ],
+   "status": 200,
+   "latency_ms": 25914.2,
+   "first_group_rank": 1,
+   "hit": true,
+   "all_groups_found": true,
+   "reciprocal_rank": 1.0,
+   "answer": "The company does not do electrical installation or grid connection.",
+   "refused": false,
+   "flags": [],
+   "facts": 0,
+   "missing_facts": [],
+   "behaviour_ok": null,
+   "refusal_ok": true
+  },
+  {
+   "id": "g008",
+   "split": "holdout",
+   "category": "single fact",
+   "subtype": "fact",
+   "expected_behaviour": "answer",
+   "should_refuse": false,
+   "smoke": false,
+   "seen": false,
+   "question": "Do you pour concrete into our field for every post?",
+   "retrieved": [
+    "services-installation:2:ca896e7404fc",
+    "foundations-ground-mount:1:749fcc790271",
+    "services-maintenance:1:1bcab0ca6b81",
+    "foundations-ground-mount:0:882079e6361a",
+    "products-ground-mount-gf2:3:01e70f179ec8",
+    "loads-wind-and-snow:2:a732ad498eb4",
+    "products-ground-mount-gf1:2:516929ac3734",
+    "products-ground-mount-gf2:2:ef6f945572be"
+   ],
+   "citations": [],
+   "cited_texts": [],
+   "status": 200,
+   "latency_ms": 11719.9,
+   "first_group_rank": 4,
+   "hit": true,
+   "all_groups_found": true,
+   "reciprocal_rank": 0.25,
+   "answer": "I can't answer that from the available documents.",
+   "refused": true,
+   "flags": [],
+   "facts": 0,
+   "missing_facts": [],
+   "behaviour_ok": false,
+   "refusal_ok": false
+  },
+  {
+   "id": "g011",
+   "split": "holdout",
+   "category": "single fact",
+   "subtype": "fact",
+   "expected_behaviour": "answer",
+   "should_refuse": false,
+   "smoke": false,
+   "seen": false,
+   "question": "Could we hang car chargers off the carport, and would you sort the chargers out as well?",
+   "retrieved": [
+    "products-carport-cp1:2:6a428ddbed36",
+    "products-carport-cp1:0:c1380b6d362c",
+    "process-roof-assessment:1:0c719377ba2f",
+    "foundations-ground-mount:0:882079e6361a",
+    "products-overview:1:7b291994c46a",
+    "warranty:1:5aca3e844773",
+    "services-installation:1:f29b088e0d21",
+    "products-carport-cp1:1:a402c784d0d4"
+   ],
+   "citations": [
+    "products-carport-cp1:2:6a428ddbed36"
+   ],
+   "cited_texts": [
+    "## Options\n\n- Rain gutter along the low edge.\n- Mounting points for EV chargers on the columns. The company does not supply or connect the chargers.\n- Impact protection at the base of each column."
+   ],
+   "status": 200,
+   "latency_ms": 15053.3,
+   "first_group_rank": 1,
+   "hit": true,
+   "all_groups_found": true,
+   "reciprocal_rank": 1.0,
+   "answer": "The company provides mounting points for EV chargers on the columns but does not supply or connect the chargers.",
+   "refused": false,
+   "flags": [],
+   "facts": 0,
+   "missing_facts": [],
+   "behaviour_ok": null,
+   "refusal_ok": true
+  },
+  {
+   "id": "g018",
+   "split": "holdout",
+   "category": "single fact",
+   "subtype": "stated absence",
+   "expected_behaviour": "answer",
+   "should_refuse": false,
+   "smoke": false,
+   "seen": false,
+   "question": "Which of your structures would you put in the splash zone of an offshore installation?",
+   "retrieved": [
+    "corrosion-categories:1:5550df1b43d8",
+    "products-ground-mount-gf2:2:ef6f945572be",
+    "process-quote-requirements:1:0cd6c5946f52",
+    "products-flat-roof-rf2:2:da8be679ccc8",
+    "process-roof-assessment:1:0c719377ba2f",
+    "products-ground-mount-gf1:2:516929ac3734",
+    "services-design:1:78351f1b3370",
+    "products-flat-roof-rf2:1:118910e283fc"
+   ],
+   "citations": [],
+   "cited_texts": [],
+   "status": 200,
+   "latency_ms": 11996.2,
+   "first_group_rank": null,
+   "hit": false,
+   "all_groups_found": false,
+   "reciprocal_rank": 0.0,
+   "answer": "I can't answer that from the available documents.",
+   "refused": true,
+   "flags": [],
+   "facts": 1,
+   "missing_facts": [
+    "CX"
+   ],
+   "behaviour_ok": false,
+   "refusal_ok": false
+  },
+  {
+   "id": "g019",
+   "split": "holdout",
+   "category": "single fact",
+   "subtype": "stated absence",
+   "expected_behaviour": "answer",
+   "should_refuse": false,
+   "smoke": false,
+   "seen": false,
+   "question": "The field is quite hilly. Will your team flatten it out before building?",
+   "retrieved": [
+    "process-site-survey:2:119e1f468ab1",
+    "foundations-ground-mount:3:de95285189ec",
+    "foundations-ground-mount:0:882079e6361a",
+    "products-ground-mount-gf1:3:94569713dff4",
+    "loads-wind-and-snow:2:a732ad498eb4",
+    "process-site-survey:4:7752dc27aa77",
+    "products-flat-roof-rf1:2:bda97207539c",
+    "products-pitched-roof-rp1:0:583cc4e63bda"
+   ],
+   "citations": [
+    "foundations-ground-mount:3:de95285189ec"
+   ],
+   "cited_texts": [
+    "## Earthworks\n\nGF-1 can follow slopes of up to 15% and GF-2 up to 10% without earthworks. On steeper sites the company recommends grading the land before installation. Grading is not part of the company's services."
+   ],
+   "status": 200,
+   "latency_ms": 19276.3,
+   "first_group_rank": 2,
+   "hit": true,
+   "all_groups_found": true,
+   "reciprocal_rank": 0.5,
+   "answer": "Grading is not part of the company's services, so the team will not flatten it out before building.",
+   "refused": false,
+   "flags": [],
+   "facts": 0,
+   "missing_facts": [],
+   "behaviour_ok": null,
+   "refusal_ok": true
+  },
+  {
+   "id": "g023",
+   "split": "holdout",
+   "category": "numeric",
+   "subtype": "table lookup",
+   "expected_behaviour": "answer",
+   "should_refuse": false,
+   "smoke": false,
+   "seen": false,
+   "question": "Our structural engineer wants to know the extra weight per square metre of the east-west system, ballast included.",
+   "retrieved": [
+    "products-flat-roof-rf2:1:118910e283fc",
+    "products-flat-roof-rf2:0:37574a244939",
+    "products-flat-roof-rf2:2:da8be679ccc8",
+    "loads-wind-and-snow:2:a732ad498eb4",
+    "products-flat-roof-rf1:2:bda97207539c",
+    "products-flat-roof-rf1:1:96bd3f1c0c6c",
+    "products-flat-roof-rf1:0:87f4079e16e5",
+    "products-ground-mount-gf2:2:ef6f945572be"
+   ],
+   "citations": [
+    "products-flat-roof-rf2:1:118910e283fc"
+   ],
+   "cited_texts": [
+    "## Specifications\n\n| Parameter | Value |\n| --- | --- |\n| Material | Aluminium, anodised |\n| Coating thickness | 20 µm anodic layer |\n| Fasteners | Stainless steel A4 |\n| Corrosivity category | C4 |\n| Tilt angle | 10° |\n| Maximum wind speed | 30 m/s |\n| Maximum snow load | 2.4 kN/m² |\n| Added roof load | 12 to 20 kg/m², including ballast |\n| Maximum roof slope | 5° |"
+   ],
+   "status": 200,
+   "latency_ms": 21810.3,
+   "first_group_rank": 1,
+   "hit": true,
+   "all_groups_found": true,
+   "reciprocal_rank": 1.0,
+   "answer": "The added roof load for the east-west system, including ballast, is 12 to 20 kg/m².",
+   "refused": false,
+   "flags": [],
+   "facts": 1,
+   "missing_facts": [],
+   "behaviour_ok": true,
+   "refusal_ok": true
+  },
+  {
+   "id": "g027",
+   "split": "holdout",
+   "category": "numeric",
+   "subtype": "table lookup",
+   "expected_behaviour": "answer",
+   "should_refuse": false,
+   "smoke": false,
+   "seen": false,
+   "question": "What corrosion class is the rail system for sloped roofs good for?",
+   "retrieved": [
+    "products-pitched-roof-rp1:1:888b406bd5c4",
+    "products-flat-roof-rf1:1:96bd3f1c0c6c",
+    "products-pitched-roof-rp1:0:583cc4e63bda",
+    "corrosion-categories:3:d802103773d8",
+    "products-overview:1:7b291994c46a",
+    "products-flat-roof-rf2:1:118910e283fc",
+    "products-flat-roof-rf2:0:37574a244939",
+    "products-ground-mount-gf2:3:01e70f179ec8"
+   ],
+   "citations": [
+    "products-overview:1:7b291994c46a"
+   ],
+   "cited_texts": [
+    "| Product | Mounting type | Main material | Corrosivity category |\n| --- | --- | --- | --- |\n| GroundFrame GF-1 | Ground, single post | Hot-dip galvanised steel | C4 |\n| GroundFrame GF-2 | Ground, twin post | Steel with zinc-magnesium coating | C5 |\n| RoofFlat RF-1 | Flat roof, south-facing, ballasted | Anodised aluminium | C3 |\n| RoofFlat RF-2 | Flat roof, east-west, ballasted | Anodised aluminium | C4 |\n| RoofPitch RP-1 | Pitched roof, rails and hooks | Anodised aluminium | C3 |\n| CarportFrame CP-1 | Carport | Hot-dip galvanised steel | C4 |"
+   ],
+   "status": 200,
+   "latency_ms": 23134.3,
+   "first_group_rank": 1,
+   "hit": true,
+   "all_groups_found": true,
+   "reciprocal_rank": 1.0,
+   "answer": "The RoofPitch RP-1 pitched-roof system has a corrosivity category of C3, and since it is a rail system for sloped roofs, it is good for category C3.",
+   "refused": false,
+   "flags": [],
+   "facts": 1,
+   "missing_facts": [],
+   "behaviour_ok": true,
+   "refusal_ok": true
+  },
+  {
+   "id": "g029",
+   "split": "holdout",
+   "category": "numeric",
+   "subtype": "table lookup",
+   "expected_behaviour": "answer",
+   "should_refuse": false,
+   "smoke": false,
+   "seen": false,
+   "question": "What plant sizes is the twin-post system normally used for?",
+   "retrieved": [
+    "products-ground-mount-gf2:0:f61b6af8aebc",
+    "products-ground-mount-gf2:2:ef6f945572be",
+    "products-ground-mount-gf2:1:df7101dcc4db",
+    "products-ground-mount-gf2:4:287df327adf3",
+    "foundations-ground-mount:1:749fcc790271",
+    "services-installation:2:ca896e7404fc",
+    "products-ground-mount-gf2:3:01e70f179ec8",
+    "products-ground-mount-gf1:1:ea4f4fdab1fe"
+   ],
+   "citations": [
+    "products-ground-mount-gf2:1:df7101dcc4db"
+   ],
+   "cited_texts": [
+    "## Specifications\n\n| Parameter | Value |\n| --- | --- |\n| Material | Steel with zinc-magnesium coating |\n| Coating thickness | 25 µm per side |\n| Corrosivity category | C5 |\n| Module layout | 3 modules in portrait per table row |\n| Tilt angle | 10° to 30° |\n| Maximum wind speed | 36 m/s |\n| Maximum snow load | 3.5 kN/m² |\n| Ground clearance | At least 0.6 m |\n| Foundation | Rammed posts or screw piles |\n| Typical plant size | 1 MWp to 100 MWp |"
+   ],
+   "status": 200,
+   "latency_ms": 22635.5,
+   "first_group_rank": 3,
+   "hit": true,
+   "all_groups_found": true,
+   "reciprocal_rank": 0.3333333333333333,
+   "answer": "The twin-post system is normally used for plant sizes from 1 MWp to 100 MWp.",
+   "refused": false,
+   "flags": [],
+   "facts": 1,
+   "missing_facts": [],
+   "behaviour_ok": true,
+   "refusal_ok": true
+  },
+  {
+   "id": "g030",
+   "split": "holdout",
+   "category": "numeric",
+   "subtype": "table lookup",
+   "expected_behaviour": "answer",
+   "should_refuse": false,
+   "smoke": false,
+   "seen": false,
+   "question": "How are the modules laid out on each GF-1 table row?",
+   "retrieved": [
+    "products-ground-mount-gf1:0:964c52c94b33",
+    "products-overview:2:16e6ba64e21b",
+    "products-ground-mount-gf2:0:f61b6af8aebc",
+    "products-ground-mount-gf1:1:ea4f4fdab1fe",
+    "products-ground-mount-gf1:2:516929ac3734",
+    "products-pitched-roof-rp1:0:583cc4e63bda",
+    "products-ground-mount-gf1:3:94569713dff4",
+    "products-ground-mount-gf2:1:df7101dcc4db"
+   ],
+   "citations": [
+    "products-ground-mount-gf1:1:ea4f4fdab1fe"
+   ],
+   "cited_texts": [
+    "## Specifications\n\n| Parameter | Value |\n| --- | --- |\n| Material | Steel, hot-dip galvanised |\n| Coating thickness | 85 µm average |\n| Corrosivity category | C4 |\n| Module layout | 2 modules in portrait per table row |\n| Tilt angle | 15° to 35° |\n| Maximum wind speed | 32 m/s |\n| Maximum snow load | 2.4 kN/m² |\n| Ground clearance | At least 0.8 m |\n| Foundation | Rammed posts or screw piles |\n| Typical plant size | 500 kWp to 50 MWp |"
+   ],
+   "status": 200,
+   "latency_ms": 27960.4,
+   "first_group_rank": 4,
+   "hit": true,
+   "all_groups_found": true,
+   "reciprocal_rank": 0.25,
+   "answer": "The modules are laid out in 2 modules in portrait per table row on each GF-1 table row.",
+   "refused": false,
+   "flags": [],
+   "facts": 1,
+   "missing_facts": [],
+   "behaviour_ok": true,
+   "refusal_ok": true
+  },
+  {
+   "id": "g034",
+   "split": "holdout",
+   "category": "numeric",
+   "subtype": "rule application",
+   "expected_behaviour": "answer",
+   "should_refuse": false,
+   "smoke": false,
+   "seen": false,
+   "question": "The land climbs about 12% from south to north. Can the twin-post system go straight in without earthworks?",
+   "retrieved": [
+    "products-ground-mount-gf2:4:287df327adf3",
+    "foundations-ground-mount:3:de95285189ec",
+    "products-ground-mount-gf2:2:ef6f945572be",
+    "products-ground-mount-gf1:3:94569713dff4",
+    "products-ground-mount-gf2:1:df7101dcc4db",
+    "foundations-ground-mount:1:749fcc790271",
+    "products-ground-mount-gf2:3:01e70f179ec8",
+    "products-ground-mount-gf2:0:f61b6af8aebc"
+   ],
+   "citations": [],
+   "cited_texts": [],
+   "status": 200,
+   "latency_ms": 22931.7,
+   "first_group_rank": 1,
+   "hit": true,
+   "all_groups_found": true,
+   "reciprocal_rank": 1.0,
+   "answer": "I can't answer that from the available documents.",
+   "refused": true,
+   "flags": [
+    "answer_check_failed"
+   ],
+   "facts": 1,
+   "missing_facts": [
+    "10%"
+   ],
+   "behaviour_ok": false,
+   "refusal_ok": false
+  },
+  {
+   "id": "g040",
+   "split": "holdout",
+   "category": "multi-document",
+   "subtype": "multi-chunk",
+   "expected_behaviour": "answer",
+   "should_refuse": false,
+   "smoke": false,
+   "seen": false,
+   "question": "What will you need from us to price a ground-mounted plant?",
+   "retrieved": [
+    "process-quote-requirements:3:7f0ff5c1edd2",
+    "pricing-commercial-offer:0:0181282088d1",
+    "services-installation:2:ca896e7404fc",
+    "foundations-ground-mount:2:3f335b1b649d",
+    "services-design:1:78351f1b3370",
+    "process-quote-requirements:1:0cd6c5946f52",
+    "products-ground-mount-gf2:2:ef6f945572be",
+    "products-overview:2:16e6ba64e21b"
+   ],
+   "citations": [
+    "process-quote-requirements:1:0cd6c5946f52"
+   ],
+   "cited_texts": [
+    "## For every project\n\n- Company name and a contact person with an email address.\n- Site location: address or GPS coordinates.\n- Planned plant size in kWp, or the available area in m².\n- Mounting type: ground, flat roof, pitched roof or carport.\n- The PV module model, if it is already chosen. If not, the company designs for a typical module size and checks it again later.\n- The desired start of installation."
+   ],
+   "status": 200,
+   "latency_ms": 24038.4,
+   "first_group_rank": 6,
+   "hit": true,
+   "all_groups_found": true,
+   "reciprocal_rank": 0.16666666666666666,
+   "answer": "To price a ground-mounted plant, you will need: company name and a contact person with an email address, site location (address or GPS coordinates), planned plant size in kWp or available area in m², mounting type (ground, flat roof, pitched roof or carport), the PV module model if already chosen, and the desired start of installation.",
+   "refused": false,
+   "flags": [],
+   "facts": 0,
+   "missing_facts": [],
+   "behaviour_ok": null,
+   "refusal_ok": true
+  },
+  {
+   "id": "g044",
+   "split": "holdout",
+   "category": "multi-document",
+   "subtype": "rule application",
+   "expected_behaviour": "answer",
+   "should_refuse": false,
+   "smoke": false,
+   "seen": false,
+   "question": "We've got a tiled roof about 4 km from the coast. Is your pitched-roof system OK there?",
+   "retrieved": [
+    "products-pitched-roof-rp1:2:15e0861aad71",
+    "products-pitched-roof-rp1:0:583cc4e63bda",
+    "products-pitched-roof-rp1:1:888b406bd5c4",
+    "products-flat-roof-rf2:2:da8be679ccc8",
+    "products-ground-mount-gf2:2:ef6f945572be",
+    "corrosion-categories:1:5550df1b43d8",
+    "products-ground-mount-gf1:2:516929ac3734",
+    "products-flat-roof-rf1:2:bda97207539c"
+   ],
+   "citations": [],
+   "cited_texts": [],
+   "status": 200,
+   "latency_ms": 24647.5,
+   "first_group_rank": 3,
+   "hit": true,
+   "all_groups_found": false,
+   "reciprocal_rank": 0.3333333333333333,
+   "answer": "I can't answer that from the available documents.",
+   "refused": true,
+   "flags": [
+    "answer_check_failed"
+   ],
+   "facts": 2,
+   "missing_facts": [
+    "C3",
+    "C5"
+   ],
+   "behaviour_ok": false,
+   "refusal_ok": false
+  },
+  {
+   "id": "g045",
+   "split": "holdout",
+   "category": "multi-document",
+   "subtype": "rule application",
+   "expected_behaviour": "answer",
+   "should_refuse": false,
+   "smoke": false,
+   "seen": false,
+   "question": "A storm just hit our GF-1 plant with gusts of around 30 m/s. What should we do, and is any damage covered?",
+   "retrieved": [
+    "loads-wind-and-snow:1:90b832b5b1fd",
+    "products-overview:2:16e6ba64e21b",
+    "products-ground-mount-gf1:2:516929ac3734",
+    "loads-wind-and-snow:0:460f94755e8c",
+    "services-design:3:b84ef2f275b3",
+    "products-ground-mount-gf1:0:964c52c94b33",
+    "services-installation:3:08aac2252772",
+    "warranty:2:6f52d0242c9d"
+   ],
+   "citations": [],
+   "cited_texts": [],
+   "status": 200,
+   "latency_ms": 16362.3,
+   "first_group_rank": null,
+   "hit": false,
+   "all_groups_found": false,
+   "reciprocal_rank": 0.0,
+   "answer": "I can't answer that from the available documents.",
+   "refused": true,
+   "flags": [],
+   "facts": 1,
+   "missing_facts": [
+    "25 m/s"
+   ],
+   "behaviour_ok": false,
+   "refusal_ok": false
+  },
+  {
+   "id": "g048",
+   "split": "holdout",
+   "category": "out of scope",
+   "subtype": "far",
+   "expected_behaviour": "abstain",
+   "should_refuse": true,
+   "smoke": false,
+   "seen": false,
+   "question": "How many years does it take for a solar plant like this to pay for itself?",
+   "retrieved": [
+    "services-installation:2:ca896e7404fc",
+    "process-roof-assessment:3:64686e305951",
+    "warranty:0:9d0128a7191a",
+    "company-overview:3:e737df5faf6e",
+    "company-overview:2:d20f72f4c794",
+    "services-installation:1:f29b088e0d21",
+    "products-ground-mount-gf1:1:ea4f4fdab1fe",
+    "warranty:2:6f52d0242c9d"
+   ],
+   "citations": [],
+   "cited_texts": [],
+   "status": 200,
+   "latency_ms": 4992.7,
+   "answer": "I can't answer that from the available documents.",
+   "refused": true,
+   "flags": [],
+   "facts": 0,
+   "missing_facts": [],
+   "behaviour_ok": true,
+   "refusal_ok": true
+  },
+  {
+   "id": "g051",
+   "split": "holdout",
+   "category": "out of scope",
+   "subtype": "near miss",
+   "expected_behaviour": "abstain",
+   "should_refuse": true,
+   "smoke": false,
+   "seen": false,
+   "question": "How many years is the twin-post structure designed to last?",
+   "retrieved": [
+    "products-ground-mount-gf2:0:f61b6af8aebc",
+    "products-ground-mount-gf2:2:ef6f945572be",
+    "products-ground-mount-gf2:1:df7101dcc4db",
+    "services-installation:2:ca896e7404fc",
+    "corrosion-coatings:0:60ce170e916d",
+    "products-ground-mount-gf2:3:01e70f179ec8",
+    "process-cooperation-stages:2:9fdd6a86f285",
+    "foundations-ground-mount:1:749fcc790271"
+   ],
+   "citations": [],
+   "cited_texts": [],
+   "status": 200,
+   "latency_ms": 1727.1,
+   "distractor_in_context": false,
+   "answer": "I can't answer that from the available documents.",
+   "refused": true,
+   "flags": [],
+   "facts": 0,
+   "missing_facts": [],
+   "behaviour_ok": true,
+   "refusal_ok": true
+  },
+  {
+   "id": "g052",
+   "split": "holdout",
+   "category": "out of scope",
+   "subtype": "near miss",
+   "expected_behaviour": "abstain",
+   "should_refuse": true,
+   "smoke": false,
+   "seen": false,
+   "question": "What is the maximum spacing between GF-1 posts?",
+   "retrieved": [
+    "products-ground-mount-gf1:0:964c52c94b33",
+    "products-ground-mount-gf1:3:94569713dff4",
+    "products-ground-mount-gf1:2:516929ac3734",
+    "products-ground-mount-gf1:1:ea4f4fdab1fe",
+    "products-ground-mount-gf2:0:f61b6af8aebc",
+    "products-ground-mount-gf2:3:01e70f179ec8",
+    "products-ground-mount-gf2:2:ef6f945572be",
+    "products-overview:2:16e6ba64e21b"
+   ],
+   "citations": [],
+   "cited_texts": [],
+   "status": 200,
+   "latency_ms": 1657.2,
+   "distractor_in_context": true,
+   "answer": "I can't answer that from the available documents.",
+   "refused": true,
+   "flags": [],
+   "facts": 0,
+   "missing_facts": [],
+   "behaviour_ok": true,
+   "refusal_ok": true
+  },
+  {
+   "id": "g058",
+   "split": "holdout",
+   "category": "false premise",
+   "subtype": "false premise",
+   "expected_behaviour": "correct premise",
+   "should_refuse": false,
+   "smoke": false,
+   "seen": false,
+   "question": "Since GF-2 is your C5 system, it's fine for our offshore platform, isn't it?",
+   "retrieved": [
+    "products-ground-mount-gf1:2:516929ac3734",
+    "products-overview:2:16e6ba64e21b",
+    "products-ground-mount-gf2:2:ef6f945572be",
+    "products-ground-mount-gf2:4:287df327adf3",
+    "products-ground-mount-gf2:0:f61b6af8aebc",
+    "products-ground-mount-gf2:3:01e70f179ec8",
+    "products-ground-mount-gf1:0:964c52c94b33",
+    "loads-wind-and-snow:1:90b832b5b1fd"
+   ],
+   "citations": [],
+   "cited_texts": [],
+   "status": 200,
+   "latency_ms": 4601.2,
+   "first_group_rank": null,
+   "hit": false,
+   "all_groups_found": false,
+   "reciprocal_rank": 0.0,
+   "answer": "I can't answer that from the available documents.",
+   "refused": true,
+   "flags": [],
+   "facts": 1,
+   "missing_facts": [
+    "CX"
+   ],
+   "behaviour_ok": false,
+   "refusal_ok": false
+  },
+  {
+   "id": "g061",
+   "split": "holdout",
+   "category": "false premise",
+   "subtype": "false premise",
+   "expected_behaviour": "correct premise",
+   "should_refuse": false,
+   "smoke": false,
+   "seen": false,
+   "question": "Why does RF-1 put less weight on the roof than RF-2?",
+   "retrieved": [
+    "corrosion-coatings:1:50575ee65d81",
+    "products-flat-roof-rf2:2:da8be679ccc8",
+    "products-flat-roof-rf2:0:37574a244939",
+    "products-overview:1:7b291994c46a",
+    "products-overview:2:16e6ba64e21b",
+    "products-flat-roof-rf1:2:bda97207539c",
+    "products-pitched-roof-rp1:0:583cc4e63bda",
+    "products-flat-roof-rf1:0:87f4079e16e5"
+   ],
+   "citations": [],
+   "cited_texts": [],
+   "status": 200,
+   "latency_ms": 1945.5,
+   "first_group_rank": 3,
+   "hit": true,
+   "all_groups_found": true,
+   "reciprocal_rank": 0.3333333333333333,
+   "answer": "I can't answer that from the available documents.",
+   "refused": true,
+   "flags": [],
+   "facts": 0,
+   "missing_facts": [],
+   "behaviour_ok": false,
+   "refusal_ok": false
+  },
+  {
+   "id": "g069",
+   "split": "holdout",
+   "category": "ambiguous",
+   "subtype": "ambiguous",
+   "expected_behaviour": "clarify",
+   "should_refuse": false,
+   "smoke": false,
+   "seen": false,
+   "question": "What tilt angle do your systems give the modules?",
+   "retrieved": [
+    "products-flat-roof-rf2:0:37574a244939",
+    "products-pitched-roof-rp1:0:583cc4e63bda",
+    "products-overview:0:7f2f6479c51d",
+    "products-overview:1:7b291994c46a",
+    "products-overview:2:16e6ba64e21b",
+    "services-overview:2:26db0a54b28f",
+    "corrosion-categories:3:d802103773d8",
+    "products-flat-roof-rf1:0:87f4079e16e5"
+   ],
+   "citations": [],
+   "cited_texts": [],
+   "status": 200,
+   "latency_ms": 1663.1,
+   "first_group_rank": null,
+   "hit": false,
+   "all_groups_found": false,
+   "reciprocal_rank": 0.0,
+   "answer": "I can't answer that from the available documents.",
+   "refused": true,
+   "flags": [],
+   "facts": 0,
+   "missing_facts": [],
+   "behaviour_ok": false,
+   "refusal_ok": false
+  },
+  {
+   "id": "g070",
+   "split": "holdout",
+   "category": "ambiguous",
+   "subtype": "ambiguous",
+   "expected_behaviour": "clarify",
+   "should_refuse": false,
+   "smoke": false,
+   "seen": false,
+   "question": "Is the site visit free?",
+   "retrieved": [
+    "process-site-survey:3:022b8f64e544",
+    "pricing-commercial-offer:1:378da8d65414",
+    "process-cooperation-stages:0:ac299d58503a",
+    "services-design:2:74890812a3eb",
+    "process-site-survey:1:4d8de16bf208",
+    "process-quote-requirements:4:93baf54ab698",
+    "process-site-survey:0:5dc708605682",
+    "process-cooperation-stages:2:9fdd6a86f285"
+   ],
+   "citations": [
+    "process-site-survey:3:022b8f64e544"
+   ],
+   "cited_texts": [
+    "## Cost\n\nThe site survey is free for projects of 100 kWp and above that are in one of the three sales regions. For sites outside the sales regions, the company may charge a travel fee, which is stated before the visit is booked."
+   ],
+   "status": 200,
+   "latency_ms": 12992.9,
+   "first_group_rank": 1,
+   "hit": true,
+   "all_groups_found": true,
+   "reciprocal_rank": 1.0,
+   "answer": "The site survey is free for projects of 100 kWp and above that are in one of the three sales regions, and for sites outside the sales regions, the company may charge a travel fee, which is stated before the visit is booked.",
+   "refused": false,
+   "flags": [],
+   "facts": 0,
+   "missing_facts": [],
+   "behaviour_ok": null,
+   "refusal_ok": true
+  },
+  {
+   "id": "g073",
+   "split": "holdout",
+   "category": "unsupported language",
+   "subtype": "other language",
+   "expected_behaviour": "language refusal",
+   "should_refuse": true,
+   "smoke": false,
+   "seen": false,
+   "question": "Czy montujecie systemy na dachach płaskich?",
+   "retrieved": [],
+   "citations": [],
+   "cited_texts": [],
+   "status": 200,
+   "latency_ms": 3.0,
+   "answer": "I can only answer questions in English. Please ask your question in English.",
+   "refused": false,
+   "flags": [
+    "not_english"
+   ],
+   "facts": 0,
+   "missing_facts": [],
+   "behaviour_ok": true,
+   "refusal_ok": true
+  },
+  {
+   "id": "g075",
+   "split": "holdout",
+   "category": "unsupported language",
+   "subtype": "other language",
+   "expected_behaviour": "language refusal",
+   "should_refuse": true,
+   "smoke": false,
+   "seen": false,
+   "question": "Quels documents faut-il fournir pour obtenir un devis ?",
+   "retrieved": [],
+   "citations": [],
+   "cited_texts": [],
+   "status": 200,
+   "latency_ms": 2.7,
+   "answer": "I can only answer questions in English. Please ask your question in English.",
+   "refused": false,
+   "flags": [
+    "not_english"
+   ],
+   "facts": 0,
+   "missing_facts": [],
+   "behaviour_ok": true,
+   "refusal_ok": true
+  }
+ ]
+}
