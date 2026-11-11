@@ -1071,7 +1071,14 @@ The owner tried the chat window again and wrote "tell me about the company". The
 
 To be honest, it didn't fix the owner's question in real life. When we asked the real notebooks "tell me about the company", the answer machine wrote a good summary, but one sentence came out jumbled ("more than 40 than 400 MWp"). The fact-checker caught the jumbled sentence and, by its rules, threw away the whole answer. That's a different problem, in a different part of the robot, and it's on the list for later. It's like a teacher who finds one wrong sum on a page and marks the whole page wrong: careful, but too strict.
 
----
+### Stage 8, part 1: a stranger follows the recipe
+
+The README has a recipe called Quick start: the steps to get the chatbot running on your own computer. It worked on the owner's computer, but that computer already had everything: the models, the right Python, the database. A recipe can work in your own kitchen and still miss a step, because you never needed that step.
+
+So we pretended to be a stranger. We downloaded the project into an empty folder and followed the recipe word for word, doing only what it said. Three things went wrong. It told us to download a model the robot no longer uses, and forgot one it needs. It told us to start the chatbot before building its database, so the chat crashed with an error. And the computer's usual Python was too old, which the recipe only mentioned in small print.
+
+We rewrote the recipe and tried again in a brand-new empty folder. This time every step worked: 1561 tests passed, the chatbot answered, the browser tests passed, and the 21 practice questions got exactly the same answers as in our saved tests, word for word.
+
 
 ## Findings
 
