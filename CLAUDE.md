@@ -12,6 +12,8 @@ Before trusting an eval scorer or CI gate, run it on the fixed refusal sentence,
 
 For the agent eval, also check every reply_excludes word against the replies of the last committed dev run (reports/agent/latest.json, "turns"): no word may appear in a reply that passes every other check. An oracle's replies are not known-correct answers: a033 excluded "Handover", and a true reply ("the next stage is Handover") failed.
 
+The agent eval's stand-in knowledge base answers every question a case does not list in stub_refusals. For a change whose effect depends on what the knowledge base answers, first send the affected messages to the real pipeline (/ask), write the predictions from that, and confirm the result with a real check through /chat as well as the eval. In Stage 7, a037 passed in the eval while the real knowledge base refuses it, and A9 failed holdout h008 in the eval while it passes in real use.
+
 If two runs in a row die with "CUDA error: shared object initialization failed", stop retrying and ask the owner to restart Windows. On 2026-11-09 neither unloading the models (ollama stop) nor restarting Ollama helped reliably, and the in-run retry failed too; only a Windows restart did.
 
 Put any Python longer than about 15 lines, or with nested quotes, in a scratchpad .py file written with the Write tool. Never run it through a bash heredoc. The hook .claude/hooks/block_inline_python.py blocks heredoc Python and any python -c longer than 300 characters or spanning lines.
@@ -22,11 +24,11 @@ python -m evals.mutation_check breaks a temporary copy of the project, never the
 
 Do not print or read holdout cases from evals/golden_dataset.jsonl. Filter to split == dev, and report holdout as ids and booleans only.
 
-evals/agent_holdout.jsonl holds the agent holdout cases, written by the owner. Never open, print or read it: check it only with python -m evals.agent_eval --check-holdout, and run it only with --split holdout at the end of a stage. Report it as counts and case ids only.
+evals/agent_holdout.jsonl holds the agent holdout cases, written by the owner. Never open, print or read it: check it only with python -m evals.agent_eval --check-holdout, and run it only with --split holdout at the end of a stage. Report it as counts and case ids only. If agent holdout text reaches the session, add the id to Exposure in evals/AGENT_HOLDOUT.md the same day, and report agent holdout results with and without exposed cases. When asking the owner to check a holdout case by hand, ask for the verdict only: no screenshots, no text.
 
 evals/annotation/blind_20.csv and any filled copy hold 8 holdout questions: score them only with python -m evals.validate_golden --agreement and read only its summary line. If holdout question text reaches the session, add the ids to EXPOSED_HOLDOUT in evals/exposure.py and to Holdout exposure in evals/golden_validation.md the same day.
 
-Before every push, run make lint and make test, the exact commands CI runs. Never a narrower path such as ruff check app evals tests.
+Before every push, run make lint and make test, the exact commands CI runs. Never a narrower path such as ruff check app evals tests. Chain a check and the step that depends on it only with &&. Send a long check's output to a file and print its exit code; never pipe it through tail. The hook .claude/hooks/tests_before_push.py runs both checks before any git push and blocks it if either fails.
 
 Try a new Python package in a throwaway virtual environment first, and run pip check there. Install it into .venv only after it shows no conflict, and add it to requirements.txt in the same commit. Pick the newest release at least 14 days old. A tool that runs a server (such as Phoenix) gets its own venv, never .venv. After its first start, run netstat -ano, check every port it listens on, and turn off its telemetry and any built-in agent.
 

@@ -193,3 +193,45 @@ Written by /aar-loop after each session's After Action Review. Read this file be
 - Actual: A4 (prompt v3) fixed a022 and lost a018, which then asked for the corrosion class instead of the customer's name; it was not kept. The agent holdout (run 20261109T143452Z) passed 3/10 with tool choice 9/10; 5 of 7 failed cases failed 'reply includes'.
 - Why: Small models are sensitive to any prompt change, and v2's booking rule was written from dev failures. The holdout gap's cause is unknown to the session, which may not read the cases; the owner can. Logged only: the decision rule (no pass may be lost) already caught A4.
 - tags: agent,prompts,holdout,logged-only
+
+## 2026-11-11 -- A rule and a lint hook did not stop a push past failing tests: .claude/hooks/tests_before_push.py now runs ruff check . and pytest before any Bash command that runs git push and blocks it on failure. Chain a check and its dependent step only with &&, send long output to a file and print the exit code, never pipe a check through tail.
+- Expected: make lint and make test pass before every push (CLAUDE.md), and a failing check stops the step after it.
+- Actual: Stage 7: 'mutation_check ... | tail -3' hid a failing baseline and commit 1b8cf5c went ahead; 'make test > log; ...; git push' pushed 5a78205 with 2 failing tests, so 92f8593 and 5a78205 were red in CI; after A6 only the agent and chat tests ran, which missed the broken NoTool reference agent.
+- Why: ';' and '| tail' drop the exit code, and the only mechanical gate (lint_before_commit.py) covers ruff at commit time, not tests at push time. Fix applied: the hook (16 unit tests; real run: passes the clean tree in 56 s, blocks a real failing test with exit 2) and the CLAUDE.md push rule. The owner registers the hook in .claude/settings.json.
+- tags: ci,hooks,push,exit-codes,fix-applied
+
+## 2026-11-11 -- The agent eval's stand-in knowledge base answers every question not listed in a case's stub_refusals; for an agent change whose effect depends on what the knowledge base answers, send the affected messages to the real pipeline (/ask) before writing predictions, and confirm with a real /chat check as well as the eval.
+- Expected: Agent eval passes and failures show how the agent behaves with the real knowledge base.
+- Actual: a037 ('tell me about the company') passed in the A7, A8 and A9 evals while the real knowledge base refuses it (one garbled sentence makes the answer check withdraw the whole answer); A9 failed holdout h008 in the eval, but the owner's real check passed with no sources.
+- Why: The stand-in returns '[the checked knowledge-base answer]' for anything not in stub_refusals, so a change like A9 (replace a decline only if the knowledge base answers) fires in the eval wherever it matches. Only the real-pipeline probe run before A9's predictions showed it. Fix applied: CLAUDE.md rule after the agent-eval paragraph.
+- tags: evals,agent,stand-in,fix-applied
+
+## 2026-11-11 -- Agent holdout exposure gets recorded too: if agent holdout text reaches the session, add the id to Exposure in evals/AGENT_HOLDOUT.md the same day and report agent holdout with and without exposed cases; when the owner checks a holdout case by hand, ask for the verdict only, no screenshots and no text.
+- Expected: Agent holdout cases stay unseen by the session that tunes the agent.
+- Actual: h008's message reached the session through the owner's screenshot of the demo chat; there was no exposure list for agent holdout ids (EXPOSED_HOLDOUT in evals/exposure.py covers only golden-dataset g ids), so it was recorded by hand.
+- Why: The exposure rules were written for the golden dataset only, and the instruction to the owner said 'don't paste the message or reply' but not 'no screenshot'. Fix applied: Exposure table in evals/AGENT_HOLDOUT.md (h008) and the CLAUDE.md agent holdout rule.
+- tags: holdout,agent,exposure,fix-applied
+
+## 2026-11-11 -- A mutation break that no longer matches its code is skipped by mutation_check --only and stops a full run; tests/unit/test_mutation_breaks.py now fails in make test the day a break goes stale.
+- Expected: Every break in evals/mutation_check.py tests a line that still exists.
+- Actual: On 2026-11-10 four breaks were stale (reformatted or moved code), one of them since Stage 5.
+- Why: Nothing checked the break texts against the files between full mutation runs. Fix applied earlier in Stage 7 (commit 8bf0f82); its own run must exclude that test, because it fails for every break by design.
+- tags: mutation,tests,fix-applied
+
+## 2026-11-11 -- Before an official run (make smoke, agent-eval, agent-attacks, nightly, holdout), git status --short must be empty, and no tracked file is edited until it finishes: the CI gate refuses a run recorded with git_dirty true.
+- Expected: Official agent runs on the A9 code could be committed as they were.
+- Actual: The runs saw an uncommitted README edit made during the run and uncommitted smoke results, were refused as 'made on uncommitted code', and were redone (about 6 minutes).
+- Why: git_dirty covers the whole working tree, not only the files a run reads. Context only: the gate already catches it.
+- tags: evals,git,runs
+
+## 2026-11-11 -- Ollama inside Docker is not an exact copy of the desktop Ollama even at the same version, model digests, CUDA library and GPU layer split: compare the smoke answers before adopting a new runtime.
+- Expected: ollama/ollama:0.40.15 in Docker would answer like the desktop Ollama 0.40.15 the evals ran on.
+- Actual: 20 of 21 smoke answers identical; g032 refused 3 of 3 times in Docker and answered 3 of 3 on the desktop. The demo uses the desktop Ollama (21/21 identical); Ollama in Docker is optional with the difference noted.
+- Why: Cause not measured; the remaining known difference is the Linux build against the Windows build.
+- tags: docker,ollama,runtime
+
+## 2026-11-11 -- A Write to a scratchpad file that already exists fails unless it was read first, and a Bash call sent in the same message then runs the old file: give each new scratchpad script a new name.
+- Expected: A new holdout comparison script would run.
+- Actual: holdout_compare.py already existed from an earlier stage; the Write failed and the same message ran the old script, which crashed before printing anything.
+- Why: Tool calls in one message run in order regardless of an earlier failure. Context only; no holdout text was printed.
+- tags: tooling,scratchpad
