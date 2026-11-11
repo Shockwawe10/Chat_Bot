@@ -64,7 +64,7 @@ It runs 21 questions and takes about 5 minutes. Film the start, pause the record
 python -m pytest tests/e2e -m e2e --headed --slowmo 400
 ```
 
-**Say:** "And the chat window has its own tests. Playwright opens a real browser and uses the window like a person would: nine tests, against a stand-in API, on every push."
+**Say:** "And the chat window has its own tests. Playwright opens a real browser and uses the window like a person would: ten tests, against a stand-in API, on every push."
 
 ### 6. Close (20 s)
 

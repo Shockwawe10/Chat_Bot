@@ -54,9 +54,9 @@ def show_answer(index, turn):
 
 
 def main():
-    st.set_page_config(page_title="Example Solar support", page_icon="☀️")
-    st.title("Example Solar support")
-    st.caption("Answers come from the company's documents. A site survey is booked only after you confirm it.")
+    st.set_page_config(page_title="Sunny · solar helper", page_icon="☀️")
+    st.title("Sunny, your solar helper")
+    st.caption("Example Solar's support assistant. Answers come from the company's documents, and a site survey is booked only after you confirm it.")
     state = st.session_state
     state.setdefault("session_id", None)
     state.setdefault("turns", [])
@@ -76,13 +76,17 @@ def main():
 
     message = st.chat_input("Ask about products, projects or site surveys", max_chars=MAX_CHARS)
     if message and message.strip():
-        with st.spinner("Thinking..."):
-            reply, error = ask(message.strip(), state.session_id)
+        text = message.strip()
+        # The customer's message shows at once; the answer takes 10 to 30 s on a 4 GB GPU.
+        with st.chat_message("user"):
+            st.markdown(text)
+        with st.chat_message("assistant"), st.spinner("Thinking..."):
+            reply, error = ask(text, state.session_id)
         if reply:
             state.session_id = reply["session_id"]
-            state.turns.append({"message": message.strip(), **reply})
+            state.turns.append({"message": text, **reply})
         else:
-            state.turns.append({"message": message.strip(), "error": error})
+            state.turns.append({"message": text, "error": error})
         st.rerun()
 
 

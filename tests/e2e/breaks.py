@@ -20,6 +20,7 @@ BREAKS = {
     ),
     "a proposed booking shown as booked": ('            if booking["status"] == "confirmed":\n', "            if True:\n"),
     "empty input sent": ("    if message and message.strip():\n", "    if message is not None:\n"),
+    "the question shown only with the answer": ('        with st.chat_message("user"):\n            st.markdown(text)\n', ""),
 }
 
 

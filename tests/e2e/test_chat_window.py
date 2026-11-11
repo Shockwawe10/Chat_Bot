@@ -21,7 +21,7 @@ def send(page: Page, text: str):
 
 def open_chat(page: Page, url: str):
     page.goto(url)
-    expect(page.get_by_role("heading", name="Example Solar support")).to_be_visible(timeout=30_000)
+    expect(page.get_by_role("heading", name="Sunny, your solar helper")).to_be_visible(timeout=30_000)
 
 
 def test_happy_path_shows_the_question_and_the_answer(page: Page, chat_url):
@@ -29,6 +29,15 @@ def test_happy_path_shows_the_question_and_the_answer(page: Page, chat_url):
     send(page, "How long is the warranty?")
     expect(page.locator(".st-key-reply-0")).to_contain_text("15-year warranty", timeout=30_000)
     expect(page.get_by_test_id("stChatMessage").first).to_contain_text("How long is the warranty?")
+
+
+def test_the_question_shows_at_once_while_the_answer_is_on_its_way(page: Page, chat_url):
+    open_chat(page, chat_url)
+    send(page, "Please answer slowly")
+    expect(page.get_by_test_id("stChatMessage").first).to_contain_text("Please answer slowly", timeout=2_000)
+    expect(page.locator(".st-key-reply-0")).to_have_count(0)
+    expect(page.locator(".st-key-reply-0")).to_contain_text("Here is the slow answer.", timeout=30_000)
+    expect(page.get_by_test_id("stChatMessage").first).to_contain_text("Please answer slowly")
 
 
 def test_sources_are_displayed_under_the_answer(page: Page, chat_url):

@@ -6,12 +6,15 @@ It answers from a script, keyed on words in the message, and builds every reply 
 app.api.ChatRequest and ChatResponse models: a change to the /chat contract breaks these tests too.
 """
 
+import time
+
 from fastapi import FastAPI, HTTPException
 
 from app.api import ChatRequest, ChatResponse
 
 app = FastAPI(title="stub /chat")
 SESSION = "stub0session0id"
+SLOW_S = 4  # long enough for a test to look at the page while the answer is on its way
 LONG = " ".join(f"Sentence {n} of a long answer about mounting systems." for n in range(1, 61))
 WARRANTY_SOURCE = {"doc_id": "warranty", "heading_path": "Warranty > Warranty periods", "chunk_id": "warranty:0:aa"}
 
@@ -27,6 +30,9 @@ def chat(request: ChatRequest):
     message = request.message.lower()
     if "fail" in message:
         raise HTTPException(503, "service unavailable: Ollama is down")
+    if "slowly" in message:  # the real model takes 10 to 30 s
+        time.sleep(SLOW_S)
+        return reply("Here is the slow answer.")
     if message == "yes":
         booking = {"survey_id": 1, "project_id": "P-1008", "survey_date": "2026-11-12", "status": "confirmed"}
         return reply("Your site survey for project P-1008 is booked for 2026-11-12.", booking)

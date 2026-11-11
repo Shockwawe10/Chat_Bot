@@ -62,7 +62,7 @@ def record():
         browser = p.chromium.launch()
         page = browser.new_page(viewport=VIEWPORT)
         page.goto(URL)
-        expect(page.get_by_role("heading", name="Example Solar support")).to_be_visible(timeout=60_000)
+        expect(page.get_by_role("heading", name="Sunny, your solar helper")).to_be_visible(timeout=60_000)
         recorder = Recorder(page)
         recorder.shot(1500)
 
