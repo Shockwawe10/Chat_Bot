@@ -31,3 +31,8 @@ Thumbs.db
 # Phoenix (make phoenix): its own venv and its trace store
 .venv-phoenix/
 .phoenix/
+
+# Kept on the owner's PC only, never pushed (owner's decision, 2026-11-11)
+docs/ROADMAP.md
+docs/DEVELOPMENT.md
+docs/EXPLAINED_SIMPLY.md

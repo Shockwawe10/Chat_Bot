@@ -13,7 +13,7 @@ An AI QA portfolio project: an English-language customer support chatbot that an
 - A pull request that fails CI on purpose: [#7](https://github.com/Shockwawe10/Chat_Bot/pull/7). The demo runs locally in Docker ([Demo](#demo)); a public link is postponed.
 - The most interesting defects found so far: [Findings](#findings).
 
-**Status:** Stages 0 to 7 done; Stage 8 (packaging) in progress. See the [Roadmap](docs/ROADMAP.md#roadmap).
+**Status:** Stages 0 to 7 done; Stage 8 (packaging) in progress. See the [Roadmap](#roadmap).
 
 ---
 
@@ -29,9 +29,7 @@ An AI QA portfolio project: an English-language customer support chatbot that an
 - [Quick start](#quick-start)
 - [Configuration](#configuration)
 - [Quality strategy](#quality-strategy)
-- [Development workflow](docs/DEVELOPMENT.md#development-workflow)
-- [Roadmap](docs/ROADMAP.md#roadmap)
-- [Explained simply](docs/EXPLAINED_SIMPLY.md#explained-simply)
+- [Roadmap](#roadmap)
 - [Findings](#findings)
 - [Learning resources](#learning-resources)
 - [License](#license)
@@ -174,7 +172,7 @@ Every model runs locally on Ollama 0.40.15, pinned in `.env.example` with each m
 | Drift comparison: a second chatbot model | `phi4-mini:3.8b` | `reports/drift.md` |
 | Judges tried and not adopted | `phi4-mini:3.8b` (two methods), `granite3-guardian:2b` | [LLM-as-judge calibration](#llm-as-judge-calibration) |
 
-The code was written with Claude Code; that model is part of the workflow, not of the running system ([docs/DEVELOPMENT.md](docs/DEVELOPMENT.md)).
+The code was written with Claude Code; that model is part of the workflow, not of the running system.
 
 ---
 
@@ -192,7 +190,7 @@ The code was written with Claude Code; that model is part of the workflow, not o
 | Agent tools | Official MCP Python SDK | Standard agent-to-tool protocol |
 | UI and E2E | Streamlit, Playwright for Python | Minimal frontend, browser tests |
 | CI | GitHub Actions | Quality gates on every pull request |
-| Demo | Docker, on the owner's PC | The same system the evals measured. AWS was priced and not used ([Stage 7](docs/ROADMAP.md#stage-7-ui-playwright-and-cloud-weeks-78)) |
+| Demo | Docker, on the owner's PC | The same system the evals measured. AWS was priced and not used |
 
 The chatbot's model is a single configuration value (`LLM_MODEL` with its digest), so the same evals can run on another Ollama model, as the drift comparison did.
 
@@ -252,9 +250,6 @@ Chat_Bot/
 ├── .dockerignore            # keeps .env, the database and the index out of the image
 ├── docker/                  # start_api.py (version check, seed, index, server), copy_models.py
 ├── docs/
-│   ├── ROADMAP.md           # the plan, stage by stage, with what each delivered
-│   ├── DEVELOPMENT.md       # AI-assisted workflow, authorship rules, Git, Definition of Done, data rules
-│   ├── EXPLAINED_SIMPLY.md  # the project told so a 10-year-old could follow it
 │   ├── demo.gif, demo-chat.png, make_demo_gif.py   # the README demo picture and the script that records it
 │   ├── demo_video_script.md # shot list and narration for the demo video
 │   └── posts/               # drafts of posts about findings
@@ -436,7 +431,7 @@ Tests are organized by risk, not by feature. Each risk has an example, a suite t
 
 Rules:
 
-- About 75 cases, written **before** any tuning. Cases may be drafted or edited by AI or by me, under the rules in [AI and human authorship](docs/DEVELOPMENT.md#ai-and-human-authorship).
+- About 75 cases, written **before** any tuning. Cases may be drafted or edited by AI or by me, and a case counts only after I review it.
 - Categories and target counts: single fact 20, multi-document 10, numeric 15, out of scope (must refuse) 10, false premise 8, ambiguous 7, unsupported language (must reply that only English is supported) 5.
 - **Dev / holdout split.** About 70% dev for tuning and 30% holdout, split within each category so both sets have the same mix. Holdout runs only at the end of a stage, manually, and its results go to `reports/holdout/`. It is never part of the nightly run, so the metrics measure the chatbot, not how well it was fitted to the tests.
 - **Smoke set.** 3 dev cases from each category, 21 in total. Every category is covered, so a PR cannot break refusals or numbers unnoticed.
@@ -558,15 +553,9 @@ Choices made:
 
 ---
 
-## Development workflow
-
-How the project is built with an AI coding assistant: who writes what and who reviews it, the Git workflow, the Definition of Done and the data rules. See [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md).
-
----
-
 ## Roadmap
 
-Each stage has a goal, a checklist and exit criteria; the full plan, with what each stage delivered and how it was checked, is in [docs/ROADMAP.md](docs/ROADMAP.md).
+Each stage had a goal, a checklist and exit criteria that could be checked.
 
 | Stage | Goal | Merged |
 | --- | --- | --- |
@@ -582,11 +571,6 @@ Each stage has a goal, a checklist and exit criteria; the full plan, with what e
 
 ---
 
-## Explained simply
-
-The whole project told so a 10-year-old could follow it, one short part for each finished piece of work: [docs/EXPLAINED_SIMPLY.md](docs/EXPLAINED_SIMPLY.md).
-
----
 
 ## Findings
 
