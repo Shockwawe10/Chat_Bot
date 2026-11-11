@@ -74,8 +74,10 @@ class Oracle:
 
 
 class NoTool:
+    """Never calls a tool and never refuses: a refusal would now start a knowledge search (agent A6)."""
+
     def chat(self, messages, tools):
-        return say("I can't help with that.")
+        return say("Thank you for your message.")
 
 
 class FirstTool:
@@ -269,9 +271,21 @@ def test_the_attack_set_validates_and_maps_to_owasp():
     assert {case["category"] for case in ATTACK_CASES} <= set(OWASP)
 
 
-def test_a_plain_refusal_defends_every_attack():
+def test_an_agent_that_does_nothing_defends_every_attack():
     results = run_attacks(NoTool)
     assert [r["id"] for r in results if not r["passed"]] == []
+
+
+class Refuser:
+    def chat(self, messages, tools):
+        return say("I can't help with that.")
+
+
+def test_a_plain_refusal_defends_every_attack_even_through_the_knowledge_fallback():
+    """With A6 a refusal starts a knowledge search; the attacks must still all fail."""
+    results = run_attacks(Refuser)
+    assert [r["id"] for r in results if not r["passed"]] == []
+    assert all("knowledge_fallback" in r["flags"] for r in results)
 
 
 def test_an_agent_with_no_defences_loses_every_attack():
@@ -328,3 +342,29 @@ def test_dev_and_attack_runs_keep_the_replies_and_a_holdout_run_never_does():
         assert with_turns(results, outcomes, split)[0]["turns"] == [{"message": "m", "reply": "P-1003 is in Supply."}]
     held = with_turns(results, outcomes, "holdout")
     assert "turns" not in held[0] and "P-1003 is in Supply." not in json.dumps(held)
+
+
+def test_a_case_can_make_the_stand_in_answer_refuse():
+    """a036: the first question gets the real refusal sentence, as an out-of-scope question does."""
+    from app.generator import ABSTAIN_SENTENCE
+    from evals import agent_eval
+
+    agent_eval.STUB_REFUSALS[:] = ["size of a solar panel"]
+    try:
+        assert agent_eval.stub_answer("What is the size of a solar panel?")[0].answer == ABSTAIN_SENTENCE
+        assert agent_eval.stub_answer("Which coating is used?")[0].answer == agent_eval.KNOWLEDGE_REPLY
+    finally:
+        agent_eval.STUB_REFUSALS[:] = []
+
+
+def test_a_copied_refusal_fails_a036_and_a_knowledge_answer_passes_it():
+    from app.generator import ABSTAIN_SENTENCE
+
+    case = next(c for c in CASES if c["id"] == "a036")
+    copied = {**outcome([ABSTAIN_SENTENCE, ABSTAIN_SENTENCE]), "turns": [
+        {"message": "m", "reply": ABSTAIN_SENTENCE, "tool_calls": [{"name": "search_knowledge_base", "arguments": {}, "result": {}}], "flags": [], "booking": None},
+        {"message": "m", "reply": ABSTAIN_SENTENCE, "tool_calls": [], "flags": [], "booking": None},
+    ]}
+    assert score_case(case, copied)["passed"] is False
+    searched = {**copied, "turns": [copied["turns"][0], {**copied["turns"][1], "reply": "[the checked knowledge-base answer]"}]}
+    assert score_case(case, searched)["passed"] is True

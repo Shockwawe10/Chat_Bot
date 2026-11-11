@@ -1,0 +1,36 @@
+# Optional: Ollama inside Docker on the GPU, for a PC without the desktop Ollama.
+#
+#   make docker-models      # once: copy the three models from this PC's Ollama into a volume
+#   make docker-up-ollama   # docker compose -f docker-compose.yml -f docker-compose.ollama.yml up
+#
+# Not an exact copy of the desktop Ollama the evals ran on, though the version, the model
+# digests, the CUDA library and the GPU layer split were the same: on 2026-11-10 the smoke run
+# reports/runs/20261110T112859Z-http-dev-smoke-docker.json gave 20 of 21 answers word for word
+# and refused g032 (3 of 3 times), which the desktop Ollama answers (3 of 3). Cause not measured.
+# Quit the desktop Ollama first: two copies on a 4 GB GPU push each other's models out.
+services:
+  ollama:
+    image: ollama/ollama:0.40.15@sha256:0e59999e0e8f9fd4e704bd788a89b7e4cad399367fb1365f8c102ac662288761
+    gpus: all
+    environment:
+      # Ollama 0.40 starts with its cloud models and remote features on; the demo uses only
+      # the local models.
+      OLLAMA_NO_CLOUD: "1"
+    volumes:
+      - ollama-models:/root/.ollama/models
+    healthcheck:
+      test: ["CMD", "ollama", "list"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+
+  api:
+    environment:
+      OLLAMA_URL: http://ollama:11434
+    depends_on:
+      ollama:
+        condition: service_healthy
+
+volumes:
+  ollama-models:
+    name: rag-ollama-models

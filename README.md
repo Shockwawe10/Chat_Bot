@@ -16,6 +16,7 @@ An AI QA portfolio project: an English-language customer support chatbot that an
 
 - [Why this project](#why-this-project)
 - [Demo domain](#demo-domain)
+- [Demo](#demo)
 - [Results](#results)
 - [Architecture](#architecture)
 - [Tech stack](#tech-stack)
@@ -59,6 +60,21 @@ This domain is a good test bed because a wrong answer there causes real harm:
 - Requests turn into actions (a lead, a site survey booking) that must not happen without confirmation.
 
 The company, its products, projects and customers are invented for this project. Any resemblance to a real company is unintended.
+
+---
+
+## Demo
+
+![The chat window: a product question answered from the knowledge base with its sources, and a project status from the database](docs/demo-chat.png)
+
+```bash
+make docker-up      # then open http://127.0.0.1:8501
+make docker-down    # stop it
+```
+
+It needs Docker Desktop and the desktop Ollama 0.40.15 with the three models in `.env.example` (`ollama pull` each). The API refuses to start on another Ollama version. The demo is the system the evals measured: on 2026-11-10 its 21 smoke answers came out word for word the same as the committed run (`reports/runs/20261110T114458Z-http-dev-smoke-docker-desktop-ollama.json`). The demo database and the index are rebuilt on every start, so leads and bookings made in the demo do not outlive a restart. The chat window is reachable only from this PC.
+
+A public link is postponed (owner's decision, 2026-11-10). The Telegram bot that would give one, without opening a port on the PC, is parked on the `later/telegram-bot` branch.
 
 ---
 
@@ -164,7 +180,7 @@ The LLM provider is a single configuration value, so the same evals can run on d
 Chat_Bot/
 ├── app/                     # chunking, retrieval, generation, FastAPI
 ├── mcp_server/              # tools: leads, projects, products, site surveys (Stage 6)
-├── ui/                      # Streamlit
+├── ui/app.py                # the Streamlit chat window (make ui)
 ├── prompts/                 # versioned prompt templates, like answer_v2.txt
 ├── data/
 │   ├── kb/                  # demo knowledge base (*.md with front matter)
@@ -188,7 +204,7 @@ Chat_Bot/
 │   ├── security/            # injection, jailbreak, prompt leakage
 │   ├── agent/               # tool selection, excessive agency, PII
 │   ├── integration/         # real models, needs Ollama: pytest -m real
-│   └── e2e/                 # Playwright
+│   └── e2e/                 # Playwright browser tests against a stand-in API (make e2e)
 ├── reports/
 │   ├── runs/                # one manifest per dev run
 │   ├── holdout/             # holdout runs, end of stage only
@@ -205,7 +221,13 @@ Chat_Bot/
 ├── promptfooconfig.yaml
 ├── pytest.ini
 ├── requirements.txt
-├── Dockerfile
+├── requirements-app.txt     # the subset the Docker image installs, same pins
+├── Dockerfile               # the API and the chat window
+├── docker-compose.yml       # make docker-up: API and chat window, desktop Ollama
+├── docker-compose.ollama.yml  # optional: Ollama in Docker on the GPU
+├── .dockerignore            # keeps .env, the database and the index out of the image
+├── docker/                  # start_api.py (version check, seed, index, server), copy_models.py
+├── docs/demo-chat.png       # the README demo screenshot
 ├── Makefile
 ├── .env.example
 ├── .gitignore
@@ -264,6 +286,10 @@ make seed                       # build data/app.db from the CSV files
 # Stage 7
 make ui                         # Streamlit
 make e2e                        # Playwright
+make docker-up                  # API and chat window in Docker on http://127.0.0.1:8501, using the desktop Ollama
+make docker-down                # stop it
+make docker-models              # once, for Ollama in Docker: copy the three models from the PC's Ollama
+make docker-up-ollama           # Ollama in Docker on the GPU instead (quit the desktop Ollama first)
 ```
 
 The app reads `.env` itself, so you do not need to export the variables in your shell.
@@ -644,12 +670,14 @@ Personal data leakage (LLM02) needs the agent and its customer data, so it is te
 
 **Goal:** a live demo and browser tests.
 
-- [ ] Streamlit UI: question, answer, sources
-- [ ] Playwright tests: happy path, empty input, long answer, API error, sources displayed
-- [ ] Dockerfile; deploy to AWS
-- [ ] Spending alert configured; demo switched off when not needed
+- [x] Streamlit UI on `/chat` (`ui/app.py`, `make ui`): question, answer, sources, and booking proposals with the confirmation step
+- [x] Playwright tests (`tests/e2e`, `make e2e`, on every push): happy path, empty input, long answer, API error, sources displayed, plus the API being down, the booking confirmation and a new conversation, against a stand-in API. `python -m tests.e2e.breaks` shows each test catching its break
+- [x] Dockerfile and a compose file (`make docker-up`): the API and the chat window on `127.0.0.1:8501`, using the desktop Ollama the evals ran on, which the API checks is the pinned version; fresh database and index on every start. With it, the 21 smoke answers came out word for word the same as the committed run (`reports/runs/20261110T114458Z-http-dev-smoke-docker-desktop-ollama.json`). Ollama in Docker on the GPU is optional (`docker-compose.ollama.yml`, `make docker-up-ollama`): 20 of 21 the same, g032 refused, cause not measured (`reports/runs/20261110T112859Z-http-dev-smoke-docker.json`). CI builds the image from a clean clone and imports and seeds it
+- [ ] Optional public link from the owner's PC. **Postponed** (owner's decision, 2026-11-10). The plan changed from a tunnel to a Telegram bot, which polls Telegram and so opens no port; it is written and tested against a stand-in Telegram (per-chat and hourly limits, optional allowed users, the token never logged) and parked on the `later/telegram-bot` branch until a bot token is set up. The database reset on each start is already in the Docker demo
 
-**Exit criteria:** E2E suite green in CI; Docker image builds from a clean clone; demo URL in the README.
+**Exit criteria:** E2E suite green in CI; Docker image builds from a clean clone; a README [demo section](#demo) with a screenshot and the command to run it. The live link is postponed (owner's decision, 2026-11-10): the Telegram bot that would give it is parked on the `later/telegram-bot` branch.
+
+**Changed on 2026-11-10 (owner's decision): local Docker instead of AWS.** The demo would need a GPU server: about $0.53 per hour in the US while it runs, plus about $4.00 a month for its disk, or $391.63 a month if left on (third-party price trackers, November 2026). A cheap server with the Claude API instead would make the demo a different system from the one the evals measured. So the demo runs in Docker on the owner's PC, with an optional tunnel for a public link while it is on.
 
 ### Stage 8. Packaging (week 8)
 
@@ -986,6 +1014,38 @@ GitHub already checked the chatbot's answers on every change. Now it checks the 
 Then it marks them. A driving-test conversation that went right on the accepted paper must still go right. Not a single trick may work. And across both papers there must be no booking without the customer's own "yes", no other customer's details in any reply, and no conversation that crashed.
 
 We checked GitHub's marking too: a pretend robot that never presses a button loses conversations the real one won, a robot with no defences loses every kind of trick, and breaking each rule on purpose, 6 times, was caught every time. Like a referee who has watched the replays, so we know they'd blow the whistle.
+
+### Stage 7, part 1: a chat window, and a robot that clicks it
+
+Until now, only programmers could talk to the chatbot, by sending it messages from code. So we built a chat window, like the ones on shopping websites: type a question, press Enter, get an answer. Under each answer there's a little "Sources" box that shows which page of the company's notebooks the answer came from. When you ask for an engineer's visit, a blue box says "proposed, not booked until you reply yes", and after your "yes" it turns green: "booked".
+
+Then we taught a robot to use the window like a person. It's called Playwright: it opens a real browser, types questions, presses Enter and checks what appears. It tries 9 things, among them a normal question, an empty message, a very long answer, the sources box, a booking with a "yes", and what happens when the chatbot's brain is switched off. It talks to a pretend chatbot that always gives the same answers, so the test is the same every time and GitHub can run it on every change.
+
+Of course we tested the tester too. We broke the window on purpose four times: hid the sources, showed a scary error message instead of a friendly one, showed a booking as done before the "yes", and let empty messages through. Each time, the clicking robot noticed.
+
+### Stage 7, part 2: a robot that copied its own "I don't know"
+
+The owner tried the new window and found a bug. They asked a question the notebooks can't answer, and the robot said "I can't answer that". Fine. Then they asked a question the notebooks *can* answer, and the robot said "I can't answer that" again, without even looking. It had copied its last reply, like a pupil who wrote "don't know" once and then writes it under every question without reading them.
+
+The fix is a rule in the code, not a polite request to the robot: if it says "I can't" or "I don't know" without looking anything up, the code looks in the notebooks for it, with the customer's own question, and gives the checked answer. If it did look and still found nothing, its "I don't know" stands. We wrote down what we expected before we tried it, and it came true: the driving test went from 30 to 32 conversations out of 36, the two fixed ones were exactly the two with this bug, the new rule switched on in no other conversation, and 0 of 22 tricks worked.
+
+### Stage 7, part 3: the chatbot in a lunchbox
+
+To run the chatbot, you used to need Python, the right packages, the right settings and a few commands in the right order. Now it's packed into Docker, like a lunchbox with everything inside: one command, `make docker-up`, starts the chatbot and the chat window, and you open the window in your browser. Every time it starts, it puts the pretend company's data back the way it was, so nothing a visitor typed stays behind.
+
+We first put the robot's brain (Ollama) in the lunchbox too. It found the graphics card, but when we asked it the 21 practice questions, 20 answers were word for word the same as before and 1 was different: it said "I can't answer" to a question the old brain answers every time. We couldn't find out why, and a demo should be the same robot we tested. So the lunchbox uses the brain already on the PC, the one all our tests ran on. With it, all 21 answers came out word for word the same. The brain-in-the-box version is still there for a PC without Ollama, with a note saying it is 1 answer in 21 different.
+
+### Stage 7, part 4: three tries at "tell me about the company"
+
+The owner tried the chat window again and wrote "tell me about the company". The robot answered "I cannot provide information without a specific question", without even looking in the notebooks. A big, friendly question isn't a vague one, so this was a bug.
+
+**Try 1: a new sentence in the robot's rules.** We added: "a broad question like 'tell me about the company' is a question too, so look it up". The robot then looked things up for that question and two others like it. But it got worse at something else: when a customer forgot to give their name, it asked for the wrong thing instead. Our rule, written before we tried, says a fix may not break anything that worked, so we threw it away.
+
+**Try 2: a checklist.** We gave the robot the list of six things a new customer request needs, and told it not to press any button until it had all six. It fixed 6 conversations, but it broke 2 that worked before: in both, a reply to a customer asking for a quote got blocked, and in one of them the customer had given all six things and the request still wasn't saved. So we threw this one away too.
+
+**Try 3: a rule in the code, not in the robot's head.** If the robot says "I cannot provide…" without looking anything up, the code looks in the notebooks for it. If the notebooks have a real answer, the customer gets that answer. If they don't, the robot's "no" stays. That last part matters, because the robot must still say no to "give me another customer's phone number". We checked that on the real notebooks: all 10 of those "no"s stayed exactly as they were. The driving test went from 32 to 33 conversations out of 39, and nothing broke. So we kept it.
+
+To be honest, it didn't fix the owner's question in real life. When we asked the real notebooks "tell me about the company", the answer machine wrote a good summary, but one sentence came out jumbled ("more than 40 than 400 MWp"). The fact-checker caught the jumbled sentence and, by its rules, threw away the whole answer. That's a different problem, in a different part of the robot, and it's on the list for later. It's like a teacher who finds one wrong sum on a page and marks the whole page wrong: careful, but too strict.
 
 ---
 

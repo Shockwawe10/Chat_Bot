@@ -9,7 +9,7 @@ permissions:
 jobs:
   lint-and-test:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -20,8 +20,24 @@ jobs:
       - run: pip install -r requirements.txt
       - run: make lint PYTHON=python
       - run: make test PYTHON=python
+      # Browser tests of the chat window (tests/e2e), against a stand-in API: no model needed.
+      - run: python -m playwright install --with-deps chromium
+      - run: make e2e PYTHON=python
       # The full dev and attack runs come from make nightly. A stale one is a warning, not a
       # failure: the smoke run, checked in make test, is what every change must refresh.
       - name: Nightly runs are fresh (warning only)
         continue-on-error: true
         run: python -m pytest -m nightly
+
+  # The image builds from a clean clone, imports the app, the MCP server and the chat window,
+  # and seeds its database as the non-root user. No GPU or model here: Ollama runs on the PC.
+  docker:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - run: docker compose config --quiet
+      - run: docker compose -f docker-compose.yml -f docker-compose.ollama.yml config --quiet
+      - run: docker build --tag rag-chatbot:ci .
+      - run: docker run --rm rag-chatbot:ci python -c "import app.api, mcp_server.server, streamlit"
+      - run: docker run --rm rag-chatbot:ci python -m mcp_server.seed

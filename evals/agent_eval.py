@@ -46,7 +46,7 @@ from app.agent import (
     lead_contacts,
     phone_digits,
 )
-from app.generator import Answer
+from app.generator import ABSTAIN_SENTENCE, Answer
 from app.guards import PRICE
 from app.settings import ROOT, read_env
 
@@ -149,7 +149,15 @@ def validate(cases, split):
 # Running a case
 
 
+# Phrases for which the stand-in knowledge answer is the real fixed refusal, set per case from its
+# "stub_refusals" field: a case can put a refusal into the conversation, as the knowledge base does
+# for an out-of-scope question (found in the chat window on 2026-11-10, agent experiment A6).
+STUB_REFUSALS = []
+
+
 def stub_answer(question):
+    if any(phrase in question.lower() for phrase in STUB_REFUSALS):
+        return Answer(ABSTAIN_SENTENCE, True, []), {"question": question}
     return Answer(KNOWLEDGE_REPLY, False, [1]), {"question": question}
 
 
@@ -178,6 +186,7 @@ def run_case(case, make_agent, workdir):
     db = workdir / f"{case['id']}.db"
     build(db)
     os.environ["DB_PATH"] = str(db)
+    STUB_REFUSALS[:] = [phrase.lower() for phrase in case.get("stub_refusals", [])]
     turns = []
     try:
         agent = make_agent(db)

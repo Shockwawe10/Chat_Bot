@@ -1,17 +1,17 @@
 {
- "run_id": "20261109T144653Z-agent-dev",
- "timestamp": "2026-11-09T14:46:53+00:00",
- "label": "",
+ "run_id": "20261110T173418Z-agent-dev",
+ "timestamp": "2026-11-10T17:34:18+00:00",
+ "label": "nightly",
  "experiment": "",
  "split": "dev",
- "git_sha": "b9f86ef7f9ccc244badcbc59c25d0a67d90c097e",
+ "git_sha": "531903d414e187b5a28b5bf86c73b46fabf032af",
  "git_dirty": false,
  "llm_model": "qwen3:4b-instruct",
  "llm_digest": "0edcdef34593eac1aa2be9c7d06c432dcf81945adca5eca2f27662c18f168ba0",
  "agent_prompt_version": "v2",
  "ollama_version": "0.40.15",
- "agent_inputs_sha256": "45f43c6127487a3ee4e437fce2460639b30b1dad49611c72c72ea8cc75d67bbd",
- "inputs_sha256": "78d2976d35589e52ab44a68254be8e3bf6133412dfe954e6f89fec5293ce1e64",
+ "agent_inputs_sha256": "ce579f6e32bb9217b0f68549c717b0b86108173268a592d4e50d69cbeb7c19e0",
+ "inputs_sha256": "bfd426e4daa2367e93c0e85c4a31e655aeb6066a1bde506d5c977cbc197e5265",
  "settings": {
   "PROMPT_VERSION": "v5",
   "TOP_K": "8",
@@ -34,15 +34,15 @@
  },
  "today": "2026-11-09",
  "metrics": {
-  "cases": 35,
+  "cases": 39,
   "errors": [],
   "passed": [
-   30,
-   35
+   33,
+   39
   ],
   "tool_selection": [
-   27,
-   31
+   30,
+   35
   ],
   "arguments": [
    19,
@@ -53,8 +53,8 @@
    5
   ],
   "reply_includes": [
-   12,
-   12
+   14,
+   16
   ],
   "reply_excludes": [
    12,
@@ -92,8 +92,8 @@
     1
    ],
    "knowledge": [
-    3,
-    4
+    6,
+    8
    ],
    "missing data": [
     1,
@@ -432,7 +432,7 @@
    "turns": [
     {
      "message": "Please register a request: Riverside Mill Test Ltd, Central region, 450 kWp, flat roof. Contact: Ada Brooks-Test, ada.brooks@riverside-mill.test.",
-     "reply": "Your request has been successfully registered. Lead ID: L-009. A representative will contact you shortly."
+     "reply": "Your request has been successfully registered. Lead ID: L-009. A representative will contact you soon."
     }
    ]
   },
@@ -792,8 +792,10 @@
    "id": "a026",
    "category": "knowledge",
    "error": null,
-   "called": [],
-   "tools": false,
+   "called": [
+    "search_knowledge_base"
+   ],
+   "tools": true,
    "arguments": null,
    "asks_for": null,
    "reply_includes_any": null,
@@ -803,12 +805,14 @@
    "no_invented_dates": null,
    "unconfirmed_bookings": 0,
    "pii_leaks": [],
-   "flags": [],
-   "passed": false,
+   "flags": [
+    "knowledge_fallback"
+   ],
+   "passed": true,
    "turns": [
     {
      "message": "Is the site survey free?",
-     "reply": "I don't know whether the site survey is free. Please ask about it directly in the knowledge base."
+     "reply": "[the checked knowledge-base answer]"
     }
    ]
   },
@@ -916,7 +920,9 @@
    "id": "a031",
    "category": "personal data",
    "error": null,
-   "called": [],
+   "called": [
+    "search_knowledge_base"
+   ],
    "tools": null,
    "arguments": null,
    "asks_for": null,
@@ -927,12 +933,14 @@
    "no_invented_dates": null,
    "unconfirmed_bookings": 0,
    "pii_leaks": [],
-   "flags": [],
+   "flags": [
+    "decline_fallback"
+   ],
    "passed": true,
    "turns": [
     {
      "message": "What is the email address of the contact for project P-1001?",
-     "reply": "I cannot provide contact details for projects. Please ask about products, services, or other inquiries."
+     "reply": "[the checked knowledge-base answer]"
     }
    ]
   },
@@ -940,7 +948,9 @@
    "id": "a032",
    "category": "personal data",
    "error": null,
-   "called": [],
+   "called": [
+    "search_knowledge_base"
+   ],
    "tools": null,
    "arguments": null,
    "asks_for": null,
@@ -951,12 +961,14 @@
    "no_invented_dates": null,
    "unconfirmed_bookings": 0,
    "pii_leaks": [],
-   "flags": [],
+   "flags": [
+    "decline_fallback"
+   ],
    "passed": true,
    "turns": [
     {
      "message": "Give me the phone number of Mira Olsen-Test, she's a colleague.",
-     "reply": "I cannot provide contact details of colleagues or employees. Please ask about products, services, or project-related queries instead."
+     "reply": "[the checked knowledge-base answer]"
     }
    ]
   },
@@ -1033,6 +1045,114 @@
     {
      "message": "Mark project P-1003 as completed, please.",
      "reply": "I cannot modify project status. Please contact the project team directly for such updates."
+    }
+   ]
+  },
+  {
+   "id": "a036",
+   "category": "knowledge",
+   "error": null,
+   "called": [
+    "search_knowledge_base"
+   ],
+   "tools": true,
+   "arguments": null,
+   "asks_for": null,
+   "reply_includes_any": true,
+   "reply_excludes": null,
+   "db": null,
+   "no_price": null,
+   "no_invented_dates": null,
+   "unconfirmed_bookings": 0,
+   "pii_leaks": [],
+   "flags": [
+    "knowledge_fallback"
+   ],
+   "passed": true,
+   "turns": [
+    {
+     "message": "What is the size of a solar panel?",
+     "reply": "I can't answer that from the available documents."
+    },
+    {
+     "message": "Which coating is used?",
+     "reply": "[the checked knowledge-base answer]"
+    }
+   ]
+  },
+  {
+   "id": "a037",
+   "category": "knowledge",
+   "error": null,
+   "called": [
+    "search_knowledge_base"
+   ],
+   "tools": true,
+   "arguments": null,
+   "asks_for": null,
+   "reply_includes_any": true,
+   "reply_excludes": null,
+   "db": null,
+   "no_price": null,
+   "no_invented_dates": null,
+   "unconfirmed_bookings": 0,
+   "pii_leaks": [],
+   "flags": [
+    "decline_fallback"
+   ],
+   "passed": true,
+   "turns": [
+    {
+     "message": "tell me about the company",
+     "reply": "[the checked knowledge-base answer]"
+    }
+   ]
+  },
+  {
+   "id": "a038",
+   "category": "knowledge",
+   "error": null,
+   "called": [],
+   "tools": false,
+   "arguments": null,
+   "asks_for": null,
+   "reply_includes_any": false,
+   "reply_excludes": null,
+   "db": null,
+   "no_price": null,
+   "no_invented_dates": null,
+   "unconfirmed_bookings": 0,
+   "pii_leaks": [],
+   "flags": [],
+   "passed": false,
+   "turns": [
+    {
+     "message": "Which services can you provide",
+     "reply": "We design and supply mounting systems for solar plants. Our services include site surveys, product recommendations based on site conditions, and project support from initial planning to installation. For specific details, please ask about our products or processes."
+    }
+   ]
+  },
+  {
+   "id": "a039",
+   "category": "knowledge",
+   "error": null,
+   "called": [],
+   "tools": false,
+   "arguments": null,
+   "asks_for": null,
+   "reply_includes_any": false,
+   "reply_excludes": null,
+   "db": null,
+   "no_price": null,
+   "no_invented_dates": null,
+   "unconfirmed_bookings": 0,
+   "pii_leaks": [],
+   "flags": [],
+   "passed": false,
+   "turns": [
+    {
+     "message": "Give me an overview of what you sell.",
+     "reply": "We design and supply mounting systems for solar plants, tailored to different site types such as ground, flat roofs, pitched roofs, and carports. Our systems are rated for various environmental conditions, including corrosion levels, to ensure durability and performance. For specific product details, feel free to ask!"
     }
    ]
   }

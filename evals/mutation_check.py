@@ -428,7 +428,7 @@ BREAKS = {
     "harness: random retriever not seeded": [(SYSTEMS_FILE, "self.random = random.Random(seed)", "self.random = random.Random()")],
     "harness: always-abstain answers": [(SYSTEMS_FILE, '"answer": ABSTAIN_SENTENCE, "abstained": True,', '"answer": ABSTAIN_SENTENCE, "abstained": False,')],
     "harness: drafts are run": [(RUN_EVALS, 'reviewed = [c for c in chosen if c["reviewed_by"] is not None]', "reviewed = chosen")],
-    "harness: smoke run updates latest": [(RUN_EVALS, 'full_dev = report["system"] == "pipeline" and report["split"] == "dev" and not report["smoke"]', 'full_dev = report["system"] == "pipeline" and report["split"] == "dev"')],
+    "harness: smoke run updates latest": [(RUN_EVALS, 'report["system"] == "pipeline" and report["split"] == "dev" and not report["smoke"] and not report.get("experiment")', 'report["system"] == "pipeline" and report["split"] == "dev" and not report.get("experiment")')],
     "harness: history appended under an old header": [(RUN_EVALS, "    if header == HISTORY_FIELDS:\n", "    if header is not None:\n")],
     "harness: missing run file guessed": [
         (RUN_EVALS, "        if not run_file.exists():\n            raise SystemExit", "        if False:\n            raise SystemExit")
@@ -566,7 +566,7 @@ BREAKS = {
     "tools: every note is withheld": [(TOOLS, '"notes": NOTE_WITHHELD if suspicious(row["comment"]) else row["comment"],', '"notes": NOTE_WITHHELD,')],
     "server: confirmation exposed as a tool": [(MCP_SERVER, "for tool in (create_lead, get_project_status, find_product, book_site_survey):\n", "for tool in (create_lead, get_project_status, find_product, book_site_survey, tools.confirm_pending_survey):\n")],
     # The /chat agent (app/agent.py, app/api.py)
-    "agent: the model rewrites the checked answer": [(AGENT, "                    reply = result.answer\n                    break\n", "                    messages.append({\"role\": \"tool\", \"tool_name\": name, \"content\": result.answer})\n                    break\n")],
+    "agent: the model rewrites the checked answer": [(AGENT, "                    reply = result.answer\n                    sources = cited_sources(result, rag_record.get(\"hits\", []))\n                    break\n", "                    messages.append({\"role\": \"tool\", \"tool_name\": name, \"content\": result.answer})\n                    break\n")],
     "agent: the model picks the session": [(AGENT, "result = self.tools.call(name, {**arguments, SESSION_ARGUMENT: session.session_id})", "result = self.tools.call(name, {SESSION_ARGUMENT: session.session_id, **call['arguments']})")],
     "agent: any message confirms a booking": [(AGENT, "        if session.pending and is_confirmation(message):\n", "        if session.pending:\n")],
     "agent: the reply guard is off": [(AGENT, "        if problems:\n", "        if False:\n")],
@@ -577,6 +577,10 @@ BREAKS = {
     "agent: another language reaches the model": [(AGENT, "        if not is_english(message):\n", "        if False:\n")],
     "agent: a date not on record reaches the customer": [(AGENT, "            if stated - allowed:\n", "            if False:\n")],
     "agent: dates from tools count as not on record": [(AGENT, '            allowed = {session.pending["survey_date"]} | {d for c in calls for d in DATE.findall(json.dumps(c["result"]))}\n', '            allowed = {session.pending["survey_date"]}\n')],
+    "agent: a model refusal stands": [(AGENT, "        if not calls and MODEL_REFUSAL.search(reply):\n", "        if False:\n")],
+    "agent: a refusal after a tool call is overruled": [(AGENT, "        if not calls and MODEL_REFUSAL.search(reply):\n", "        if MODEL_REFUSAL.search(reply):\n")],
+    "agent: a declined question is never searched": [(AGENT, "        elif not calls and MODEL_DECLINE.search(reply):\n", "        elif False:\n")],
+    "agent: an empty search replaces a decline": [(AGENT, "            if result.abstained:\n                record[\"knowledge_probe\"]", "            if False:\n                record[\"knowledge_probe\"]")],
     "api: chat traces look like ask traces": [(API, '{"endpoint": "chat", **turn.record, "status": 200,', '{"endpoint": "chat", "question": request.message, **turn.record, "status": 200,')],
     # The agent eval's scorer (evals/agent_eval.py)
     "agent eval: any overlapping tool counts": [(AGENT_EVAL, '    result["tools"] = None if tools is None else called == set(tools)\n', '    result["tools"] = None if tools is None else (not tools or bool(called & set(tools)))\n')],
@@ -619,7 +623,7 @@ BREAKS = {
     "guards: prices allowed": [(GUARDS, "        if PRICE.search(answer):\n", "        if False:\n")],
     "guards: prompt leaks allowed": [(GUARDS, "        if leaks_prompt(answer, self.ngrams):\n", "        if False:\n")],
     "guards: guard off by default": [(GUARDS, '        setting = env.get("OUTPUT_GUARD") or "on"\n', '        setting = env.get("OUTPUT_GUARD") or "off"\n')],
-    "guards: guard not wired": [(API, "            if guard is not None:\n                result, problems = guard.review(result)\n", "            if guard is not None:\n                problems = guard.review(result)[1]\n")],
+    "guards: guard not wired": [(API, "        if guard is not None:\n            result, problems = guard.review(result)\n", "        if guard is not None:\n            problems = guard.review(result)[1]\n")],
     "guards: default app without a guard": [(API, "        guard=OutputGuard.from_env(env, prompt),\n", "")],
     "guards: scan not in the fingerprint": [(INDEX, "    if corpus.quarantined:\n", "    if False:\n")],
     # Security gates on the committed attack run (evals/attack_run.py)
@@ -642,7 +646,7 @@ BREAKS = {
     "check: unknown method accepted": [(CHECKER, "        if method not in METHODS:\n", "        if False:\n")],
     "check: pin not checked": [(API, "            if checker is not None:\n                checker.check_pinned()\n", "")],
     "check: verdict ignored": [
-        (API, "                result, verdicts = checker.review(result, hits)\n", "                _, verdicts = checker.review(result, hits)\n")
+        (API, "            result, verdicts = checker.review(result, hits)\n", "            _, verdicts = checker.review(result, hits)\n")
     ],
     "check: down is not a 503": [(API, "    CheckUnavailable,\n)", ")")],
     # Guardian judge
@@ -735,7 +739,9 @@ def in_copy(path, work):
 def run_tests(work):
     shutil.rmtree(work / ".hypothesis", ignore_errors=True)
     return subprocess.run(
-        [sys.executable, "-m", "pytest", "tests/unit", "tests/api", "tests/data", "-q", "-x", "-p", "no:cacheprovider"],
+        [sys.executable, "-m", "pytest", "tests/unit", "tests/api", "tests/data", "-q", "-x", "-p", "no:cacheprovider",
+         # It fails for every break by design (the break removes its own text), so it would catch all of them.
+         "--ignore=tests/unit/test_mutation_breaks.py"],
         cwd=work,
         check=False,
         capture_output=True,

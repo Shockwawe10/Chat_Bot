@@ -51,6 +51,19 @@ CONFIRMATION = re.compile(
     r"that works|book it|yes,? book it|go ahead)$",
     re.IGNORECASE,
 )
+# A model reply that refuses or does not know. Without a tool call this turn, the knowledge base
+# answers instead (agent experiment A6).
+MODEL_REFUSAL = re.compile(r"\b(?:can't|cannot|can not)\s+(?:answer|help)\b|\b(?:don't|do not)\s+know\b", re.IGNORECASE)
+# A model reply that turns the question down in other words: "I cannot provide information about
+# the company without a specific question", "I cannot list our services". It is also how the model
+# refuses what it must refuse (contacts, prices), so the knowledge base replaces it only with a
+# real answer; when the knowledge base has none, the model's reply stands (agent experiment A9).
+MODEL_DECLINE = re.compile(
+    r"\b(?:can't|cannot|can not|unable to|not able to)\s+(?:\w+\s+){0,2}?"
+    r"(?:provide|list|give|share|tell|describe|explain|offer)\b"
+    r"|\b(?:a|any) (?:more )?specific question\b",
+    re.IGNORECASE,
+)
 DATE = re.compile(r"\d{4}-\d{2}-\d{2}")
 PHONE = re.compile(r"\+?\d[\d ().-]{5,}\d")
 
@@ -367,6 +380,19 @@ class Turn:
     flags: list
     booking: dict | None
     record: dict
+    sources: list = field(default_factory=list)  # the passages a knowledge answer cited
+
+
+def cited_sources(result, hits):
+    """The passages an answer cited, for the chat window: document, section and chunk id.
+    A refused or blocked answer cites none."""
+    if result.abstained:
+        return []
+    return [
+        {"doc_id": hits[n - 1]["doc_id"], "heading_path": hits[n - 1]["heading_path"], "chunk_id": hits[n - 1]["chunk_id"]}
+        for n in result.citations
+        if 1 <= n <= len(hits)
+    ]
 
 
 class Agent:
@@ -400,7 +426,7 @@ class Agent:
 
         system = self.prompt.substitute(today=self.today().isoformat())
         messages = [{"role": "system", "content": system}, *session.history, {"role": "user", "content": message}]
-        calls, flags, booking = [], [], None
+        calls, flags, booking, sources = [], [], None, []
         reply = None
         for _ in range(MAX_STEPS):
             answer = self.llm.chat(messages, self.schemas())
@@ -420,6 +446,7 @@ class Agent:
                     calls.append({"name": name, "arguments": {"question": question}, "result": {"answer": result.answer, "abstained": result.abstained}})
                     record["knowledge"] = rag_record
                     reply = result.answer
+                    sources = cited_sources(result, rag_record.get("hits", []))
                     break
                 if name == "book_site_survey":
                     arguments.pop(SESSION_ARGUMENT, None)
@@ -441,6 +468,32 @@ class Agent:
             reply = NOT_FINISHED
             flags.append("too_many_steps")
 
+        if not calls and MODEL_REFUSAL.search(reply):
+            # A refusal must come from the knowledge base, never from the model alone (agent experiment
+            # A6): after one refusal in the conversation, the model copied it for a question the
+            # knowledge base answers. Search with the customer's own message instead.
+            result, rag_record = self.answer_question(message)
+            record["knowledge"] = rag_record
+            record["model_refusal"] = reply
+            calls.append({"name": KNOWLEDGE_TOOL, "arguments": {"question": message}, "result": {"answer": result.answer, "abstained": result.abstained}})
+            reply = result.answer
+            sources = cited_sources(result, rag_record.get("hits", []))
+            flags.append("knowledge_fallback")
+        elif not calls and MODEL_DECLINE.search(reply):
+            # The model turned a question down without searching (agent experiment A9): "tell me
+            # about the company" got "I cannot provide information ... without a specific question".
+            # Only a real knowledge-base answer replaces it, so a refusal the model must make stands.
+            result, rag_record = self.answer_question(message)
+            if result.abstained:
+                record["knowledge_probe"] = rag_record
+            else:
+                record["knowledge"] = rag_record
+                record["model_decline"] = reply
+                calls.append({"name": KNOWLEDGE_TOOL, "arguments": {"question": message}, "result": {"answer": result.answer, "abstained": False}})
+                reply = result.answer
+                sources = cited_sources(result, rag_record.get("hits", []))
+                flags.append("decline_fallback")
+
         if session.pending:
             # The customer is never told a survey date the records do not hold (agent experiment A5).
             allowed = {session.pending["survey_date"]} | {d for c in calls for d in DATE.findall(json.dumps(c["result"]))}
@@ -457,7 +510,9 @@ class Agent:
             reply = BLOCKED
             flags = sorted({*flags, "output_blocked"})
         record["tool_calls"] = calls
-        return Turn(reply, calls, flags, booking, record)
+        if problems:
+            sources = []  # a blocked reply cites nothing
+        return Turn(reply, calls, flags, booking, record, sources)
 
     def _confirm(self, session, record):
         result = self.confirm(session.session_id)

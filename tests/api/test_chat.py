@@ -131,3 +131,15 @@ def test_an_unavailable_model_is_a_503_and_is_traced(make_client, tmp_path):
 def test_ask_still_works_beside_chat(make_client):
     response = make_client(say("unused")).post("/ask", json={"question": "How long is the product warranty?"})
     assert response.status_code == 200 and response.json()["answer"] == "Products have a 15-year warranty."
+
+
+def test_a_knowledge_answer_comes_with_its_source(make_client):
+    client = make_client(tool_call(KNOWLEDGE_TOOL, question="How long is the product warranty?"))
+    body = client.post("/chat", json={"message": "How long is the product warranty?"}).json()
+    assert len(body["sources"]) == 1
+    assert set(body["sources"][0]) == {"doc_id", "heading_path", "chunk_id"} and body["sources"][0]["doc_id"]
+
+
+def test_a_tool_answer_has_no_sources(make_client):
+    client = make_client(tool_call("get_project_status", project_id="P-1003"), say("P-1003 is in supply."))
+    assert client.post("/chat", json={"message": "Status of P-1003?"}).json()["sources"] == []

@@ -16,6 +16,7 @@ from app.agent import (
     ChatGuard,
     McpTools,
     Sessions,
+    cited_sources,
     is_confirmation,
     lead_contacts,
     numbers_given,
@@ -371,3 +372,126 @@ def test_without_a_pending_survey_dates_are_not_checked(make_agent):
     agent, _ = make_agent(say("Detailed design usually starts by 2026-12-01."))
     turn = agent.turn(Sessions().get(), "When could design start?")
     assert "date_mismatch" not in turn.flags
+
+
+# Sources for the chat window (Stage 7)
+
+HITS = [
+    {"doc_id": "warranty", "heading_path": "Warranty > Periods", "chunk_id": "warranty:0:aa"},
+    {"doc_id": "other", "heading_path": "Other", "chunk_id": "other:0:bb"},
+]
+
+
+def test_a_knowledge_answer_returns_the_passages_it_cited(make_agent):
+    agent, _ = make_agent(call(KNOWLEDGE_TOOL, question="How long is the warranty?"))
+    agent.answer_question = lambda q: (Answer("Products have a 15-year warranty.", False, [1]), {"question": q, "hits": HITS})
+    turn = agent.turn(Sessions().get(), "How long is the warranty?")
+    assert turn.sources == [HITS[0]]
+
+
+def test_a_refused_answer_and_a_citation_out_of_range_give_no_source():
+    assert cited_sources(Answer(ABSTAIN_SENTENCE, True, []), HITS) == []
+    assert cited_sources(Answer("Text.", False, [2, 7]), HITS) == [HITS[1]]
+
+
+def test_a_blocked_knowledge_answer_cites_nothing(make_agent):
+    agent, _ = make_agent(call(KNOWLEDGE_TOOL, question="How much is it?"))
+    agent.answer_question = lambda q: (Answer("It costs 450 EUR.", False, [1]), {"question": q, "hits": HITS})
+    turn = agent.turn(Sessions().get(), "How much is it?")
+    assert turn.reply == BLOCKED and turn.sources == []
+
+
+# A refusal must come from the knowledge base, not from the model alone (agent experiment A6)
+
+
+def test_a_refusal_copied_from_the_history_is_replaced_by_a_knowledge_search(make_agent):
+    agent, _ = make_agent(call(KNOWLEDGE_TOOL, question="What is the size of a solar panel?"), say(ABSTAIN_SENTENCE))
+    answers = iter([Answer(ABSTAIN_SENTENCE, True, []), Answer("Coatings are hot-dip galvanising and zinc-magnesium.", False, [1])])
+    agent.answer_question = lambda q: (next(answers), {"question": q, "hits": HITS})
+    session = Sessions().get()
+    assert agent.turn(session, "What is the size of a solar panel?").reply == ABSTAIN_SENTENCE
+    turn = agent.turn(session, "Which coating is used?")
+    assert turn.reply == "Coatings are hot-dip galvanising and zinc-magnesium."
+    assert turn.flags == ["knowledge_fallback"] and turn.record["model_refusal"] == ABSTAIN_SENTENCE
+    assert turn.tool_calls[0]["arguments"] == {"question": "Which coating is used?"} and turn.sources == [HITS[0]]
+
+
+@pytest.mark.parametrize(
+    "reply, falls_back",
+    [
+        ("I don't know whether the site survey is free.", True),
+        ("I cannot answer that.", True),
+        ("I can't help with that question.", True),
+        ("Could you tell me your email address?", False),
+        ("I can't share another customer's details.", False),
+        ("Hello! How can I help you today?", False),
+    ],
+)
+def test_only_a_refusal_without_a_tool_call_falls_back(make_agent, reply, falls_back):
+    agent, _ = make_agent(say(reply))
+    turn = agent.turn(Sessions().get(), "Some question?")
+    assert ("knowledge_fallback" in turn.flags) is falls_back
+
+
+def test_a_refusal_after_a_tool_call_stands(make_agent):
+    agent, _ = make_agent(call("get_project_status", project_id="P-9999"), say("I can't answer that: there is no project P-9999."))
+    turn = agent.turn(Sessions().get(), "Status of P-9999?")
+    assert "knowledge_fallback" not in turn.flags and "P-9999" in turn.reply
+
+
+# A question turned down in other words is answered by the knowledge base when it can (agent experiment A9)
+
+DECLINE = "I cannot provide information about Example Solar Ltd. without a specific question."
+SERVICES = "Example Solar Ltd. offers four services: Design, Supply, Installation, and Maintenance."
+
+
+def test_a_declined_question_the_knowledge_base_answers_gets_that_answer(make_agent):
+    agent, _ = make_agent(say(DECLINE))
+    agent.answer_question = lambda q: (Answer(SERVICES, False, [1]), {"question": q, "hits": HITS})
+    turn = agent.turn(Sessions().get(), "Which services can you provide")
+    assert turn.reply == SERVICES and turn.flags == ["decline_fallback"] and turn.record["model_decline"] == DECLINE
+    assert turn.tool_calls == [{"name": KNOWLEDGE_TOOL, "arguments": {"question": "Which services can you provide"}, "result": {"answer": SERVICES, "abstained": False}}]
+    assert turn.sources == [HITS[0]]
+
+
+def test_a_decline_stands_when_the_knowledge_base_has_no_answer_and_no_search_is_reported(make_agent):
+    refusal = "I cannot provide contact details for projects."
+    agent, _ = make_agent(say(refusal))
+    agent.answer_question = lambda q: (Answer(ABSTAIN_SENTENCE, True, []), {"question": q, "hits": HITS})
+    turn = agent.turn(Sessions().get(), "What is the email address of the contact for project P-1001?")
+    assert turn.reply == refusal and turn.flags == [] and turn.tool_calls == [] and turn.sources == []
+    assert turn.record["knowledge_probe"]["question"] == "What is the email address of the contact for project P-1001?"
+
+
+@pytest.mark.parametrize(
+    "reply, searches",
+    [
+        (DECLINE, True),
+        ("I cannot list our services without a specific question.", True),
+        ("I can't share that. For help, please write to support@example.com.", True),
+        ("Please ask a more specific question.", True),
+        ("Could you tell me your email address?", False),
+        ("We design and supply mounting systems for solar plants.", False),
+    ],
+)
+def test_only_a_decline_without_a_tool_call_searches(make_agent, reply, searches):
+    agent, _ = make_agent(say(reply))
+    asked = []
+    agent.answer_question = lambda q: (asked.append(q), (Answer(ABSTAIN_SENTENCE, True, []), {"question": q, "hits": HITS}))[1]
+    agent.turn(Sessions().get(), "Some question?")
+    assert bool(asked) is searches
+
+
+def test_a_decline_after_a_tool_call_stands(make_agent):
+    reply = "I cannot provide contact details for project P-1001."
+    agent, _ = make_agent(call("get_project_status", project_id="P-1001"), say(reply))
+    agent.answer_question = lambda q: (Answer(SERVICES, False, [1]), {"question": q, "hits": HITS})
+    turn = agent.turn(Sessions().get(), "Who is the contact for P-1001?")
+    assert turn.reply == reply and "decline_fallback" not in turn.flags
+
+
+def test_a_knowledge_answer_that_replaces_a_decline_still_passes_the_guard(make_agent):
+    agent, _ = make_agent(say("I cannot provide prices."))
+    agent.answer_question = lambda q: (Answer("It costs 450 EUR.", False, [1]), {"question": q, "hits": HITS})
+    turn = agent.turn(Sessions().get(), "How much is a GF-1?")
+    assert turn.reply == BLOCKED and turn.sources == []
