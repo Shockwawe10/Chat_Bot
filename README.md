@@ -232,7 +232,7 @@ Chat_Bot/
 ├── docker-compose.ollama.yml  # optional: Ollama in Docker on the GPU
 ├── .dockerignore            # keeps .env, the database and the index out of the image
 ├── docker/                  # start_api.py (version check, seed, index, server), copy_models.py
-├── docs/                    # demo-chat.png, demo.gif and make_demo_gif.py, which records the GIF
+├── docs/                    # demo-chat.png, demo.gif, make_demo_gif.py (records the GIF), demo_video_script.md
 ├── Makefile
 ├── .env.example
 ├── .gitignore
