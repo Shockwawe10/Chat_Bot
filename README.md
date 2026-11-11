@@ -243,58 +243,82 @@ Chat_Bot/
 
 ## Quick start
 
-> Commands are marked with the stage from which they work. Until then they are part of the plan, not a promise.
+**You need** Git, Python 3.11, and [Ollama](https://ollama.com) 0.40.15, the version every committed run was made on (the Docker demo refuses another). The models take about 7.5 GB. Everything was measured on a laptop GPU with 4 GB; a machine without a GPU was not tried. On Windows, run the commands in Git Bash with GNU Make installed. This Quick start was followed word for word in a fresh clone on Windows 11 on 2026-11-11; CI installs and tests on Linux.
+
+**The three models**, for every path below:
 
 ```bash
-# Stage 0
-git clone https://github.com/Shockwawe10/Chat_Bot.git && cd Chat_Bot
-python -m venv .venv
-source .venv/bin/activate       # Windows: .venv\Scripts\activate
-pip install -r requirements.txt
-cp .env.example .env            # then fill in the values
-ollama pull qwen3:4b-instruct   # chatbot (LLM_MODEL)
-ollama pull phi4-mini:3.8b      # judge (JUDGE_MODEL)
-ollama pull nomic-embed-text:v1.5   # embeddings (EMBEDDING_MODEL)
-pytest                          # data checks on the knowledge base
+ollama pull qwen3:4b-instruct      # answers (LLM_MODEL)
+ollama pull bespoke-minicheck:7b   # answer check and judge (ANSWER_CHECK_MODEL, JUDGE_MODEL)
+ollama pull nomic-embed-text:v1.5  # embeddings (EMBEDDING_MODEL)
+```
 
-# Stage 1
-make ingest                     # chunk and index data/kb into Chroma
-make run                        # API on http://localhost:8000
-make test                       # unit, data and API tests
-make lint                       # ruff
+`.env.example` pins each model's digest. On 2026-11-11 a fresh pull of each tag gave exactly the pinned model.
+
+### 1. Try the demo (Docker)
+
+Needs Docker Desktop, and Ollama running on the PC.
+
+```bash
+git clone https://github.com/Shockwawe10/Chat_Bot.git && cd Chat_Bot
+make docker-up      # then open http://127.0.0.1:8501
+make docker-down    # stop it
+```
+
+The first `make docker-up` builds the image: 905 s on the test PC, 844 s of it installing packages over a slow connection. Without `make`: `docker compose up --build --detach --wait`.
+
+### 2. Develop
+
+```bash
+git clone https://github.com/Shockwawe10/Chat_Bot.git && cd Chat_Bot
+py -3.11 -m venv .venv             # macOS or Linux: python3.11 -m venv .venv
+source .venv/Scripts/activate      # macOS or Linux: source .venv/bin/activate
+pip install -r requirements.txt
+cp .env.example .env               # works as it is; ANTHROPIC_API_KEY is only for paid runs
+make seed                          # the demo database the agent's tools read (data/app.db)
+make ingest                        # chunk and index data/kb into Chroma
+make test                          # unit, data and API tests; no model needed
+make run                           # the API on http://localhost:8000: POST /ask and POST /chat
+make ui                            # in a second terminal: the chat window on http://localhost:8501
+```
+
+`make seed` comes before `make run`: without the database, `/chat` fails with HTTP 500 ("no such table: leads").
+
+### 3. Evaluate
+
+```bash
+make eval-smoke                         # 21 dev cases, about 5 minutes; writes reports/runs/<run_id>.json
+make eval                               # the full dev run, 52 cases, about 25 minutes
+make agent-eval                         # the agent's dev cases
+python -m playwright install chromium   # once, for the browser tests
+make e2e                                # browser tests of the chat window against a stand-in API; no model needed
+```
+
+### All commands
+
+```bash
+make lint                       # ruff, as CI runs it
+pytest -m real                  # end-to-end test with the real models
 python -m evals.chunk_report    # chunk config, length histogram, gold-span coverage
 python -m app.index build       # embed, index and verify; a no-op if nothing changed
 python -m app.index prune       # delete every collection except the active one
 python -m evals.mutation_check  # break the code on purpose and check the tests notice
-uvicorn app.api:create_default_app --factory --port 8000   # the API, same as make run
-pytest -m real                  # end-to-end test with the real models, needs Ollama
-
-# Stage 2
-make eval                       # full dev run, writes reports/runs/<run_id>.json and reports/latest.json
-make eval-smoke                 # 21 dev cases, the same set CI uses
+make smoke-accept               # accept the latest smoke run as the per-case reference, on purpose only
+make agent-attacks              # the 22 attacks on the agent
+make agent-accept               # accept the latest agent dev run as the reference, on purpose only
+make nightly                    # full dev run, RAG attacks, agent dev and attacks
+make holdout                    # end of a stage only, after make nightly on the same commit
 make results                    # regenerate the Results table in README.md
 python -m evals.run_evals --judge   # add the Ragas metrics, judged by JUDGE_MODEL
 make judge-labels               # write the blind file of 30 answers to label, once
-make calibrate LABELLED_BY=name # agreement and kappa between my labels and the judge
-
-# Stage 4
+make calibrate LABELLED_BY=name # agreement and kappa between the labels and the judge
 make redteam                    # promptfoo red teaming
-
-# Stage 6
-make seed                       # build data/app.db from the CSV files
-
-# Stage 7
-make ui                         # Streamlit
-make e2e                        # Playwright
-make docker-up                  # API and chat window in Docker on http://127.0.0.1:8501, using the desktop Ollama
-make docker-down                # stop it
+make phoenix                    # Arize Phoenix for traces, in its own venv
 make docker-models              # once, for Ollama in Docker: copy the three models from the PC's Ollama
 make docker-up-ollama           # Ollama in Docker on the GPU instead (quit the desktop Ollama first)
 ```
 
 The app reads `.env` itself, so you do not need to export the variables in your shell.
-
-**Windows.** Python, Ollama and `pytest` work natively. If `python --version` shows a version older than 3.11, create the venv with `py -3.11 -m venv .venv`. For `make` targets, use WSL or Git Bash with GNU Make installed. CI runs on Linux.
 
 ---
 
