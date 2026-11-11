@@ -1,6 +1,6 @@
 # Learning log
 
-One entry per merged PR. AI may draft an entry, but I review and edit it, and a draft says so at the top until I have (see the AI-assisted development policy and the AI and human authorship rules in the README).
+One entry per merged PR. AI may draft an entry, but I review and edit it, and a draft says so at the top until I have (see the AI-assisted development policy and the AI and human authorship rules in [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md)).
 
 ## Template
 
