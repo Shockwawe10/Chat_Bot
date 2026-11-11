@@ -1,4 +1,6 @@
-"""Write the Results table in README.md from reports/latest.json and reports/baseline.json.
+"""Write the Results table in README.md from reports/latest.json and reports/baseline.json, the
+attack rate from reports/security/latest.json, and the agent rows from reports/agent/latest.json
+and reports/agent/attacks/latest.json.
 
     python -m evals.render_results          # rewrite the table (make results)
     python -m evals.render_results --check  # exit 1 if README.md is out of date
@@ -117,7 +119,31 @@ def attack_rate(security):
     return f"{hits / total:.2f} ({hits}/{total})" if total else DASH
 
 
-def render(text, baseline, current, calibration=None, security=None):
+def tool_selection(agent):
+    """The agent's tool selection accuracy, from a saved agent dev run (evals/agent_eval.py)."""
+    if not agent or not agent["metrics"].get("tool_selection"):
+        return DASH
+    right, total = agent["metrics"]["tool_selection"]
+    return f"{right / total:.2f} ({right}/{total})" if total else DASH
+
+
+def unconfirmed_and_leaks(agent, agent_attacks):
+    """Unconfirmed bookings and personal-data leaks over the saved agent dev and attack runs, both needed."""
+    if not agent or not agent_attacks:
+        return DASH
+    runs = (agent["metrics"], agent_attacks["metrics"])
+    unconfirmed = sum(m["unconfirmed_bookings"] for m in runs)
+    leaks = sum(m["pii_leaks"] for m in runs)
+    return f"{unconfirmed} / {leaks} ({runs[0]['cases']} dev and {runs[1]['cases']} attack cases)"
+
+
+AGENT_ROWS = {
+    "Tool selection accuracy": lambda agent, attacks: tool_selection(agent),
+    "Unconfirmed actions / PII leaks": unconfirmed_and_leaks,
+}
+
+
+def render(text, baseline, current, calibration=None, security=None, agent=None, agent_attacks=None):
     if START not in text or END not in text:
         raise SystemExit("README.md has no results markers")
     head, rest = text.split(START, 1)
@@ -136,10 +162,15 @@ def render(text, baseline, current, calibration=None, security=None):
         elif cells and cells[0] == "Attack success rate":
             cells[2] = attack_rate(security)
             line = "| " + " | ".join(cells) + " |"
+        elif cells and cells[0] in AGENT_ROWS:
+            cells[2] = AGENT_ROWS[cells[0]](agent, agent_attacks)
+            line = "| " + " | ".join(cells) + " |"
         lines.append(line)
     sources = source_line(baseline, current)
+    if agent and agent_attacks:
+        sources += f" Agent: `{agent['run_id']}` and `{agent_attacks['run_id']}`."
     if sources:
-        lines += ["", "Runs: " + sources]
+        lines += ["", "Runs: " + sources.strip()]
     body = re.sub(r"\n{3,}", "\n\n", "\n".join(lines))
     return f"{head}{START}\n\n{body.strip()}\n\n{END}{tail}"
 
@@ -150,7 +181,8 @@ def main(argv=None):
     args = parser.parse_args(argv)
     text = README.read_bytes().decode("utf-8").replace("\r\n", "\n")
     new = render(
-        text, load("baseline.json"), load("latest.json"), load("judge_calibration.json"), load("security/latest.json")
+        text, load("baseline.json"), load("latest.json"), load("judge_calibration.json"), load("security/latest.json"),
+        load("agent/latest.json"), load("agent/attacks/latest.json"),
     )
     if args.check:
         if new != text:

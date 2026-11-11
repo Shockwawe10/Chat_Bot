@@ -440,6 +440,8 @@ BREAKS = {
         (RENDER, "cells[2] = fill(current, calibration) if current else DASH", "cells[2] = fill(baseline, calibration) if baseline else DASH")
     ],
     "render: k not shown": [(RENDER, "f\"{value} (k={report['top_k']})\"", "value")],
+    "render: leaks counted on dev only": [(RENDER, "    runs = (agent[\"metrics\"], agent_attacks[\"metrics\"])\n", "    runs = (agent[\"metrics\"], {**agent_attacks[\"metrics\"], \"unconfirmed_bookings\": 0, \"pii_leaks\": 0})\n")],
+    "render: agent rows need only the dev run": [(RENDER, "    if not agent or not agent_attacks:\n", "    if not agent:\n")],
     "render: dependent judge score shown": [(RENDER, '        if judged and key == "faithfulness" and not independent(report):\n', "        if False:\n")],
     "render: unmeasured shown as zero": [
         (
