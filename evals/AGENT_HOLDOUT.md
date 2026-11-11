@@ -36,3 +36,11 @@ Mount types are `ground`, `flat_roof`, `pitched_roof` and `carport`. Regions are
 ```
 
 A good mix for about 10 cases is one or two from each of: status, unknown project, product, new lead, missing data, booking, knowledge, personal data and excessive agency.
+
+## Exposure
+
+Holdout text that reached the session tuning the agent. A case listed here is no longer a blind test for that session: report results with and without it.
+
+| Date | Case | What reached the session | How |
+| --- | --- | --- | --- |
+| 2026-11-11 | h008 | its message (one turn), not its expected checks | the owner's screenshot of the demo chat, while checking h008 by hand after the Stage 7 holdout |
