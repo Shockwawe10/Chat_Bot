@@ -2,13 +2,18 @@
 
 An AI QA portfolio project: an English-language customer support chatbot that answers from a document knowledge base (RAG) and uses an MCP agent for simple actions. The chatbot is intentionally simple. The point of the project is everything around it: how its quality is measured, attacked, gated in CI and tracked over time.
 
+![The chat window: a product question answered from the knowledge base with its three sources, then a project status from the agent's database tool](docs/demo.gif)
+
+*The Docker demo, recorded by `docs/make_demo_gif.py`. Both answers are real and unedited; the 10 to 30 seconds each one takes on a 4 GB laptop GPU are cut to a "Thinking..." frame.*
+
 **In short**
 
 - A small RAG chatbot with an MCP agent. It answers customer questions in English from a pluggable knowledge base.
-- The focus is QA: a golden dataset, retrieval and answer metrics, an LLM judge checked against human labels, red teaming and CI quality gates.
-- Demo video, live demo and a pull request that fails CI on purpose are linked here once they exist (Stages 5, 7 and 8).
+- The focus is QA: a golden dataset, retrieval and answer metrics, an LLM judge calibrated on labelled answers, red teaming, CI quality gates and browser tests.
+- A pull request that fails CI on purpose: [#7](https://github.com/Shockwawe10/Chat_Bot/pull/7). The demo runs locally in Docker ([Demo](#demo)); a public link is postponed.
+- The most interesting defects found so far: [Findings](#findings).
 
-**Status:** Stage 0 (setup). The project has stages 0 to 8. See the [Roadmap](#roadmap).
+**Status:** Stages 0 to 7 done; Stage 8 (packaging) in progress. See the [Roadmap](#roadmap).
 
 ---
 
@@ -227,7 +232,7 @@ Chat_Bot/
 ├── docker-compose.ollama.yml  # optional: Ollama in Docker on the GPU
 ├── .dockerignore            # keeps .env, the database and the index out of the image
 ├── docker/                  # start_api.py (version check, seed, index, server), copy_models.py
-├── docs/demo-chat.png       # the README demo screenshot
+├── docs/                    # demo-chat.png, demo.gif and make_demo_gif.py, which records the GIF
 ├── Makefile
 ├── .env.example
 ├── .gitignore
@@ -709,7 +714,7 @@ Personal data leakage (LLM02) needs the agent and its customer data, so it is te
 
 - [ ] Final full run and holdout run; Results table regenerated with `make results`
 - [x] [Findings](#findings) section with the 5–7 most interesting defects: seven told as short stories, eleven in the table, one of them (F7's negation blind spot) still open
-- [ ] Demo GIF at the top of the README
+- [x] Demo GIF at the top of the README (`docs/demo.gif`, 17 s, 0.39 MB, remade with `python docs/make_demo_gif.py`)
 - [ ] 3–5 minute demo video: a question, an eval run, a red CI after a bad change
 - [ ] A short post about one finding, for example how well the LLM judge agreed with my labels
 
@@ -1092,6 +1097,10 @@ And our practice test for the helper robot used pretend notebooks that know the 
 ### Stage 8, part 3: catching up on the diary
 
 The project has a diary, the learning log, where the owner writes after each big step: what changed, how they checked it, and what they learned. After Stage 2 the diary went quiet, for five stages. So we wrote first drafts for Stages 3 to 7 from the saved test results, with every number copied from those records. Each draft is marked "not reviewed yet", because a diary is only useful if it's in the owner's own words. The two parts that must be the owner's own, "how it works, in my own words" and "what I did by hand", are left for the owner to fill in.
+
+### Stage 8, part 4: a moving picture on the front page
+
+Someone who opens the project page decides in a few seconds whether to read on. So the page now starts with a short moving picture: someone types a question about a product, the chatbot answers and shows which pages of the notebooks the answer came from, then someone asks about a project and gets its status. The answers are real, not made up for the picture. The only trick is that the waiting is cut short: each answer really takes 10 to 30 seconds on this computer, and the picture shows just a moment of "Thinking...". A small program made the picture, so it can be made again whenever the chatbot changes.
 
 
 ## Findings
